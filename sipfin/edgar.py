@@ -40,7 +40,11 @@ def grab_docs_links(page: bs4.BeautifulSoup) -> list:
     return all_links
 
 
-def get_holdings(page: bs4.BeautifulSoup, output='df') -> pd.DataFrame:
+# def get_holding_from_link(link: str):
+
+
+
+def get_holding(page: bs4.BeautifulSoup, output='df') -> pd.DataFrame:
     table = page.find('table', {'summary': 'Form 13F-NT Header Information'})
 
     if output == 'df':
@@ -71,8 +75,7 @@ def main():
     pages = list(map(get_page, links))
     document_links = list(map(grab_docs_links, pages))
     doc_pages = list(map(get_page, document_links))
-
-    dfs = list(map(get_holdings, doc_pages))
+    dfs = list(map(get_holding, doc_pages))
 
     print(dfs)
     return dfs
