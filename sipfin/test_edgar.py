@@ -1,7 +1,7 @@
 import edgar as ed
 
 
-def test_get_links(companies: list) -> list:
+def links(companies: list) -> list:
     
     return list(map(ed.search_link, companies))
 
@@ -14,9 +14,10 @@ def test_get_links(companies: list) -> list:
 # &output=xml
 
 
+
 if __name__ == "__main__":
     companies = ['Renaissance Technologies', 'Two Sigma Investments', 'Bridgewater Associates',
                  'AQR Capital Management', 'Millennium Management', 'Elliott Management', 'BlackRock', 'Citadel LLC']
-    links = test_get_links(companies)
-    print(links)
+    ls = links(companies)
+    print(ls)
 

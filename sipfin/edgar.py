@@ -9,11 +9,11 @@ get company ids
 """
 search = "https://www.sec.gov/cgi-bin/browse-edgar?company=Two+Sigma&owner=exclude&action=getcompany&count=100"
 
-ROOT = 'https://www.sec.gov/'
+ROOT = 'https://www.sec.gov'
 
 def search_link(name: str, form_type='13F-HR') -> str:
     company = name.replace(' ', '+')
-    return ROOT + 'cgi-bin/browse-edgar?action=getcompany' + '&company=' + company + '&type=' + form_type + '&count=100'  # + '&output=xml'
+    return ROOT + '/cgi-bin/browse-edgar?action=getcompany' + '&company=' + company + '&type=' + form_type + '&count=100'  # + '&output=xml'
 
 
 def get_page(link: str, parser:str='html.parser') -> bs4.BeautifulSoup:
@@ -31,30 +31,34 @@ def next_pages(page: bs4.BeautifulSoup) -> list:
     return pages
 
 
-def grab_docs_links(page: bs4.BeautifulSoup) -> list:
-    docs_links = []
-    # all_links = []
-    # all_pages = next_pages(page)
-    # for page in all_pages:
-    #     t = page.find('table', {'class': 'results'})
-    #     if t is not None:
-    #         links = [l['href'] for l in t.find_all('a')]
-    #         all_links += links
-        # else:
-    # print(page)
+def grab_docs_links(page: bs4.BeautifulSoup, output:str='dict'):
+    """
+
+    """
+    print(f'getting document links')
+    if output == 'dict':
+        docs = {}
+    elif output == 'list':
+        docs = []
 
     all_links = page.find_all('a', {'id': 'documentsbutton'})
-    for l in all_links:
-        if l is not None:
-            cur_page = get_page(ROOT + l['href'])
-            cur_table = cur_page.find('table', {'class': 'tableFile'})
-            links = cur_table.find_all('a')
-            if len(links) < 4:
-                continue
-            html_link = ROOT + links[2]['href']
-            docs_links.append(html_link)
 
-    return docs_links
+    for l in all_links:
+        cur_page = get_page(ROOT + l['href'])
+        date = cur_page.find('div', {'class' : 'info'}).text
+        cur_table = cur_page.find('table', {'class': 'tableFile'})
+        links = cur_table.find_all('a')
+
+        if len(links) < 4:
+            continue
+        
+        html_link = ROOT + links[2]['href']
+
+        if output == 'dict':
+            docs[date] = html_link
+        elif output == 'list':
+            docs.append(html_link)
+    return docs
 
 
 def get_holding_from_link(link: str)-> pd.DataFrame:
@@ -80,17 +84,16 @@ def clean_holding(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def company_history(name:str, verbose:bool=False)-> dict:
-#     """
-#     date : df
-#     """
-#     data 
+    """
+    date : df
+    """
     history = {}
     link = search_link(name)
     page = get_page(link)
-    doc_links = grab_docs_links(page)
-    doc_pages = list(map(get_page, doc_links))
-    for doc_page in doc_pages:
-        date = doc_page.find_all('td', {'class': 'SmallFormTextR'})[1].text
+    doc_links = grab_docs_links(page, output='dict')
+    for date, doc_link in doc_links.items():
+        print(f'date: {date}')
+        doc_page = get_page(doc_link)
         df = get_holding(doc_page)
         history[date] = df
     return history
