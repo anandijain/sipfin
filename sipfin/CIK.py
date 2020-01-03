@@ -3,12 +3,13 @@ from selenium import webdriver
 import csv
 import json
 import edgar
+
 """
 # todo benchmark selenium driver to bs4 cik grab vs just selenium 
 
 """
 
-CIK_URL = 'https://www.sec.gov/cgi-bin/cik_lookup'
+CIK_URL = "https://www.sec.gov/cgi-bin/cik_lookup"
 
 
 def base_driver(screen=None):
@@ -31,8 +32,7 @@ def base_driver(screen=None):
     return driver
 
 
-
-def get_CIKs(driver, search_term:str)-> list:
+def get_CIKs(driver, search_term: str) -> list:
     driver.get(CIK_URL)
     input_fields = driver.find_element_by_tag_name("input")
     input_fields[0].send_keys(search_term)
@@ -52,12 +52,20 @@ def main():
     3. write to csv 
         csv: each column is search term row elements are 
     """
-    companies = ['Renaissance Technologies', 'Two Sigma Investments', 'Bridgewater Associates',
-                 'AQR Capital Management', 'Millennium Management', 'Elliott Management', 'BlackRock', 'Citadel LLC']
+    companies = [
+        "Renaissance Technologies",
+        "Two Sigma Investments",
+        "Bridgewater Associates",
+        "AQR Capital Management",
+        "Millennium Management",
+        "Elliott Management",
+        "BlackRock",
+        "Citadel LLC",
+    ]
 
     driver = base_driver()
-    # need to async/map by opening new tab or something 
-    ret = {c : get_CIKs(driver, c) for c in companies}
+    # need to async/map by opening new tab or something
+    ret = {c: get_CIKs(driver, c) for c in companies}
     return ret
 
 
