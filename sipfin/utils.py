@@ -10,9 +10,16 @@ def page(link: str) -> bs4.BeautifulSoup:
     return p
 
 
-def df_from_link(link: str) -> pd.DataFrame:
+def get_dfs(link: str) -> list:
     """
 
     """
-    df = pd.read_html(page(link).find('table').prettify())
-    return df
+    dfs = [pd.read_html(p.prettify()) for p in page(link).find_all('table')]
+    return dfs
+
+
+def sp500_df() -> pd.DataFrame:
+    return get_dfs('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0][0]
+
+def col_to_txt(df, col:str, fn:str):
+    l = df[[col]]

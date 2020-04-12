@@ -132,10 +132,11 @@ pub struct PressRelease {
 
 impl PressRelease {
     pub fn to_record(&self) -> Vec<String> {
+        let hl_text = str::replace(&self.headline.text, ",", ";");
         let rec = &[
             self.id.to_string(),
             self.url.to_string(),
-            self.headline.text.to_string(),
+            hl_text.to_string(),
             self.updated_at.to_string(),
         ];
         return rec.to_vec();
