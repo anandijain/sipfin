@@ -98,30 +98,15 @@ pub struct Root {
     pub press_releases: Option<Vec<PressRelease>>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PressRelease {
-    pub id: String,
-    pub url: String,
-    pub headline: Headline,
-    pub updated_at: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Headline {
-    pub text: String,
-}
-
 impl Root {
     pub fn to_record(&self) -> Vec<String> {
         let rec = &[
             self.id.to_string(),
             self.short_name.to_string(),
             self.market_cap.to_string(),
+            self.company_phone.to_string(),
             self.last_update.to_string(),
             self.average_volume30_day.to_string(),
-
             self.price.to_string(),
             self.open_price.to_string(),
             self.high_price.to_string(),
@@ -131,7 +116,107 @@ impl Root {
             self.number_of_employees.to_string(),
             self.price_earnings_ratio.to_string(),
             self.shares_outstanding.to_string(),
-            ];
+        ];
         return rec.to_vec();
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PressRelease {
+    pub id: String,
+    pub url: String,
+    pub headline: Headline,
+    pub updated_at: String,
+}
+
+impl PressRelease {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec = &[
+            self.id.to_string(),
+            self.url.to_string(),
+            self.headline.text.to_string(),
+            self.updated_at.to_string(),
+        ];
+        return rec.to_vec();
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Headline {
+    pub text: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Collections {
+    pub field_data_collection: Vec<FieldDataCollection>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldDataCollection {
+    pub id: String,
+    pub issued_currency: String,
+    pub long_name: String,
+    pub price: String,
+    pub price_change1_day: String,
+    pub percent_change1_day: String,
+    #[serde(rename = "tradingDayCloseUTC")]
+    pub trading_day_close_utc: String,
+    #[serde(rename = "lastUpdateUTC")]
+    pub last_update_utc: String,
+    #[serde(rename = "MEDIA_SECURITY_TYPE")]
+    pub media_security_type: String,
+    #[serde(rename = "MEDIA_SECURITY_SUBTYPE")]
+    pub media_security_subtype: String,
+    pub security_type: String,
+    pub short_name: String,
+    pub commodity_contract_date: String,
+    pub price_date: String,
+    pub last_update_time: String,
+    #[serde(rename = "lastUpdateISO")]
+    pub last_update_iso: String,
+    pub user_time_zone: String,
+    pub market_open: bool,
+    pub commodity_units: Option<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Intraday {
+    pub ticker: String,
+    pub previous_closing_price_one_trading_day_ago: f64,
+    pub open_price: ::serde_json::Value,
+    pub range: Range,
+    pub price: Vec<Price>,
+    pub volume: Vec<Volume>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Range {
+    pub start: String,
+    pub end: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Price {
+    pub date_time: String,
+    pub value: f64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Volume {
+    pub date_time: String,
+    pub value: i64,
+}
+
+impl Price {
+    pub fn to_record(&self) -> Vec<String> {
+        return vec![self.date_time.to_string(), self.value.to_string()];
     }
 }

@@ -30,3 +30,6 @@ dfs = edgar.company_history('Renaissance Technologies')
 2. Income statement parser
 3. Cash flow statements 
 4. Shareholders' equity statements 
+
+
+1. https://www.currency-iso.org/dam/downloads/lists/list_one.xml
