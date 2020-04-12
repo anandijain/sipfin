@@ -21,5 +21,6 @@ def get_dfs(link: str) -> list:
 def sp500_df() -> pd.DataFrame:
     return get_dfs('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0][0]
 
+
 def col_to_txt(df, col:str, fn:str):
-    l = df[[col]]
+    l = df[[col]].to_csv(index=False, sep='\n')

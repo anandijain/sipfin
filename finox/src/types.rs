@@ -1,3 +1,4 @@
+extern crate csv;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
@@ -99,7 +100,7 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_record(&self) -> csv::StringRecord {
         let rec = &[
             self.id.to_string(),
             self.short_name.to_string(),
@@ -117,7 +118,19 @@ impl Root {
             self.price_earnings_ratio.to_string(),
             self.shares_outstanding.to_string(),
         ];
-        return rec.to_vec();
+        return csv::StringRecord::from(rec.to_vec());
+    }
+
+    pub fn to_headlines(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
+        let mut ret: Vec<csv::StringRecord> = Vec::new();
+        if let Some(prs) = self.press_releases {
+            for pr in prs.iter() {
+                ret.push(types::PressRelease::to_record(pr));
+            }
+            Ok(ret)
+        } else {
+            Err("no headlines most likely")
+        }
     }
 }
 
@@ -131,15 +144,15 @@ pub struct PressRelease {
 }
 
 impl PressRelease {
-    pub fn to_record(&self) -> Vec<String> {
-        let hl_text = str::replace(&self.headline.text, ",", ";");
+    pub fn to_record(&self) -> csv::StringRecord {
+        let hl_text = self.headline.text.replace(",", ";");
         let rec = &[
             self.id.to_string(),
             self.url.to_string(),
             hl_text.to_string(),
             self.updated_at.to_string(),
         ];
-        return rec.to_vec();
+        return csv::StringRecord::from(rec.to_vec());
     }
 }
 
