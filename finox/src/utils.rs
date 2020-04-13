@@ -38,17 +38,15 @@ pub fn currencies_intraday() -> Result<(), reqwest::Error> {
                 continue;
             }
             let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
-            if let Ok(curs) = getters::get_intraday(symb.to_string()) {
+            if let Some(curs) = getters::get_intraday(symb.to_string()) {
                 let prices_fn = format!("./data/{}{}_prices.csv", s1.to_string(), s2.to_string());
-
                 if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
                     writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
-                } else {
-                println!("HMMM {}", symb.to_string());
+                }
+            } else {
+                println!("currency route missing: {}", symb.to_string());
                 continue;
-
             }
-            } 
         }
     }
     Ok(())
@@ -116,7 +114,7 @@ pub fn commodities_intraday(start: String) -> Result<(), reqwest::Error> {
                 let volume_fn = format!("./data/{}_volume.csv", s.to_string());
                 let vol_col = format!("{}_volume", &s.to_string());
                 writerecs(volume_fn, &["date_time", &vol_col], volume);
-            } 
+            }
         }
     }
     Ok(())
@@ -188,9 +186,9 @@ pub const STOCK_HEADER: [&'static str; 15] = [
     "shares_outstanding",
 ];
 
-pub const CURRENCY_SYMBOLS: [&'static str; 33] = [
-    // "USD", "EUR",
-    "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN", "BRL", //   "CLP",
+pub const CURRENCY_SYMBOLS: [&'static str; 36] = [
+    "USD", "EUR",
+    "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN", "BRL", "CLP",
     "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF", "RUB", "TRY",
     "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR", "THB",
 ];

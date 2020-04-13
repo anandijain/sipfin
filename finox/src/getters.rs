@@ -8,7 +8,18 @@ use std::{thread, time};
 pub const DELAY: std::time::Duration = time::Duration::from_millis(1000);
 
 #[tokio::main]
-pub async fn get_datastrip(t: String) -> Result<Vec<types::Root>, reqwest::Error> {
+pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
+    let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
+    let client = reqwest::Client::builder().user_agent(ua).build()?;
+    let res = client.get(&url).send().await?;
+    thread::sleep(DELAY);
+    let body = res.text().await?;
+    Ok(body)
+}
+
+
+#[tokio::main]
+pub async fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
     let url = [
         "https://www.bloomberg.com/markets2/api/datastrip/",
         &t,
@@ -16,17 +27,16 @@ pub async fn get_datastrip(t: String) -> Result<Vec<types::Root>, reqwest::Error
     ]
     .concat();
     println!("{}", url);
-    let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
-    let client = reqwest::Client::builder().user_agent(ua).build()?;
-    let res = client.get(&url).send().await?;
-    let body = res.text().await?;
-    let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
-    thread::sleep(DELAY);
-    Ok(company)
+    if let Ok(body) = simple_get(url) {
+        let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
+        if company != vec![] {
+            Some(company)
+        }
+    }
+    None
 }
 
-#[tokio::main]
-pub async fn get_intraday(t: String) -> Result<Vec<types::Intraday>, reqwest::Error> {
+pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
     let url = [
         "https://www.bloomberg.com/markets2/api/intraday/",
         &t,
@@ -34,13 +44,13 @@ pub async fn get_intraday(t: String) -> Result<Vec<types::Intraday>, reqwest::Er
     ]
     .concat();
     println!("{}", url);
-    let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
-    let client = reqwest::Client::builder().user_agent(ua).build()?;
-    let res = client.get(&url).send().await?;
-    let body = res.text().await?;
-    let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-    thread::sleep(DELAY);
-    Ok(cur)
+    if let Ok(body) = simple_get(url) {
+        let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
+        if cur != vec![] {
+            Some(cur)
+        }
+    }
+    None
 }
 
 #[tokio::main]
@@ -79,4 +89,4 @@ pub async fn get_news(t: String) -> Result<news::NewsVec, reqwest::Error> {
     Ok(cur)
 }
 
-// IND COM US GOV  
+// IND COM CUR US GOV  
