@@ -3,6 +3,9 @@ import pandas as pd
 import requests
 import glob
 import matplotlib.pyplot as plt
+
+
+from functools import reduce
 def page(link: str) -> bs4.BeautifulSoup:
     """
 
@@ -34,10 +37,7 @@ def commodities():
     return dfs  
 
 def write_plots():
-    fns = glob.glob('/home/sippycups/programming/repos/sipfin/finox/data/**stock_intraday*.csv')
-    print(fns)
-    dfs = [pd.read_csv(fn) for fn in fns]
-    dfs = convert_dts(dfs, 'date_time')
+    dfs = getem()
     for df in dfs:
         df.plot(x='date_time', y=df.columns[1])
         print(df.columns[1])
@@ -51,6 +51,21 @@ def convert_dts(dfs, colname):
 
 def col_to_txt(df, col:str, fn:str):
     l = df[[col]].to_csv(index=False, sep='\n')
+
+def getem():
+    fns = glob.glob(
+        '/home/sippycups/programming/repos/sipfin/finox/data/**stock_intraday*.csv')
+    print(fns)
+    dfs = [pd.read_csv(fn) for fn in fns]
+    dfs = convert_dts(dfs, 'date_time')
+    return dfs 
+
+
+def merge_em():
+    dfs = getem()
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['date_time'],
+                                                    how='outer'), dfs)
+    return df_merged
 
 if __name__ == "__main__":
     write_plots()
