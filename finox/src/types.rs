@@ -175,15 +175,23 @@ pub struct Intraday {
 }
 
 impl Intraday {
-    pub fn to_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
+    pub fn price_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
-        //uhh
-        assert_eq!(self.price.len(), self.volume.len());
-        
         for i in 0..self.price.len() {
             let rec = [
                 self.price[i].date_time.to_string(),
                 self.price[i].value.to_string(),
+            ];
+            ret.push(csv::StringRecord::from(rec.to_vec()));
+        }
+        Ok(ret)
+    }
+
+    pub fn volume_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
+        let mut ret: Vec<csv::StringRecord> = Vec::new();
+        for i in 0..self.volume.len() {
+            let rec = [
+                self.volume[i].date_time.to_string(),
                 self.volume[i].value.to_string(),
             ];
             ret.push(csv::StringRecord::from(rec.to_vec()));

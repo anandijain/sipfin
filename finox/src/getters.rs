@@ -26,11 +26,11 @@ pub async fn get_datastrip(t: String) -> Result<Vec<types::Root>, reqwest::Error
 }
 
 #[tokio::main]
-pub async fn get_currency(t: String) -> Result<Vec<types::Intraday>, reqwest::Error> {
+pub async fn get_intraday(t: String) -> Result<Vec<types::Intraday>, reqwest::Error> {
     let url = [
-        "https://www.bloomberg.com/markets2/api/intraday/USD",
+        "https://www.bloomberg.com/markets2/api/intraday/",
         &t,
-        "%3ACUR?days=10&interval=0&volumeInterval=0",
+        "?days=10&interval=0&volumeInterval=0",
     ]
     .concat();
     println!("{}", url);

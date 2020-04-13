@@ -9,9 +9,9 @@ mod news;
 mod utils;
 
 fn main() -> Result<(), reqwest::Error> {
-    // utils::currencies()
+    utils::currencies_intraday()
     // utils::sp500("CMCSA".to_string(), false)
     // utils::news()
     // utils::prices("INTC".to_string())
-    utils::commodities_prices("JX1".to_string())
+    // utils::commodities_prices("LMCADS03".to_string())
 }
