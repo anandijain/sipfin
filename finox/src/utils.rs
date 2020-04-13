@@ -10,6 +10,15 @@ use crate::getters;
 use crate::news;
 use crate::types;
 
+// IND COM CUR US GOV  
+pub enum Security {
+    IND(String),
+    COM(String),
+    CUR(String),
+    US(String),
+    GOV(String),
+}
+
 pub fn writerecs(
     file_name: String,
     header: &[&str],
@@ -39,34 +48,13 @@ pub fn currencies_intraday() -> Result<(), reqwest::Error> {
             }
             let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
             if let Some(curs) = getters::get_intraday(symb.to_string()) {
-                let prices_fn = format!("./data/{}{}_prices.csv", s1.to_string(), s2.to_string());
+                let prices_fn = format!("./data/{}_intraday_prices.csv", symb.to_string());
                 if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
                     writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
                 }
             } else {
                 println!("currency route missing: {}", symb.to_string());
                 continue;
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn prices(start: String) -> Result<(), reqwest::Error> {
-    let symbs = read_tickers("./data/sp500tickers.txt");
-    let index = symbs
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &symbs[index..symbs.len()];
-    for s in todo_symbs.iter() {
-        if let Ok(hist) = getters::get_history(format!("{}%3AUS", s.to_string())) {
-            if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
-                let write_fn = format!("./data/{}.csv", s.to_string());
-                let price_col = format!("{}_price", &s.to_string());
-                let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(write_fn, &["date_time", &price_col, &vol_col], recs);
             }
         }
     }
@@ -81,7 +69,7 @@ pub fn commodities_prices(start: String) -> Result<(), reqwest::Error> {
 
     let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
     for s in todo_symbs.iter() {
-        if let Ok(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
+        if let Some(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
             if let Ok(prices) = types::Intraday::price_records(&hist[0]) {
                 let prices_fn = format!("./data/{}_prices.csv", s.to_string());
                 let price_col = format!("{}_price", &s.to_string());
@@ -96,6 +84,7 @@ pub fn commodities_prices(start: String) -> Result<(), reqwest::Error> {
     }
     Ok(())
 }
+
 pub fn commodities_intraday(start: String) -> Result<(), reqwest::Error> {
     let index = COMMODITIES_SYMBOLS
         .iter()
@@ -104,7 +93,7 @@ pub fn commodities_intraday(start: String) -> Result<(), reqwest::Error> {
 
     let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
     for s in todo_symbs.iter() {
-        if let Ok(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
+        if let Some(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
             if let Ok(prices) = types::Intraday::price_records(&hist[0]) {
                 let prices_fn = format!("./data/{}_prices.csv", s.to_string());
                 let price_col = format!("{}_price", &s.to_string());
@@ -114,6 +103,22 @@ pub fn commodities_intraday(start: String) -> Result<(), reqwest::Error> {
                 let volume_fn = format!("./data/{}_volume.csv", s.to_string());
                 let vol_col = format!("{}_volume", &s.to_string());
                 writerecs(volume_fn, &["date_time", &vol_col], volume);
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn news() -> Result<(), csv::Error> {
+    let write_fn = "./data/news.csv";
+    let mut wtr = csv::Writer::from_path(&write_fn)?;
+    wtr.write_record(&NEWS_HEADER);
+    for s in NEWS_SYMBOLS.iter() {
+        if let Some(news_vec) = getters::get_news(s.to_string()) {
+            if let Ok(recs) = news::NewsVec::to_records(&news_vec) {
+                for r in recs.iter() {
+                    wtr.write_record(r);
+                }
             }
         }
     }
@@ -137,7 +142,7 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
     lines_wtr.write_record(&HEADLINES_HEADER);
     for s in todo_symbs.iter() {
         let symb = format!("{}%3AUS", s.to_string());
-        if let Ok(c) = getters::get_datastrip(symb.to_string()) {
+        if let Some(c) = getters::get_datastrip(symb.to_string()) {
             if let Ok(headlines) = types::Root::to_headlines(&c[0]) {
                 for r in headlines.iter() {
                     lines_wtr.write_record(r);
@@ -152,16 +157,21 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
     Ok(())
 }
 
-pub fn news() -> Result<(), csv::Error> {
-    let write_fn = "./data/news.csv";
-    let mut wtr = csv::Writer::from_path(&write_fn)?;
-    wtr.write_record(&NEWS_HEADER);
-    for s in NEWS_SYMBOLS.iter() {
-        if let Ok(news_vec) = getters::get_news(s.to_string()) {
-            if let Ok(recs) = news::NewsVec::to_records(&news_vec) {
-                for r in recs.iter() {
-                    wtr.write_record(r);
-                }
+pub fn stock_prices(start: String) -> Result<(), reqwest::Error> {
+    let symbs = read_tickers("./data/sp500tickers.txt");
+    let index = symbs
+        .iter()
+        .position(|r| r.to_string() == start.to_string())
+        .unwrap();
+
+    let todo_symbs = &symbs[index..symbs.len()];
+    for s in todo_symbs.iter() {
+        if let Some(hist) = getters::get_history(format!("{}%3AUS", s.to_string())) {
+            if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
+                let write_fn = format!("./data/{}.csv", s.to_string());
+                let price_col = format!("{}_price", &s.to_string());
+                let vol_col = format!("{}_volume", &s.to_string());
+                writerecs(write_fn, &["date_time", &price_col, &vol_col], recs);
             }
         }
     }
@@ -186,11 +196,11 @@ pub const STOCK_HEADER: [&'static str; 15] = [
     "shares_outstanding",
 ];
 
-pub const CURRENCY_SYMBOLS: [&'static str; 36] = [
-    "USD", "EUR",
-    "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN", "BRL", "CLP",
-    "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF", "RUB", "TRY",
-    "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR", "THB",
+pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
+    "USD", "EUR", "XAU", "XAG", "XPT", "XPD", "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN",
+    "BRL", "CLP", "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF",
+    "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
+    "THB",
 ];
 
 pub const NEWS_SYMBOLS: [&'static str; 5] = [
@@ -200,6 +210,7 @@ pub const NEWS_SYMBOLS: [&'static str; 5] = [
     "CURRENCY",
     "BLOOMBERG_BARCLAYS_INDEX",
 ];
+
 pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
     "CO1", "CL1", "XB1", "NG1", "HO1", "GC1", "SI1", "HG1", "C%201", "W%201", "CC1", "CT1", "LC1",
     "QS1", "JX1", "MO1", "JG1", "LMCADS03", "LMAHDS03", "LMZSDS03", "LMSNDS03", "O%201", "RR1",

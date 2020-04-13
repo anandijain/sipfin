@@ -17,9 +17,7 @@ pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
     Ok(body)
 }
 
-
-#[tokio::main]
-pub async fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
+pub fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
     let url = [
         "https://www.bloomberg.com/markets2/api/datastrip/",
         &t,
@@ -30,7 +28,7 @@ pub async fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
     if let Ok(body) = simple_get(url) {
         let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
         if company != vec![] {
-            Some(company)
+            return Some(company)
         }
     }
     None
@@ -47,14 +45,14 @@ pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
-            Some(cur)
+            return Some(cur)
         }
     }
     None
 }
 
-#[tokio::main]
-pub async fn get_history(t: String) -> Option<Vec<types::Intraday>> {
+
+pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
     let url = [
         "https://www.bloomberg.com/markets2/api/history/",
         &t,
@@ -65,14 +63,14 @@ pub async fn get_history(t: String) -> Option<Vec<types::Intraday>> {
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
-            Some(cur)
+            return Some(cur)
         }
     }
     None
 }
 
-#[tokio::main]
-pub async fn get_news(t: String) -> Option<news::NewsVec> {
+
+pub fn get_news(t: String) -> Option<news::NewsVec> {
     let url = [
         "https://www.bloomberg.com/markets/api/comparison/news?securityType=",
         &t,
@@ -83,11 +81,10 @@ pub async fn get_news(t: String) -> Option<news::NewsVec> {
 
     if let Ok(body) = simple_get(url) {
         let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
-        if cur != vec![] {
-            Some(cur)
+        if cur.news != vec![] {
+            return Some(cur)
         }
     }
     None
 }
 
-// IND COM CUR US GOV  
