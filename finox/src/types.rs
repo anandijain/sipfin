@@ -3,7 +3,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -163,40 +162,6 @@ pub struct Headline {
     pub text: String,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Collections {
-    pub field_data_collection: Vec<FieldDataCollection>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FieldDataCollection {
-    pub id: String,
-    pub issued_currency: String,
-    pub long_name: String,
-    pub price: String,
-    pub price_change1_day: String,
-    pub percent_change1_day: String,
-    #[serde(rename = "tradingDayCloseUTC")]
-    pub trading_day_close_utc: String,
-    #[serde(rename = "lastUpdateUTC")]
-    pub last_update_utc: String,
-    #[serde(rename = "MEDIA_SECURITY_TYPE")]
-    pub media_security_type: String,
-    #[serde(rename = "MEDIA_SECURITY_SUBTYPE")]
-    pub media_security_subtype: String,
-    pub security_type: String,
-    pub short_name: String,
-    pub commodity_contract_date: String,
-    pub price_date: String,
-    pub last_update_time: String,
-    #[serde(rename = "lastUpdateISO")]
-    pub last_update_iso: String,
-    pub user_time_zone: String,
-    pub market_open: bool,
-    pub commodity_units: Option<String>,
-}
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -212,18 +177,18 @@ pub struct Intraday {
 impl Intraday {
     pub fn to_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
-            for p in self.price.iter() {
-                ret.push(Price::to_record(p));
-            }
-            Ok(ret)
+        for p in self.price.iter() {
+            ret.push(Price::to_record(p));
+        }
+        Ok(ret)
     }
 
     // pub fn write_records(&self, fn:String) -> Result<(), &'static str> {
     //     let recs = self.to_records();
     //     let header: [&'static str; 2] = ["date_time", &self.ticker.to_string()];
-    //     utils::writerecs(fn, header, recs);        
+    //     utils::writerecs(fn, header, recs);
     //     Ok(())
-    // } 
+    // }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
