@@ -68,4 +68,6 @@ def merge_em():
     return df_merged
 
 if __name__ == "__main__":
-    write_plots()
+    df = merge_em()
+    df.to_csv('intraday_merged.csv')
+    print(df)
