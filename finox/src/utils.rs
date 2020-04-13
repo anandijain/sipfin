@@ -43,52 +43,40 @@ pub fn currencies() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-// pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
-//     let symbs = read_tickers("./data/sp500tickers.txt");
-//     let index = symbs
-//         .iter()
-//         .position(|r| r.to_string() == start.to_string())
-//         .unwrap();
+pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
+    let symbs = read_tickers("./data/sp500tickers.txt");
+    let index = symbs
+        .iter()
+        .position(|r| r.to_string() == start.to_string())
+        .unwrap();
 
-//     let todo_symbs = &symbs[index..symbs.len()];
+    let todo_symbs = &symbs[index..symbs.len()];
 
-//     let headlines_fn = "./data/sp500_headlines.csv".to_string();
-//     let metadata_fn = "./data/sp500.csv".to_string();
+    let headlines_fn = "./data/sp500_headlines.csv".to_string();
+    let metadata_fn = "./data/sp500.csv".to_string();
 
-//     if write_header {
-//         let mut meta_wtr = csv::Writer::from_path(&metadata_fn)?;
-//         let mut lines_wtr = csv::Writer::from_path(&headlines_fn)?;
-//         meta_wtr.write_record(&stock_header);
-//         lines_wtr.write_record(&headlines_header);
-//     }
-//     // else {
-//     //     let lines_append = match OpenOptions::new().append(true).open(headlines_fn) {
-//     //         Ok(mut f) => f,
-//     //         Err(e) => panic!("Could not open the file for appendin: {:?}", e),
-//     //     };
-//     //     let meta_append = match OpenOptions::new().append(true).open(metadata_fn) {
-//     //         Ok(mut f) => f,
-//     //         Err(e) => panic!("Could not open the file for appendin: {:?}", e),
-//     //     };
-//     //     let mut meta_wtr = csv::Writer::from_writer(&meta_append);
-//     //     let mut lines_wtr = csv::Writer::from_writer(&lines_append);
-//     // }
+    if write_header {
+        let mut meta_wtr = csv::Writer::from_path(&metadata_fn)?;
+        let mut lines_wtr = csv::Writer::from_path(&headlines_fn)?;
+        meta_wtr.write_record(&stock_header);
+        lines_wtr.write_record(&headlines_header);
 
-//     for s in todo_symbs.iter() {
-//         if let Ok(c) = getters::get_datastrip(s.to_string()) {
-//             if let Ok(headlines) = types::Root::to_headlines(&c[0]) {
-//                 for r in headlines.iter() {
-//                     lines_wtr.write_record(r);
-//                 }
-//             }
-//             let metadata_record = types::Root::to_record(&c[0]);
-//             meta_wtr.write_record(&metadata_record);
-//         }
-//     }
-//     meta_wtr.flush();
-//     lines_wtr.flush();
-//     Ok(())
-// }
+
+    for s in todo_symbs.iter() {
+        if let Ok(c) = getters::get_datastrip(s.to_string()) {
+            if let Ok(headlines) = types::Root::to_headlines(&c[0]) {
+                for r in headlines.iter() {
+                    lines_wtr.write_record(r);
+                }
+            }
+            let metadata_record = types::Root::to_record(&c[0]);
+            meta_wtr.write_record(&metadata_record);
+        }
+    }
+    meta_wtr.flush();
+    lines_wtr.flush();
+    Ok(())
+}
 
 pub fn news() -> Result<(), csv::Error> {
     let write_fn = "./data/news.csv";
@@ -106,21 +94,7 @@ pub fn news() -> Result<(), csv::Error> {
     Ok(())
 }
 
-//todo
-// fn dash() -> Result<(), reqwest::Error> {
-//     let dashboard_root = "https://www.bloomberg.com/markets/api/data-dashboard/tileset/";
-// https://www.bloomberg.com/markets2/api/report/income/EQT/MSFT%3AUS/annual?locale=en&currency=USD
-// https://www.bloomberg.com/markets/api/security/currency/cross-rates/USD,EUR
-// https://www.bloomberg.com/markets2/api/people/2029055
-// https://www.bloomberg.com/markets2/api/peopleForCompany/101743
-// https://www.bloomberg.com/markets/api/sectors/S5INFT%3AIND?locale=en
-// https://www.bloomberg.com/markets2/api/history/MSFT%3AUS/PX_LAST?timeframe=5_YEAR&period=daily&volumePeriod=daily
-// https://www.bloomberg.com/markets2/api/history/CL1%3ACOM/PX_LAST?timeframe=5_YEAR&period=daily&volumePeriod=daily
-// https://www.bloomberg.com/markets/api/comparison/news?securityType=GOVERNMENT_BOND&limit=1000&locale=en
-// anotha SP1:IND,DM1:IND,SX5E:IND,UKX:IND,DAX:IND,NKY:IND,SHCOMP:IND,SPX:IND,RTY:IND,DXY:CUR,USDJPY:CUR,EURUSD:CUR,XAU:CUR,USGG10YR:IND,USGG2YR:IND,LEGATRUU:IND,CL1:COM,CO1:COM
-//     let symbs = vec!["commodities", "futures", "asia", "americas", "europe"];
 
-// }
 pub const stock_header: [&'static str; 15] = [
     "id",
     "short_name",
@@ -155,39 +129,3 @@ pub const news_header: [&'static str; 3] = [
 
 pub const headlines_header: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
-
-
-// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct Collections {
-//     pub field_data_collection: Vec<FieldDataCollection>,
-// }
-
-// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct FieldDataCollection {
-//     pub id: String,
-//     pub issued_currency: String,
-//     pub long_name: String,
-//     pub price: String,
-//     pub price_change1_day: String,
-//     pub percent_change1_day: String,
-//     #[serde(rename = "tradingDayCloseUTC")]
-//     pub trading_day_close_utc: String,
-//     #[serde(rename = "lastUpdateUTC")]
-//     pub last_update_utc: String,
-//     #[serde(rename = "MEDIA_SECURITY_TYPE")]
-//     pub media_security_type: String,
-//     #[serde(rename = "MEDIA_SECURITY_SUBTYPE")]
-//     pub media_security_subtype: String,
-//     pub security_type: String,
-//     pub short_name: String,
-//     pub commodity_contract_date: String,
-//     pub price_date: String,
-//     pub last_update_time: String,
-//     #[serde(rename = "lastUpdateISO")]
-//     pub last_update_iso: String,
-//     pub user_time_zone: String,
-//     pub market_open: bool,
-//     pub commodity_units: Option<String>,
-// }
