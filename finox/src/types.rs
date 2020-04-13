@@ -3,6 +3,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -123,9 +124,9 @@ impl Root {
 
     pub fn to_headlines(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
-        if let Some(prs) = self.press_releases {
+        if let Some(prs) = &self.press_releases {
             for pr in prs.iter() {
-                ret.push(types::PressRelease::to_record(pr));
+                ret.push(PressRelease::to_record(pr));
             }
             Ok(ret)
         } else {
@@ -208,6 +209,23 @@ pub struct Intraday {
     pub volume: Vec<Volume>,
 }
 
+impl Intraday {
+    pub fn to_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
+        let mut ret: Vec<csv::StringRecord> = Vec::new();
+            for p in self.price.iter() {
+                ret.push(Price::to_record(p));
+            }
+            Ok(ret)
+    }
+
+    // pub fn write_records(&self, fn:String) -> Result<(), &'static str> {
+    //     let recs = self.to_records();
+    //     let header: [&'static str; 2] = ["date_time", &self.ticker.to_string()];
+    //     utils::writerecs(fn, header, recs);        
+    //     Ok(())
+    // } 
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Range {
@@ -222,15 +240,15 @@ pub struct Price {
     pub value: f64,
 }
 
+impl Price {
+    pub fn to_record(&self) -> csv::StringRecord {
+        return csv::StringRecord::from(vec![self.date_time.to_string(), self.value.to_string()]);
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Volume {
     pub date_time: String,
     pub value: i64,
-}
-
-impl Price {
-    pub fn to_record(&self) -> Vec<String> {
-        return vec![self.date_time.to_string(), self.value.to_string()];
-    }
 }

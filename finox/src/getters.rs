@@ -2,12 +2,6 @@ extern crate csv;
 extern crate serde;
 
 use std::error::Error;
-use std::fs::OpenOptions;
-use std::{
-    fs::File,
-    io::{prelude::*, BufReader},
-    path::Path,
-};
 use std::{thread, time};
 
 use crate::types;
@@ -42,19 +36,19 @@ pub fn company_to_rec(t: String) -> Result<Vec<csv::StringRecord>, reqwest::Erro
     Ok(ret)
 }
 
-pub fn headlines_to_rec(t: String) -> Result<Vec<csv::StringRecord>, reqwest::Error> {
-    let mut ret: Vec<csv::StringRecord> = Vec::new();
-    if let Ok(res) = get_company(t.to_string()) {
-        for c in res.iter() {
-            if let Ok(recs) = types::PressRelease::to_headlines(pr) {
-                ret.concat(recs)
-            }
-        }
-    } else {
-        println!("oh fuck");
-    }
-    Ok(ret)
-}
+// pub fn headlines_to_rec(t: String) -> Result<Vec<csv::StringRecord>, reqwest::Error> {
+//     let mut ret: Vec<csv::StringRecord> = Vec::new();
+//     if let Ok(res) = get_company(t.to_string()) {
+//         for c in res.iter() {
+//             if let Ok(recs) = types::Root::to_headlines(c) {
+//                     ret.push(recs);
+//             }
+//         }
+//     } else {
+//         println!("oh fuck");
+//     }
+//     Ok(ret)
+// }
 
 #[tokio::main]
 pub async fn get_currency(t: String) -> Result<Vec<types::Intraday>, reqwest::Error> {
@@ -73,31 +67,27 @@ pub async fn get_currency(t: String) -> Result<Vec<types::Intraday>, reqwest::Er
     Ok(cur)
 }
 
-pub fn cur_to_rec(t: String) -> Result<Vec<csv::StringRecord>, reqwest::Error> {
-    let mut ret: Vec<csv::StringRecord> = Vec::new();
-    if let Ok(res) = get_currency(t.to_string()) {
-        for c in res.iter() {
-            for p in c.price.iter() {
-                let rec = csv::StringRecord::from(types::Price::to_record(p));
-                ret.push(rec);
-            }
-        }
-    } else {
-        println!("oh fuck");
-    }
-    Ok(ret)
-}
+// pub fn currency_records(t: String) -> Result<Vec<csv::StringRecord>, reqwest::Error> {
+//     let mut ret: Vec<csv::StringRecord> = Vec::new();
+//     if let Ok(res) = get_currency(t.to_string()) {
+//         let recs = types::Intraday::to_records(res[0])
+//     } else {
+//         Err("fuck")
+//     }
+//     Ok(recs)
+// }
 
 // prob need to depr
 pub fn get_csv(
     get_fn: fn(String) -> Result<Vec<csv::StringRecord>, reqwest::Error>,
-    header: Vec<String>,
+    header: &[&str],
     symbols: Vec<String>,
     write_fn: String,
     ms_delay: u64,
 ) -> Result<(), Box<dyn Error>> {
+    
     let mut wtr = csv::Writer::from_path(write_fn)?;
-    wtr.write_record(&header);
+    wtr.write_record(header);
 
     let delay = time::Duration::from_millis(ms_delay);
 
