@@ -40,8 +40,14 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
         .collect()
 }
 
-pub fn currencies_intraday() -> Result<(), reqwest::Error> {
-    for s1 in CURRENCY_SYMBOLS.iter() {
+pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
+    let index = CURRENCY_SYMBOLS
+    .iter()
+    .position(|r| r.to_string() == start.to_string())
+    .unwrap();
+
+    let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
+    for s1 in todo_symbs.iter() {
         for s2 in CURRENCY_SYMBOLS.iter() {
             if s1 == s2 {
                 continue;
@@ -49,6 +55,33 @@ pub fn currencies_intraday() -> Result<(), reqwest::Error> {
             let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
             if let Some(curs) = getters::get_intraday(symb.to_string()) {
                 let prices_fn = format!("./data/{}_intraday_prices.csv", symb.to_string());
+                if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
+                    writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
+                }
+            } else {
+                println!("currency route missing: {}", symb.to_string());
+                continue;
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn currencies_history(start: String) -> Result<(), reqwest::Error> {
+    let index = CURRENCY_SYMBOLS
+    .iter()
+    .position(|r| r.to_string() == start.to_string())
+    .unwrap();
+
+    let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
+    for s1 in todo_symbs.iter() {
+        for s2 in CURRENCY_SYMBOLS.iter() {
+            if s1 == s2 {
+                continue;
+            }
+            let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
+            if let Some(curs) = getters::get_history(symb.to_string()) {
+                let prices_fn = format!("./data/{}_history_prices.csv", symb.to_string());
                 if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
                     writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
                 }
@@ -85,22 +118,22 @@ pub fn commodities_prices(start: String) -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-pub fn commodities_intraday(start: String) -> Result<(), reqwest::Error> {
-    let index = COMMODITIES_SYMBOLS
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
+pub fn commodities_intraday() -> Result<(), reqwest::Error> {
+    // let index = COMMODITIES_SYMBOLS
+    //     .iter()
+    //     .position(|r| r.to_string() == start.to_string())
+    //     .unwrap();
 
-    let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
-    for s in todo_symbs.iter() {
+    // let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
+    for s in COMMODITIES_SYMBOLS.iter() {
         if let Some(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
             if let Ok(prices) = types::Intraday::price_records(&hist[0]) {
-                let prices_fn = format!("./data/{}_prices.csv", s.to_string());
+                let prices_fn = format!("./data/{}_intraday_prices.csv", s.to_string());
                 let price_col = format!("{}_price", &s.to_string());
                 writerecs(prices_fn, &["date_time", &price_col], prices);
             }
             if let Ok(volume) = types::Intraday::volume_records(&hist[0]) {
-                let volume_fn = format!("./data/{}_volume.csv", s.to_string());
+                let volume_fn = format!("./data/{}_intraday_volume.csv", s.to_string());
                 let vol_col = format!("{}_volume", &s.to_string());
                 writerecs(volume_fn, &["date_time", &vol_col], volume);
             }

@@ -5,7 +5,7 @@ use crate::types;
 use crate::news;
 use std::{thread, time};
 
-pub const DELAY: std::time::Duration = time::Duration::from_millis(1000);
+pub const DELAY: std::time::Duration = time::Duration::from_millis(10);
 
 #[tokio::main]
 pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {

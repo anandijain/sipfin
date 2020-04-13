@@ -1,7 +1,8 @@
 import bs4
 import pandas as pd
 import requests
-
+import glob
+import matplotlib.pyplot as plt
 def page(link: str) -> bs4.BeautifulSoup:
     """
 
@@ -32,5 +33,23 @@ def commodities():
         dfs.append(get_dfs(url))
     return dfs  
 
+def write_plots():
+    fns = glob.glob('/home/sippycups/programming/repos/sipfin/finox/data/**intraday_prices.csv')
+    dfs = [pd.read_csv(fn) for fn in fns]
+    dfs = convert_dts(dfs, 'date_time')
+    for df in dfs:
+        df.plot(x='date_time', y=df.columns[1])
+        print(df.columns[1])
+        plt.savefig(f'{df.columns[1]}_intraday.png', dpi=300)
+
+
+def convert_dts(dfs, colname):
+    for df in dfs:
+        df[colname] = pd.to_datetime(df[colname])
+    return dfs
+
 def col_to_txt(df, col:str, fn:str):
     l = df[[col]].to_csv(index=False, sep='\n')
+
+if __name__ == "__main__":
+    write_plots()
