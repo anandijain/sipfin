@@ -201,10 +201,39 @@ pub fn stock_prices(start: String) -> Result<(), reqwest::Error> {
     for s in todo_symbs.iter() {
         if let Some(hist) = getters::get_history(format!("{}%3AUS", s.to_string())) {
             if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
-                let write_fn = format!("./data/{}.csv", s.to_string());
+                let write_fn = format!("./data/{}_stock_intraday_price.csv", s.to_string());
                 let price_col = format!("{}_price", &s.to_string());
+                writerecs(write_fn, &["date_time", &price_col], recs);
+            }
+            if let Ok(recs) = types::Intraday::volume_records(&hist[0]) {
+                let write_fn = format!("./data/{}_stock_intraday_vol.csv", s.to_string());
                 let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(write_fn, &["date_time", &price_col, &vol_col], recs);
+                writerecs(write_fn, &["date_time", &vol_col], recs);
+            }
+        }
+    }
+    Ok(())
+}
+pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
+    let symbs = read_tickers("./data/sp500tickers.txt");
+    let index = symbs
+        .iter()
+        .position(|r| r.to_string() == start.to_string())
+        .unwrap();
+
+    let todo_symbs = &symbs[index..symbs.len()];
+    for s in todo_symbs.iter() {
+        let symb = format!("{}%3AUS", s.to_string());
+        if let Some(hist) = getters::get_intraday(symb.to_string()) {
+            if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
+                let write_fn = format!("./data/{}_stock_intraday_price.csv", s.to_string());
+                let price_col = format!("{}_price", &s.to_string());
+                writerecs(write_fn, &["date_time", &price_col], recs);
+            }
+            if let Ok(recs) = types::Intraday::volume_records(&hist[0]) {
+                let write_fn = format!("./data/{}_stock_intraday_vol.csv", s.to_string());
+                let vol_col = format!("{}_volume", &s.to_string());
+                writerecs(write_fn, &["date_time", &vol_col], recs);
             }
         }
     }

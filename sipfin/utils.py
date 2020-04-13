@@ -34,7 +34,8 @@ def commodities():
     return dfs  
 
 def write_plots():
-    fns = glob.glob('/home/sippycups/programming/repos/sipfin/finox/data/**intraday_prices.csv')
+    fns = glob.glob('/home/sippycups/programming/repos/sipfin/finox/data/**stock_intraday*.csv')
+    print(fns)
     dfs = [pd.read_csv(fn) for fn in fns]
     dfs = convert_dts(dfs, 'date_time')
     for df in dfs:
