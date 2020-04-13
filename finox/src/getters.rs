@@ -1,8 +1,6 @@
 extern crate csv;
 extern crate serde;
 
-use std::error::Error;
-
 use crate::types;
 use crate::news;
 use std::{thread, time};

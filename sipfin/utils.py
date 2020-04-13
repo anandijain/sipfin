@@ -22,5 +22,15 @@ def sp500_df() -> pd.DataFrame:
     return get_dfs('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0][0]
 
 
+def commodities():
+    root = 'https://www.bloomberg.com/markets/commodities'
+    p = page(root)
+    group = p.find('ul', {'class': 'group'})
+    urls = [a['href'] for a in group.find_all('a')]
+    dfs = []
+    for url in urls:
+        dfs.append(get_dfs(url))
+    return dfs  
+
 def col_to_txt(df, col:str, fn:str):
     l = df[[col]].to_csv(index=False, sep='\n')

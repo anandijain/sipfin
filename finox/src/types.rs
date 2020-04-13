@@ -167,9 +167,9 @@ pub struct Headline {
 #[serde(rename_all = "camelCase")]
 pub struct Intraday {
     pub ticker: String,
-    pub previous_closing_price_one_trading_day_ago: f64,
+    pub previous_closing_price_one_trading_day_ago: ::serde_json::Value,
     pub open_price: ::serde_json::Value,
-    pub range: Range,
+    pub range: Option<Range>,
     pub price: Vec<Price>,
     pub volume: Vec<Volume>,
 }
@@ -177,8 +177,16 @@ pub struct Intraday {
 impl Intraday {
     pub fn to_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
-        for p in self.price.iter() {
-            ret.push(Price::to_record(p));
+        //uhh
+        assert_eq!(self.price.len(), self.volume.len());
+        
+        for i in 0..self.price.len() {
+            let rec = [
+                self.price[i].date_time.to_string(),
+                self.price[i].value.to_string(),
+                self.volume[i].value.to_string(),
+            ];
+            ret.push(csv::StringRecord::from(rec.to_vec()));
         }
         Ok(ret)
     }
