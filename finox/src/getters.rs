@@ -54,7 +54,7 @@ pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
 }
 
 #[tokio::main]
-pub async fn get_history(t: String) -> Result<Vec<types::Intraday>, reqwest::Error> {
+pub async fn get_history(t: String) -> Option<Vec<types::Intraday>> {
     let url = [
         "https://www.bloomberg.com/markets2/api/history/",
         &t,
@@ -62,17 +62,17 @@ pub async fn get_history(t: String) -> Result<Vec<types::Intraday>, reqwest::Err
     ]
     .concat();
     println!("{}", url);
-    let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
-    let client = reqwest::Client::builder().user_agent(ua).build()?;
-    let res = client.get(&url).send().await?;
-    let body = res.text().await?;
-    let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-    thread::sleep(DELAY);
-    Ok(cur)
+    if let Ok(body) = simple_get(url) {
+        let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
+        if cur != vec![] {
+            Some(cur)
+        }
+    }
+    None
 }
 
 #[tokio::main]
-pub async fn get_news(t: String) -> Result<news::NewsVec, reqwest::Error> {
+pub async fn get_news(t: String) -> Option<news::NewsVec> {
     let url = [
         "https://www.bloomberg.com/markets/api/comparison/news?securityType=",
         &t,
@@ -80,13 +80,14 @@ pub async fn get_news(t: String) -> Result<news::NewsVec, reqwest::Error> {
     ]
     .concat();
     println!("{}", url);
-    let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
-    let client = reqwest::Client::builder().user_agent(ua).build()?;
-    let res = client.get(&url).send().await?;
-    let body = res.text().await?;
-    let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
-    thread::sleep(DELAY);
-    Ok(cur)
+
+    if let Ok(body) = simple_get(url) {
+        let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
+        if cur != vec![] {
+            Some(cur)
+        }
+    }
+    None
 }
 
 // IND COM CUR US GOV  
