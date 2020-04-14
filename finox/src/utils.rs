@@ -240,6 +240,19 @@ pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
     Ok(())
 }
 
+pub fn hs_and_st() -> Result<(), reqwest::Error> {
+    let urls = vec!["https://comtrade.un.org/Data/cache/classificationHS.json",
+     "https://comtrade.un.org/Data/cache/classificationST.json"];
+    for url in urls.iter() {
+        if let Ok(body) = getters::simple_get(url.to_string()) {
+            let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
+            
+        }
+
+    }
+    getters::simple_get(st_root);
+}
+
 pub const STOCK_HEADER: [&'static str; 15] = [
     "id",
     "short_name",

@@ -6,3 +6,4 @@ __pycache__/
 *.png
 sipfin/config.py
 *.csv
+*.json
