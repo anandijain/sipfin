@@ -1,7 +1,7 @@
 using Plots, CSV, DataFrames, Glob, Dates
 using Statistics, StatsBase, Dates
 
-fns = Glob.glob("*stock_history*.csv*", "./finox/data/")
+fns = Glob.glob("*yf_cur.csv*", "./finox/data/")
 dfs = CSV.read.(fns)
 
 
@@ -25,6 +25,7 @@ ndf.date_time
 
 plot(ndf.date_time, [df.AAPL_price, df.AAPL_volume])
 
+df = join(dfs..., on=:t, makeunique=true)
 df = CSV.read("history_merged.csv")
 
 for cn in colnames

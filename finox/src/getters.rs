@@ -3,12 +3,14 @@ extern crate serde;
 
 use crate::types;
 use crate::news;
+use crate::yf;
 use std::{thread, time};
 
 pub const DELAY: std::time::Duration = time::Duration::from_millis(10);
 
 #[tokio::main]
 pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
+    println!("{}", url);
     let ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36".to_string();
     let client = reqwest::Client::builder().user_agent(ua).build()?;
     let res = client.get(&url).send().await?;
@@ -24,7 +26,6 @@ pub fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
         "%3AUS",
     ]
     .concat();
-    println!("{}", url);
     if let Ok(body) = simple_get(url) {
         let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
         if company != vec![] {
@@ -41,7 +42,6 @@ pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
         "?days=10&interval=0&volumeInterval=0",
     ]
     .concat();
-    println!("{}", url);
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
@@ -59,7 +59,6 @@ pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
         "/PX_LAST?timeframe=5_YEAR&period=daily&volumePeriod=daily",
     ]
     .concat();
-    println!("{}", url);
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
@@ -77,7 +76,6 @@ pub fn get_news(t: String) -> Option<news::NewsVec> {
         "&limit=1000",
     ]
     .concat();
-    println!("{}", url);
 
     if let Ok(body) = simple_get(url) {
         let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
@@ -88,3 +86,35 @@ pub fn get_news(t: String) -> Option<news::NewsVec> {
     None
 }
 
+pub fn yf(t: String) -> Option<Vec<Vec<String>>> {
+    let url = [
+        "https://query1.finance.yahoo.com/v8/finance/chart/",
+        &t,
+        "?region=US&range=1d"
+        ].concat();
+    let write_fn = format!("{}_yf.csv", t.to_string());
+    if let Ok(body) = simple_get(url) {
+        let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
+        return Some(yf::Root::to_records(&ohlcv))
+    }
+    // let yfroot: yf::Root = reqwest::Client::new().user_agent(ua).get(url.to_string()).json(&yfroot).await?.json().await?;
+    return None
+}
+pub fn yf_cur(t: String) -> Option<Vec<Vec<String>>> {
+    let url = [
+        "https://query1.finance.yahoo.com/v8/finance/chart/",
+        &t, 
+        "=X?symbol=",
+        &t,
+        "&range=1d&interval=1m"
+        ].concat();
+
+
+    let write_fn = format!("{}_yf_cur.csv", t.to_string());
+    if let Ok(body) = simple_get(url) {
+        let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
+        return Some(yf::Root::to_records(&ohlcv))
+    }
+    // let yfroot: yf::Root = reqwest::Client::new().user_agent(ua).get(url.to_string()).json(&yfroot).await?.json().await?;
+    return None
+}

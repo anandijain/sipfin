@@ -9,9 +9,9 @@ use std::{
 use crate::getters;
 use crate::news;
 use crate::types;
-use crate::uncomtrade;
+use crate::yf;
 
-// IND COM CUR US GOV  
+// IND COM CUR US GOV
 pub enum Security {
     IND(String),
     COM(String),
@@ -43,9 +43,9 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
 
 pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
     let index = CURRENCY_SYMBOLS
-    .iter()
-    .position(|r| r.to_string() == start.to_string())
-    .unwrap();
+        .iter()
+        .position(|r| r.to_string() == start.to_string())
+        .unwrap();
 
     let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
     for s1 in todo_symbs.iter() {
@@ -70,9 +70,9 @@ pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
 
 pub fn currencies_history(start: String) -> Result<(), reqwest::Error> {
     let index = CURRENCY_SYMBOLS
-    .iter()
-    .position(|r| r.to_string() == start.to_string())
-    .unwrap();
+        .iter()
+        .position(|r| r.to_string() == start.to_string())
+        .unwrap();
 
     let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
     for s1 in todo_symbs.iter() {
@@ -241,15 +241,59 @@ pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-pub fn hs_and_st() -> Result<(), reqwest::Error> {
-    let url = "https://comtrade.un.org/Data/cache/classificationST.json";
-    let write_fn = "st.csv";
-    //  "https://comtrade.un.org/Data/cache/classificationST.json"];
-    // for url in urls.iter() {
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let res: uncomtrade::ResMeta = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = uncomtrade::ResMeta::to_records(&res);
-        writerecs(write_fn.to_string(), &["id", "text", "parent"], recs);
+// pub fn hs_and_st() -> Result<(), reqwest::Error> {
+//     let url = "https://comtrade.un.org/Data/cache/classificationST.json";
+//     let write_fn = "st.csv";
+//     //  "https://comtrade.un.org/Data/cache/classificationST.json"];
+//     // for url in urls.iter() {
+//     if let Ok(body) = getters::simple_get(url.to_string()) {
+//         let res: uncomtrade::ResMeta = serde_json::from_str(&body.to_string()).unwrap();
+//         let recs = uncomtrade::ResMeta::to_records(&res);
+//         writerecs(write_fn.to_string(), &["id", "text", "parent"], recs);
+//     }
+//     Ok(())
+// }
+
+pub fn yf_today() -> Result<(), reqwest::Error> {
+    let symbs = read_tickers("./data/sp500tickers_yf.txt");
+    for s in symbs.iter() {
+        if let Some(oh) = getters::yf(s.to_string()) {
+            let mut recs: Vec<csv::StringRecord> =
+                oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
+            writerecs(
+                format!("./data/{}_yf_sp500.csv", s.to_string()),
+                &YF_HEADER,
+                recs,
+            );
+        } else {
+            println!("OH FUCK {}", s.to_string());
+        }
+    }
+    Ok(())
+}
+pub fn yf_cur_today() -> Result<(), reqwest::Error> {
+    // let index = CURRENCY_SYMBOLS
+    //     .iter()
+    //     .position(|r| r.to_string() == start.to_string())
+    //     .unwrap();
+
+    // let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
+    for s1 in CURRENCY_SYMBOLS_YF.iter() {
+        for s2 in CURRENCY_SYMBOLS_YF.iter() {
+            if s1 == s2 {
+                continue;
+            }
+            let symb = format!("{}{}", s1.to_string(), s2.to_string());
+            if let Some(oh) = getters::yf_cur(symb.to_string()) {
+                let mut recs: Vec<csv::StringRecord> =
+                    oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
+                writerecs(
+                    format!("./data/{}_yf_cur.csv", symb.to_string()),
+                    &YF_HEADER,
+                    recs,
+                );
+            } 
+        }
     }
     Ok(())
 }
@@ -278,6 +322,9 @@ pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
     "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
     "THB",
 ];
+pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = [
+    "USD", "EUR", "JPY", "GBP", "AUD", "CAD"
+];
 
 pub const NEWS_SYMBOLS: [&'static str; 5] = [
     "GOVERNMENT_BOND",
@@ -297,3 +344,5 @@ pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
 pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 
 pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
+
+pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
