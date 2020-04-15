@@ -9,6 +9,7 @@ use std::{
 use crate::getters;
 use crate::news;
 use crate::types;
+use crate::uncomtrade;
 
 // IND COM CUR US GOV  
 pub enum Security {
@@ -201,12 +202,12 @@ pub fn stock_prices(start: String) -> Result<(), reqwest::Error> {
     for s in todo_symbs.iter() {
         if let Some(hist) = getters::get_history(format!("{}%3AUS", s.to_string())) {
             if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_intraday_price.csv", s.to_string());
+                let write_fn = format!("./data/{}_stock_history_price.csv", s.to_string());
                 let price_col = format!("{}_price", &s.to_string());
                 writerecs(write_fn, &["date_time", &price_col], recs);
             }
             if let Ok(recs) = types::Intraday::volume_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_intraday_vol.csv", s.to_string());
+                let write_fn = format!("./data/{}_stock_history_vol.csv", s.to_string());
                 let vol_col = format!("{}_volume", &s.to_string());
                 writerecs(write_fn, &["date_time", &vol_col], recs);
             }
@@ -241,16 +242,16 @@ pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
 }
 
 pub fn hs_and_st() -> Result<(), reqwest::Error> {
-    let urls = vec!["https://comtrade.un.org/Data/cache/classificationHS.json",
-     "https://comtrade.un.org/Data/cache/classificationST.json"];
-    for url in urls.iter() {
-        if let Ok(body) = getters::simple_get(url.to_string()) {
-            let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-            
-        }
-
+    let url = "https://comtrade.un.org/Data/cache/classificationST.json";
+    let write_fn = "st.csv";
+    //  "https://comtrade.un.org/Data/cache/classificationST.json"];
+    // for url in urls.iter() {
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let res: uncomtrade::ResMeta = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = uncomtrade::ResMeta::to_records(&res);
+        writerecs(write_fn.to_string(), &["id", "text", "parent"], recs);
     }
-    getters::simple_get(st_root);
+    Ok(())
 }
 
 pub const STOCK_HEADER: [&'static str; 15] = [

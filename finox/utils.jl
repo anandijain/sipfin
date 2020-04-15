@@ -1,27 +1,33 @@
 using Plots, CSV, DataFrames, Glob, Dates
-using Statistics, StatsBase
+using Statistics, StatsBase, Dates
 
-fns = Glob.glob("USD*", "./data/")
+fns = Glob.glob("*stock_history*.csv*", "./finox/data/")
 dfs = CSV.read.(fns)
 
-# df = dfs[1]
-# dtfmt = DateFormat("Y-m-dTH:M:SZ")
-# for df in dfs
-#     df.date_time = Date.(df.date_time, dtfmt)
-# end
+
 norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
-arrs = [df[:, 2] for df in dfs][1:end-3]
-arrs = norm_arr.(arrs)
-# arrs = [arr .- arr[1] for arr in arrs]
+norm_mat(m::AbstractMatrix) = hcat(map(a -> (a .- mean(a)) ./ std(a), eachcol(m))...)
+norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 
-curs = DataFrame(names.(dfs))[2, :]
-curs = string.(copy(Array(curs)))[1:end-3]
 
-x = plot(arrs[1], labels=curs[1], size=(1600,1600))
-for i in 2:length(arrs)
-    plot!(x, arrs[i], label=curs[i])
+df = CSV.read("../intraday_inner.csv")
+
+pv = df[:, 3:end]
+df = df[:, 2:end]
+ndf = norm_df(pv)
+# df = dfs[1]
+dtfmt = DateFormat("Y-m-d H:M:S+H:S")
+ndf.date_time = Date.(ndf.date_time, dtfmt)
+
+colnames = names(ndf)
+colnames = names(df)[2:end]
+ndf.date_time
+
+plot(ndf.date_time, [df.AAPL_price, df.AAPL_volume])
+
+df = CSV.read("history_merged.csv")
+
+for cn in colnames
+    display(plot(df.date_time, df[:, cn], label=cn))
+    print(cn)
 end
-display(x)
-# for i in 1:length(arrs)
-#     plot!(arrs[i], label=curs[i])
-# end
