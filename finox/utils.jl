@@ -31,3 +31,4 @@ for cn in colnames
     display(plot(df.date_time, df[:, cn], label=cn))
     print(cn)
 end
+
