@@ -271,13 +271,7 @@ pub fn yf_today() -> Result<(), reqwest::Error> {
     }
     Ok(())
 }
-pub fn yf_cur_today() -> Result<(), reqwest::Error> {
-    // let index = CURRENCY_SYMBOLS
-    //     .iter()
-    //     .position(|r| r.to_string() == start.to_string())
-    //     .unwrap();
-
-    // let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
+pub fn yf_cur() -> Result<(), reqwest::Error> {
     for s1 in CURRENCY_SYMBOLS_YF.iter() {
         for s2 in CURRENCY_SYMBOLS_YF.iter() {
             if s1 == s2 {
@@ -292,7 +286,31 @@ pub fn yf_cur_today() -> Result<(), reqwest::Error> {
                     &YF_HEADER,
                     recs,
                 );
-            } 
+            }
+        }
+    }
+    Ok(())
+}
+pub fn yf_com() -> Result<(), reqwest::Error> {
+    for s in COMMODITIES_SYMBOLS_YF.iter() {
+        if let Some(oh) = getters::yf_com(s.to_string()) {
+            let mut headers: Vec<String> = vec!["t".to_string()];
+            
+            for elt in YF_HEADER[1..YF_HEADER.len()].iter(){
+                headers.push(format!("{}_{}", elt.to_string(), s.to_string()));
+            }
+
+            let file_name = format!("./data/{}_yf_com.csv", s.to_string());
+            if let Ok(mut wtr) = csv::Writer::from_path(file_name.to_string()){
+                wtr.write_record(headers);
+                let mut recs: Vec<csv::StringRecord> =
+                    oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
+               for r in recs.iter(){
+                   wtr.write_record(r);
+                }
+                wtr.flush();
+            }
+
         }
     }
     Ok(())
@@ -322,9 +340,7 @@ pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
     "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
     "THB",
 ];
-pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = [
-    "USD", "EUR", "JPY", "GBP", "AUD", "CAD"
-];
+pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD"];
 
 pub const NEWS_SYMBOLS: [&'static str; 5] = [
     "GOVERNMENT_BOND",
@@ -340,9 +356,14 @@ pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
     "S%201", "SM1", "BO1", "RS1", "KC1", "SB1", "JO1", "CT1", "OL1", "LB1", "JN1", "DL1", "FC1",
     "LH1",
 ];
+pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
+    "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA",
+    "CL", "HO", "NG", "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
+];
 
 pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 
 pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
 pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
+

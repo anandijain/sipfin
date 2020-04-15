@@ -1,8 +1,8 @@
 extern crate csv;
 extern crate serde;
 
-use crate::types;
 use crate::news;
+use crate::types;
 use crate::yf;
 use std::{thread, time};
 
@@ -29,7 +29,7 @@ pub fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
     if let Ok(body) = simple_get(url) {
         let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
         if company != vec![] {
-            return Some(company)
+            return Some(company);
         }
     }
     None
@@ -45,12 +45,11 @@ pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
-            return Some(cur)
+            return Some(cur);
         }
     }
     None
 }
-
 
 pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
     let url = [
@@ -62,12 +61,11 @@ pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
     if let Ok(body) = simple_get(url) {
         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
         if cur != vec![] {
-            return Some(cur)
+            return Some(cur);
         }
     }
     None
 }
-
 
 pub fn get_news(t: String) -> Option<news::NewsVec> {
     let url = [
@@ -80,7 +78,7 @@ pub fn get_news(t: String) -> Option<news::NewsVec> {
     if let Ok(body) = simple_get(url) {
         let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
         if cur.news != vec![] {
-            return Some(cur)
+            return Some(cur);
         }
     }
     None
@@ -90,31 +88,47 @@ pub fn yf(t: String) -> Option<Vec<Vec<String>>> {
     let url = [
         "https://query1.finance.yahoo.com/v8/finance/chart/",
         &t,
-        "?region=US&range=1d"
-        ].concat();
-    let write_fn = format!("{}_yf.csv", t.to_string());
+        "?region=US&range=1d&interval=1m",
+    ]
+    .concat();
+
     if let Ok(body) = simple_get(url) {
         let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(yf::Root::to_records(&ohlcv))
+        return Some(yf::Root::to_records(&ohlcv));
     }
     // let yfroot: yf::Root = reqwest::Client::new().user_agent(ua).get(url.to_string()).json(&yfroot).await?.json().await?;
-    return None
+    return None;
 }
 pub fn yf_cur(t: String) -> Option<Vec<Vec<String>>> {
     let url = [
         "https://query1.finance.yahoo.com/v8/finance/chart/",
-        &t, 
+        &t,
         "=X?symbol=",
         &t,
-        "&range=1d&interval=1m"
-        ].concat();
+        "&range=1d&interval=1m",
+    ]
+    .concat();
 
-
-    let write_fn = format!("{}_yf_cur.csv", t.to_string());
     if let Ok(body) = simple_get(url) {
         let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(yf::Root::to_records(&ohlcv))
+        return Some(yf::Root::to_records(&ohlcv));
     }
-    // let yfroot: yf::Root = reqwest::Client::new().user_agent(ua).get(url.to_string()).json(&yfroot).await?.json().await?;
-    return None
+    return None;
+}
+
+pub fn yf_com(t: String) -> Option<Vec<Vec<String>>> {
+    let url = [
+        "https://query1.finance.yahoo.com/v8/finance/chart/",
+        &t,
+        "=F?symbol=",
+        &t,
+        "%3DF&range=1d&interval=1m",
+    ]
+    .concat();
+
+    if let Ok(body) = simple_get(url) {
+        let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
+        return Some(yf::Root::to_records(&ohlcv));
+    }
+    return None;
 }

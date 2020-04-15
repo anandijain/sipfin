@@ -18,7 +18,7 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::commodities_prices("LMCADS03".to_string())
     // utils::stock_intraday("AMGN".to_string())
     // utils::hs_and_st()
-    utils::yf_cur_today();
+    utils::yf_com();
 
     Ok(())
 }

@@ -26,7 +26,7 @@ def sp500_df() -> pd.DataFrame:
     return get_dfs('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0][0]
 
 
-def commodities():
+def bloomberg_commodities():
     root = 'https://www.bloomberg.com/markets/commodities'
     p = page(root)
     group = p.find('ul', {'class': 'group'})
@@ -67,7 +67,13 @@ def merge_em():
                                                     how='outer'), dfs)
     return df_merged
 
+def yf_com() -> pd.DataFrame:
+    root = 'https://finance.yahoo.com/commodities'
+    df = get_dfs(root)[0][0]
+    return df
+
 if __name__ == "__main__":
-    df = merge_em()
-    df.to_csv('intraday_merged.csv')
-    print(df)
+    # df = merge_em()
+    # df.to_csv('intraday_merged.csv')
+    df = yf_com()
+    print(df.Symbol.to_list())

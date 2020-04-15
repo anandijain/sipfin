@@ -28,10 +28,6 @@ impl Root {
         }
         return ret;
     }
-
-    // pub fn cur_record(&self) -> Vec<String> {
-
-    // }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -72,8 +68,8 @@ pub struct Meta {
     pub previous_close: f64,
     pub scale: i64,
     pub price_hint: i64,
-    pub current_trading_period: CurrentTradingPeriod,
-    pub trading_periods: Vec<Vec<TradingPeriod>>,
+    pub current_trading_period: Option<CurrentTradingPeriod>,
+    pub trading_periods: Option<Vec<Vec<TradingPeriod>>>,
     pub data_granularity: String,
     pub range: String,
     pub valid_ranges: Vec<String>,
@@ -132,6 +128,7 @@ pub struct Indicators {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Quote {
+    // todo option<vec<option<f64>>>
     pub open: Vec<Option<f64>>,
     pub close: Vec<Option<f64>>,
     pub volume: Vec<Option<i64>>,
