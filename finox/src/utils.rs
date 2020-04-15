@@ -1,9 +1,13 @@
+extern crate chrono;
 extern crate csv;
+use chrono::{Datelike, Timelike, Utc};
+
 use std::{
     error::Error,
     fs::{File, OpenOptions},
     io::{prelude::*, BufReader},
     path::Path,
+    time::Instant,
 };
 
 use crate::getters;
@@ -39,6 +43,19 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
     buf.lines()
         .map(|l| l.expect("Could not parse line"))
         .collect()
+}
+
+pub fn simppath(s: String, sfx: String) -> String {
+    //sfx enum x, f, us
+    let now = Utc::now();
+    return format!(
+        "./data/{}:{}_{}_{}_{}.csv",
+        s.to_string(),
+        sfx.to_string(),
+        now.year(),
+        now.month(),
+        now.day()
+    );
 }
 
 pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
@@ -254,35 +271,42 @@ pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
 //     Ok(())
 // }
 
-pub fn yf_today() -> Result<(), reqwest::Error> {
+
+pub fn yf_symb(s: String) -> Option<Vec<csv::StringRecord>> {
+    if let Some(tohlcv) = getters::yf_US(s.to_string()) {
+        let mut recs: Vec<csv::StringRecord> = tohlcv
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        return Some(recs);
+    }
+    return None;
+}
+
+pub fn yf_US() -> Result<(), reqwest::Error> {
+    let t1 = Instant::now();
     let symbs = read_tickers("./data/sp500tickers_yf.txt");
     for s in symbs.iter() {
-        if let Some(oh) = getters::yf(s.to_string()) {
-            let mut recs: Vec<csv::StringRecord> =
-                oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
-            writerecs(
-                format!("./data/{}_yf_sp500.csv", s.to_string()),
-                &YF_HEADER,
-                recs,
-            );
-        } else {
-            println!("OH FUCK {}", s.to_string());
+        if let Some(recs) = yf_symb(s.to_string()) {
+            writerecs(simppath(s.to_string(), "US".to_string()), &YF_HEADER, recs);
         }
     }
+    println!("{}", t1.elapsed().as_secs());
     Ok(())
 }
-pub fn yf_cur() -> Result<(), reqwest::Error> {
+
+pub fn yf_X() -> Result<(), reqwest::Error> {
     for s1 in CURRENCY_SYMBOLS_YF.iter() {
         for s2 in CURRENCY_SYMBOLS_YF.iter() {
             if s1 == s2 {
                 continue;
             }
             let symb = format!("{}{}", s1.to_string(), s2.to_string());
-            if let Some(oh) = getters::yf_cur(symb.to_string()) {
+            if let Some(oh) = getters::yf_X(symb.to_string()) {
                 let mut recs: Vec<csv::StringRecord> =
                     oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
                 writerecs(
-                    format!("./data/{}_yf_cur.csv", symb.to_string()),
+                    simppath(symb.to_string(), "X".to_string()),
                     &YF_HEADER,
                     recs,
                 );
@@ -291,26 +315,23 @@ pub fn yf_cur() -> Result<(), reqwest::Error> {
     }
     Ok(())
 }
-pub fn yf_com() -> Result<(), reqwest::Error> {
+pub fn yf_F() -> Result<(), reqwest::Error> {
     for s in COMMODITIES_SYMBOLS_YF.iter() {
-        if let Some(oh) = getters::yf_com(s.to_string()) {
+        if let Some(oh) = getters::yf_F(s.to_string()) {
             let mut headers: Vec<String> = vec!["t".to_string()];
-            
-            for elt in YF_HEADER[1..YF_HEADER.len()].iter(){
+
+            for elt in YF_HEADER[1..YF_HEADER.len()].iter() {
                 headers.push(format!("{}_{}", elt.to_string(), s.to_string()));
             }
-
-            let file_name = format!("./data/{}_yf_com.csv", s.to_string());
-            if let Ok(mut wtr) = csv::Writer::from_path(file_name.to_string()){
+            if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "F".to_string())) {
                 wtr.write_record(headers);
                 let mut recs: Vec<csv::StringRecord> =
                     oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
-               for r in recs.iter(){
-                   wtr.write_record(r);
+                for r in recs.iter() {
+                    wtr.write_record(r);
                 }
                 wtr.flush();
             }
-
         }
     }
     Ok(())
@@ -357,8 +378,8 @@ pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
     "LH1",
 ];
 pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
-    "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA",
-    "CL", "HO", "NG", "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
+    "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",
+    "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
 ];
 
 pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
@@ -366,4 +387,3 @@ pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
 pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
-

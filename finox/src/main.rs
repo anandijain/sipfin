@@ -3,7 +3,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate reqwest;
-
+extern crate chrono;
 mod getters;
 mod types;
 mod news;
@@ -18,7 +18,10 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::commodities_prices("LMCADS03".to_string())
     // utils::stock_intraday("AMGN".to_string())
     // utils::hs_and_st()
-    utils::yf_com();
+    
+    utils::yf_US();
+    utils::yf_X();
+    utils::yf_F();
 
     Ok(())
 }

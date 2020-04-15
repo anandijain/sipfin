@@ -71,3 +71,74 @@ usdtry
 //     pub market_open: bool,
 //     pub commodity_units: Option<String>,
 // }
+
+
+
+// match 
+// US(s) => vec![s, "%3AUS"].join(""),
+// F(s) => vec![s, "%3ACOM"].join("")
+
+// pub fn bloomberg_url(s: Security) -> String {
+//     let root = "https://www.bloomberg.com/";
+//     let prefix = "markets2/api/datastrip/";
+
+//     let intra_prefix = "/markets2/api/intraday/";
+//     let intra_sfx = "?days=10&interval=0&volumeInterval=0";
+    
+//     let hist_prefix = "markets2/api/history/";
+//     "&limit=1000"
+//     let news_prefix"/markets/api/comparison/news?securityType="
+//     let news_sfx "/PX_LAST?timeframe=5_YEAR&period=daily&volumePeriod=daily"
+
+//     match s {
+//         Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
+//         Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
+//         Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
+//     }
+// }
+
+// pub fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
+//     let url = [
+        
+//         &t,
+//         "%3AUS",
+    
+//     if let Ok(body) = simple_get(url) {
+//         let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
+//         if company != vec![] {
+//             return Some(company);
+//         }
+//     }
+//     None
+// }
+
+// pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
+//     if let Ok(body) = simple_get(url) {
+//         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
+//         if cur != vec![] {
+//             return Some(cur);
+//         }
+//     }
+//     None
+// }
+
+// pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
+//     if let Ok(body) = simple_get(url) {
+//         let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
+//         if cur != vec![] {
+//             return Some(cur);
+//         }
+//     }
+//     None
+// }
+
+// pub fn get_news(t: String) -> Option<news::NewsVec> {
+
+//     if let Ok(body) = simple_get(url) {
+//         let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
+//         if cur.news != vec![] {
+//             return Some(cur);
+//         }
+//     }
+//     None
+// }

@@ -19,79 +19,24 @@ pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
     Ok(body)
 }
 
-pub fn get_datastrip(t: String) -> Option<Vec<types::Root>> {
-    let url = [
-        "https://www.bloomberg.com/markets2/api/datastrip/",
-        &t,
-        "%3AUS",
-    ]
-    .concat();
-    if let Ok(body) = simple_get(url) {
-        let company: Vec<types::Root> = serde_json::from_str(&body.to_string()).unwrap();
-        if company != vec![] {
-            return Some(company);
-        }
-    }
-    None
+pub enum Security {
+    F(String),
+    X(String),
+    US(String),
 }
 
-pub fn get_intraday(t: String) -> Option<Vec<types::Intraday>> {
-    let url = [
-        "https://www.bloomberg.com/markets2/api/intraday/",
-        &t,
-        "?days=10&interval=0&volumeInterval=0",
-    ]
-    .concat();
-    if let Ok(body) = simple_get(url) {
-        let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-        if cur != vec![] {
-            return Some(cur);
-        }
+pub fn yf_url(s: Security) -> String {
+    let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
+    let sfx = "&range=7d&interval=1m";
+    match s {
+        Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
+        Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
+        Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
     }
-    None
 }
 
-pub fn get_history(t: String) -> Option<Vec<types::Intraday>> {
-    let url = [
-        "https://www.bloomberg.com/markets2/api/history/",
-        &t,
-        "/PX_LAST?timeframe=5_YEAR&period=daily&volumePeriod=daily",
-    ]
-    .concat();
-    if let Ok(body) = simple_get(url) {
-        let cur: Vec<types::Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-        if cur != vec![] {
-            return Some(cur);
-        }
-    }
-    None
-}
-
-pub fn get_news(t: String) -> Option<news::NewsVec> {
-    let url = [
-        "https://www.bloomberg.com/markets/api/comparison/news?securityType=",
-        &t,
-        "&limit=1000",
-    ]
-    .concat();
-
-    if let Ok(body) = simple_get(url) {
-        let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
-        if cur.news != vec![] {
-            return Some(cur);
-        }
-    }
-    None
-}
-
-pub fn yf(t: String) -> Option<Vec<Vec<String>>> {
-    let url = [
-        "https://query1.finance.yahoo.com/v8/finance/chart/",
-        &t,
-        "?region=US&range=1d&interval=1m",
-    ]
-    .concat();
-
+pub fn yf_US(t: String) -> Option<Vec<Vec<String>>> {
+    let url = yf_url(Security::US(t));
     if let Ok(body) = simple_get(url) {
         let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
         return Some(yf::Root::to_records(&ohlcv));
@@ -99,16 +44,9 @@ pub fn yf(t: String) -> Option<Vec<Vec<String>>> {
     // let yfroot: yf::Root = reqwest::Client::new().user_agent(ua).get(url.to_string()).json(&yfroot).await?.json().await?;
     return None;
 }
-pub fn yf_cur(t: String) -> Option<Vec<Vec<String>>> {
-    let url = [
-        "https://query1.finance.yahoo.com/v8/finance/chart/",
-        &t,
-        "=X?symbol=",
-        &t,
-        "&range=1d&interval=1m",
-    ]
-    .concat();
 
+pub fn yf_X(t: String) -> Option<Vec<Vec<String>>> {
+    let url = yf_url(Security::X(t));
     if let Ok(body) = simple_get(url) {
         let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
         return Some(yf::Root::to_records(&ohlcv));
@@ -116,16 +54,8 @@ pub fn yf_cur(t: String) -> Option<Vec<Vec<String>>> {
     return None;
 }
 
-pub fn yf_com(t: String) -> Option<Vec<Vec<String>>> {
-    let url = [
-        "https://query1.finance.yahoo.com/v8/finance/chart/",
-        &t,
-        "=F?symbol=",
-        &t,
-        "%3DF&range=1d&interval=1m",
-    ]
-    .concat();
-
+pub fn yf_F(t: String) -> Option<Vec<Vec<String>>> {
+    let url = yf_url(Security::F(t));
     if let Ok(body) = simple_get(url) {
         let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
         return Some(yf::Root::to_records(&ohlcv));
