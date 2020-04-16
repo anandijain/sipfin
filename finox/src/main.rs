@@ -4,6 +4,9 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate reqwest;
 extern crate chrono;
+
+use std::time::Instant;
+
 mod getters;
 mod types;
 mod news;
@@ -18,10 +21,12 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::commodities_prices("LMCADS03".to_string())
     // utils::stock_intraday("AMGN".to_string())
     // utils::hs_and_st()
-    
+    let t1 = Instant::now();
+
     utils::yf_US();
     utils::yf_X();
     utils::yf_F();
+    println!("{}", t1.elapsed().as_secs());
 
     Ok(())
 }

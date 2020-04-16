@@ -15,13 +15,19 @@ use crate::news;
 use crate::types;
 use crate::yf;
 
-// IND COM CUR US GOV
+// // IND COM CUR US GOV
+// pub enum Security {
+//     IND(String),
+//     COM(String),
+//     CUR(String),
+//     US(String),
+//     GOV(String),
+// }
+
 pub enum Security {
-    IND(String),
-    COM(String),
-    CUR(String),
+    F(String),
+    X(String),
     US(String),
-    GOV(String),
 }
 
 pub fn writerecs(
@@ -58,222 +64,42 @@ pub fn simppath(s: String, sfx: String) -> String {
     );
 }
 
-pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
-    let index = CURRENCY_SYMBOLS
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
 
-    let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
-    for s1 in todo_symbs.iter() {
-        for s2 in CURRENCY_SYMBOLS.iter() {
-            if s1 == s2 {
-                continue;
+pub fn chart_headers(s: String) -> Vec<String> {
+    let mut headers: Vec<String> = vec!["t".to_string()];
+
+    for elt in YF_HEADER[1..YF_HEADER.len()].iter() {
+        headers.push(format!("{}_{}", elt.to_string(), s.to_string()));
+    }
+    return headers;
+}
+
+pub fn write_yf(url: String) -> Result(() -> csv::Error) {
+    if let Some(recs) = yf_symb(url.to_string()) {
+        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "F".to_string())) {
+            let headers = chart_headers(s.to_string());
+            wtr.write_record(headers);
+            for r in recs.iter() {
+                wtr.write_record(r);
             }
-            let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
-            if let Some(curs) = getters::get_intraday(symb.to_string()) {
-                let prices_fn = format!("./data/{}_intraday_prices.csv", symb.to_string());
-                if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
-                    writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
-                }
-            } else {
-                println!("currency route missing: {}", symb.to_string());
-                continue;
-            }
+            wtr.flush();
         }
     }
     Ok(())
 }
 
-pub fn currencies_history(start: String) -> Result<(), reqwest::Error> {
-    let index = CURRENCY_SYMBOLS
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &CURRENCY_SYMBOLS[index..CURRENCY_SYMBOLS.len()];
-    for s1 in todo_symbs.iter() {
-        for s2 in CURRENCY_SYMBOLS.iter() {
-            if s1 == s2 {
-                continue;
-            }
-            let symb = format!("{}{}%3ACUR", s1.to_string(), s2.to_string());
-            if let Some(curs) = getters::get_history(symb.to_string()) {
-                let prices_fn = format!("./data/{}_history_prices.csv", symb.to_string());
-                if let Ok(recs) = types::Intraday::price_records(&curs[0]) {
-                    writerecs(prices_fn, &["date_time", &curs[0].ticker.to_string()], recs);
-                }
-            } else {
-                println!("currency route missing: {}", symb.to_string());
-                continue;
-            }
-        }
+pub fn yf_url(s: Security) -> String {
+    let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
+    let sfx = "&range=7d&interval=1m";
+    match s {
+        Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
+        Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
+        Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
     }
-    Ok(())
 }
 
-pub fn commodities_prices(start: String) -> Result<(), reqwest::Error> {
-    let index = COMMODITIES_SYMBOLS
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
-    for s in todo_symbs.iter() {
-        if let Some(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
-            if let Ok(prices) = types::Intraday::price_records(&hist[0]) {
-                let prices_fn = format!("./data/{}_prices.csv", s.to_string());
-                let price_col = format!("{}_price", &s.to_string());
-                writerecs(prices_fn, &["date_time", &price_col], prices);
-            }
-            if let Ok(volume) = types::Intraday::volume_records(&hist[0]) {
-                let volume_fn = format!("./data/{}_volume.csv", s.to_string());
-                let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(volume_fn, &["date_time", &vol_col], volume);
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn commodities_intraday() -> Result<(), reqwest::Error> {
-    // let index = COMMODITIES_SYMBOLS
-    //     .iter()
-    //     .position(|r| r.to_string() == start.to_string())
-    //     .unwrap();
-
-    // let todo_symbs = &COMMODITIES_SYMBOLS[index..COMMODITIES_SYMBOLS.len()];
-    for s in COMMODITIES_SYMBOLS.iter() {
-        if let Some(hist) = getters::get_history(format!("{}%3ACOM", s.to_string())) {
-            if let Ok(prices) = types::Intraday::price_records(&hist[0]) {
-                let prices_fn = format!("./data/{}_intraday_prices.csv", s.to_string());
-                let price_col = format!("{}_price", &s.to_string());
-                writerecs(prices_fn, &["date_time", &price_col], prices);
-            }
-            if let Ok(volume) = types::Intraday::volume_records(&hist[0]) {
-                let volume_fn = format!("./data/{}_intraday_volume.csv", s.to_string());
-                let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(volume_fn, &["date_time", &vol_col], volume);
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn news() -> Result<(), csv::Error> {
-    let write_fn = "./data/news.csv";
-    let mut wtr = csv::Writer::from_path(&write_fn)?;
-    wtr.write_record(&NEWS_HEADER);
-    for s in NEWS_SYMBOLS.iter() {
-        if let Some(news_vec) = getters::get_news(s.to_string()) {
-            if let Ok(recs) = news::NewsVec::to_records(&news_vec) {
-                for r in recs.iter() {
-                    wtr.write_record(r);
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
-    let symbs = read_tickers("./data/sp500tickers.txt");
-    let index = symbs
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &symbs[index..symbs.len()];
-
-    let headlines_fn = "./data/sp500_headlines.csv".to_string();
-    let metadata_fn = "./data/sp500.csv".to_string();
-    let mut meta_wtr = csv::Writer::from_path(&metadata_fn)?;
-    let mut lines_wtr = csv::Writer::from_path(&headlines_fn)?;
-    meta_wtr.write_record(&STOCK_HEADER);
-    lines_wtr.write_record(&HEADLINES_HEADER);
-    for s in todo_symbs.iter() {
-        let symb = format!("{}%3AUS", s.to_string());
-        if let Some(c) = getters::get_datastrip(symb.to_string()) {
-            if let Ok(headlines) = types::Root::to_headlines(&c[0]) {
-                for r in headlines.iter() {
-                    lines_wtr.write_record(r);
-                }
-            }
-            let metadata_record = types::Root::to_record(&c[0]);
-            meta_wtr.write_record(&metadata_record);
-        }
-    }
-    meta_wtr.flush();
-    lines_wtr.flush();
-    Ok(())
-}
-
-pub fn stock_prices(start: String) -> Result<(), reqwest::Error> {
-    let symbs = read_tickers("./data/sp500tickers.txt");
-    let index = symbs
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &symbs[index..symbs.len()];
-    for s in todo_symbs.iter() {
-        if let Some(hist) = getters::get_history(format!("{}%3AUS", s.to_string())) {
-            if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_history_price.csv", s.to_string());
-                let price_col = format!("{}_price", &s.to_string());
-                writerecs(write_fn, &["date_time", &price_col], recs);
-            }
-            if let Ok(recs) = types::Intraday::volume_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_history_vol.csv", s.to_string());
-                let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(write_fn, &["date_time", &vol_col], recs);
-            }
-        }
-    }
-    Ok(())
-}
-pub fn stock_intraday(start: String) -> Result<(), reqwest::Error> {
-    let symbs = read_tickers("./data/sp500tickers.txt");
-    let index = symbs
-        .iter()
-        .position(|r| r.to_string() == start.to_string())
-        .unwrap();
-
-    let todo_symbs = &symbs[index..symbs.len()];
-    for s in todo_symbs.iter() {
-        let symb = format!("{}%3AUS", s.to_string());
-        if let Some(hist) = getters::get_intraday(symb.to_string()) {
-            if let Ok(recs) = types::Intraday::price_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_intraday_price.csv", s.to_string());
-                let price_col = format!("{}_price", &s.to_string());
-                writerecs(write_fn, &["date_time", &price_col], recs);
-            }
-            if let Ok(recs) = types::Intraday::volume_records(&hist[0]) {
-                let write_fn = format!("./data/{}_stock_intraday_vol.csv", s.to_string());
-                let vol_col = format!("{}_volume", &s.to_string());
-                writerecs(write_fn, &["date_time", &vol_col], recs);
-            }
-        }
-    }
-    Ok(())
-}
-
-// pub fn hs_and_st() -> Result<(), reqwest::Error> {
-//     let url = "https://comtrade.un.org/Data/cache/classificationST.json";
-//     let write_fn = "st.csv";
-//     //  "https://comtrade.un.org/Data/cache/classificationST.json"];
-//     // for url in urls.iter() {
-//     if let Ok(body) = getters::simple_get(url.to_string()) {
-//         let res: uncomtrade::ResMeta = serde_json::from_str(&body.to_string()).unwrap();
-//         let recs = uncomtrade::ResMeta::to_records(&res);
-//         writerecs(write_fn.to_string(), &["id", "text", "parent"], recs);
-//     }
-//     Ok(())
-// }
-
-
-pub fn yf_symb(s: String) -> Option<Vec<csv::StringRecord>> {
-    if let Some(tohlcv) = getters::yf_US(s.to_string()) {
+pub fn yf_symb(url: String) -> Option<Vec<csv::StringRecord>> {
+    if let Some(tohlcv) = getters::yf_from_url(url.to_string()) {
         let mut recs: Vec<csv::StringRecord> = tohlcv
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
@@ -284,14 +110,13 @@ pub fn yf_symb(s: String) -> Option<Vec<csv::StringRecord>> {
 }
 
 pub fn yf_US() -> Result<(), reqwest::Error> {
-    let t1 = Instant::now();
     let symbs = read_tickers("./data/sp500tickers_yf.txt");
     for s in symbs.iter() {
-        if let Some(recs) = yf_symb(s.to_string()) {
+        let url = yf_url(Security::US(s.to_string()));
+        if let Some(recs) = yf_symb(url.to_string()) {
             writerecs(simppath(s.to_string(), "US".to_string()), &YF_HEADER, recs);
         }
     }
-    println!("{}", t1.elapsed().as_secs());
     Ok(())
 }
 
@@ -302,9 +127,8 @@ pub fn yf_X() -> Result<(), reqwest::Error> {
                 continue;
             }
             let symb = format!("{}{}", s1.to_string(), s2.to_string());
-            if let Some(oh) = getters::yf_X(symb.to_string()) {
-                let mut recs: Vec<csv::StringRecord> =
-                    oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
+            let url = yf_url(Security::X(symb.clone()));
+            if let Some(recs) = yf_symb(url.to_string()) {
                 writerecs(
                     simppath(symb.to_string(), "X".to_string()),
                     &YF_HEADER,
@@ -315,24 +139,11 @@ pub fn yf_X() -> Result<(), reqwest::Error> {
     }
     Ok(())
 }
+
 pub fn yf_F() -> Result<(), reqwest::Error> {
     for s in COMMODITIES_SYMBOLS_YF.iter() {
-        if let Some(oh) = getters::yf_F(s.to_string()) {
-            let mut headers: Vec<String> = vec!["t".to_string()];
-
-            for elt in YF_HEADER[1..YF_HEADER.len()].iter() {
-                headers.push(format!("{}_{}", elt.to_string(), s.to_string()));
-            }
-            if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "F".to_string())) {
-                wtr.write_record(headers);
-                let mut recs: Vec<csv::StringRecord> =
-                    oh.into_iter().map(|x| csv::StringRecord::from(x)).collect();
-                for r in recs.iter() {
-                    wtr.write_record(r);
-                }
-                wtr.flush();
-            }
-        }
+        let url = yf_url(Security::F(s.to_string()));
+        return write_yf(url);
     }
     Ok(())
 }
