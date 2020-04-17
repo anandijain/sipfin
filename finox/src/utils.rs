@@ -1,17 +1,20 @@
 extern crate chrono;
 extern crate csv;
-use chrono::{Datelike, Timelike, Utc};
+use chrono::{Datelike, Utc};
 
 use std::{
     error::Error,
-    fs::{File, OpenOptions},
+    fs::File,
     io::{prelude::*, BufReader},
     path::Path,
-    time::Instant,
+    time::{Instant, Duration},
+    thread,
 };
 
 use crate::getters;
+use crate::keys;
 use crate::news;
+use crate::sa;
 use crate::types;
 use crate::yf;
 
@@ -64,7 +67,6 @@ pub fn simppath(s: String, sfx: String) -> String {
     );
 }
 
-
 pub fn chart_headers(s: String) -> Vec<String> {
     let mut headers: Vec<String> = vec!["t".to_string()];
 
@@ -74,7 +76,7 @@ pub fn chart_headers(s: String) -> Vec<String> {
     return headers;
 }
 
-pub fn write_yf(url: String) -> Result(() -> csv::Error) {
+pub fn write_yf(url: String, s: String) -> Result<(), csv::Error> {
     if let Some(recs) = yf_symb(url.to_string()) {
         if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "F".to_string())) {
             let headers = chart_headers(s.to_string());
@@ -113,9 +115,7 @@ pub fn yf_US() -> Result<(), reqwest::Error> {
     let symbs = read_tickers("./data/sp500tickers_yf.txt");
     for s in symbs.iter() {
         let url = yf_url(Security::US(s.to_string()));
-        if let Some(recs) = yf_symb(url.to_string()) {
-            writerecs(simppath(s.to_string(), "US".to_string()), &YF_HEADER, recs);
-        }
+        write_yf(url.to_string(), s.to_string());
     }
     Ok(())
 }
@@ -128,13 +128,7 @@ pub fn yf_X() -> Result<(), reqwest::Error> {
             }
             let symb = format!("{}{}", s1.to_string(), s2.to_string());
             let url = yf_url(Security::X(symb.clone()));
-            if let Some(recs) = yf_symb(url.to_string()) {
-                writerecs(
-                    simppath(symb.to_string(), "X".to_string()),
-                    &YF_HEADER,
-                    recs,
-                );
-            }
+            write_yf(url.to_string(), symb.to_string());
         }
     }
     Ok(())
@@ -143,51 +137,73 @@ pub fn yf_X() -> Result<(), reqwest::Error> {
 pub fn yf_F() -> Result<(), reqwest::Error> {
     for s in COMMODITIES_SYMBOLS_YF.iter() {
         let url = yf_url(Security::F(s.to_string()));
-        return write_yf(url);
+        write_yf(url.to_string(), s.to_string());
     }
     Ok(())
 }
 
-pub const STOCK_HEADER: [&'static str; 15] = [
-    "id",
-    "short_name",
-    "market_cap",
-    "co_phone",
-    "last_update",
-    "average_volume30_day",
-    "price",
-    "open_price",
-    "high_price",
-    "low_price",
-    "low_price52_week",
-    "high_price52_week",
-    "number_of_employees",
-    "price_earnings_ratio",
-    "shares_outstanding",
-];
+pub fn sa() -> Result<(), reqwest::Error> {
+    let url = "https://seekingalpha.com/get_trending_articles";
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let root: sa::Root = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = sa::Root::to_records(&root)
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        writerecs("./sa.csv".to_string(), &SA_HEADER, recs);
+    }
+    Ok(())
+}
 
-pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
-    "USD", "EUR", "XAU", "XAG", "XPT", "XPD", "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN",
-    "BRL", "CLP", "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF",
-    "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
-    "THB",
-];
+pub fn nytfeed() -> Result<(), reqwest::Error> {
+    let url = format!(
+        "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}",
+        keys::NYT_KEY.to_string()
+    );
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let root: news::NYTFeed = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = news::NYTFeed::to_records(&root)
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        writerecs("./nytfeed.csv".to_string(), &NYT_FEED_HEADER, recs);
+    }
+    Ok(())
+}
+
+pub fn nytarchive() -> Result<(), csv::Error> {
+    let filename = "./nyt_archive.csv".to_string();
+    let mut wtr = csv::Writer::from_path(filename)?;
+    let nyt_delay: std::time::Duration = Duration::from_millis(6000);
+
+    wtr.write_record(&NYT_ARCHIVE_HEADER);
+    for i in 1853..2019 {
+        for j in 1..13 {
+            let url = format!(
+                "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key={}",
+                i,
+                j,
+                keys::NYT_KEY.to_string()
+            );
+            if let Ok(body) = getters::simple_get(url.to_string()) {
+                let root: news::NYTArchive = serde_json::from_str(&body.to_string()).unwrap();
+                let recs: Vec<csv::StringRecord> = news::NYTArchive::to_records(&root)
+                    .into_iter()
+                    .map(|x| csv::StringRecord::from(x))
+                    .collect();
+                for r in recs.iter(){
+                    wtr.write_record(r);
+                }
+                thread::sleep(nyt_delay);
+            }
+        }
+    }
+    wtr.flush();
+    Ok(())
+}
+
 pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD"];
 
-pub const NEWS_SYMBOLS: [&'static str; 5] = [
-    "GOVERNMENT_BOND",
-    "COMMODITY",
-    "COMMON_STOCK",
-    "CURRENCY",
-    "BLOOMBERG_BARCLAYS_INDEX",
-];
-
-pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
-    "CO1", "CL1", "XB1", "NG1", "HO1", "GC1", "SI1", "HG1", "C%201", "W%201", "CC1", "CT1", "LC1",
-    "QS1", "JX1", "MO1", "JG1", "LMCADS03", "LMAHDS03", "LMZSDS03", "LMSNDS03", "O%201", "RR1",
-    "S%201", "SM1", "BO1", "RS1", "KC1", "SB1", "JO1", "CT1", "OL1", "LB1", "JN1", "DL1", "FC1",
-    "LH1",
-];
 pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
     "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",
     "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
@@ -198,3 +214,35 @@ pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
 pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
+
+pub const SA_HEADER: [&'static str; 8] = [
+    "id",
+    "author_id",
+    "publish_on",
+    "title",
+    "slug",
+    "ncomments",
+    "author_name",
+    "path",
+];
+
+pub const NYT_FEED_HEADER: [&'static str; 14] = [
+    "slug",
+    "section",
+    "subsec",
+    "title",
+    "abs",
+    "by",
+    "item_type",
+    "source",
+    "first_pub",
+    "created",
+    "pub",
+    "updated",
+    "mat_type",
+    "url",
+];
+
+pub const NYT_ARCHIVE_HEADER: [&'static str; 12] = [
+    "id", "wc", "by", "pub", "doctype", "page", "headline", "kicker", "snippet", "abstract", "url", "source",
+];

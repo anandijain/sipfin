@@ -12,6 +12,8 @@ mod types;
 mod news;
 mod utils;
 mod yf;
+mod sa;
+mod keys;
 
 fn main() -> Result<(), reqwest::Error> {
     // utils::currencies_intraday("INR".to_string())
@@ -23,9 +25,11 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::hs_and_st()
     let t1 = Instant::now();
 
-    utils::yf_US();
-    utils::yf_X();
-    utils::yf_F();
+    // utils::yf_US();
+    // utils::yf_X();
+    // utils::yf_F();
+    // utils::sa();
+    utils::nytarchive();
     println!("{}", t1.elapsed().as_secs());
 
     Ok(())
