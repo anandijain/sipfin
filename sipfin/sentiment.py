@@ -14,3 +14,4 @@ def add_sentiments(df: pd.DataFrame, col:str, label_col="sentiment_label", score
 
     return pd.concat([df, labels, scores], axis=1)
 
+

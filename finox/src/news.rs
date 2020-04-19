@@ -43,49 +43,58 @@ impl News {
 }
 
 
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Channel {
+    pub path: String,
+    pub name: String,
+}
+
+
 // https://sope.prod.reuters.tv/program/rcom/v1/article-recirc?edition=cn&modules=rightrail,ribbon,bottom
-
-// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct TR {
-//     pub rightrail: TRRibbon,
-//     pub ribbon: TRRibbon,
-//     pub bottom: TRRibbon,
-// }
-
-// impl TR {
-//     pub fn to_records(&self) -> Vec<Vec<String>> {
-//         let mut recs: Vec<Vec<String>> = Vec::new();
-//         for hl in self.list.iter(){
-//             recs.push(Headline::to_record(hl));
-//         }
-//         return recs;
-//     }
-// }
-
-
-// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct TRRibbon {
-//     #[serde(rename = "ab_test")]
-//     pub ab_test: Vec<::serde_json::Value>,
-//     pub errors: Vec<::serde_json::Value>,
-//     pub stories: Vec<Story>,
-//     pub tags: Vec<String>,
-// }
-// impl TRRibbon {
-//     pub fn to_record(&self) -> Vec<Vec<String>> {
-//         let rec: Vec<String> = vec!(
-//             self.id.to_string(),
-
-//             );
-//         return rec;
-//     }
-// }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Story {
+pub struct TR {
+    pub rightrail: TRRibbon,
+    pub ribbon: TRRibbon,
+    pub bottom: TRRibbon,
+}
+
+impl TR {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for list in [&self.rightrail, &self.ribbon, &self.bottom].iter() {
+            recs.append(&mut TRRibbon::to_records(list));
+        }
+        return recs;
+    }
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TRRibbon {
+    #[serde(rename = "ab_test")]
+    pub ab_test: Vec<::serde_json::Value>,
+    pub errors: Vec<::serde_json::Value>,
+    pub stories: Vec<TRStory>,
+    pub tags: Vec<String>,
+}
+
+impl TRRibbon {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for s in self.stories.iter() {
+            recs.push(TRStory::to_record(&s));
+        }
+        return recs;
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TRStory {
     pub updated: i64,
     pub headline: String,
     pub image: String,
@@ -95,40 +104,33 @@ pub struct Story {
     pub channel: Channel,
 }
 
-impl Story {
+impl TRStory {
     pub fn to_record(&self) -> Vec<String> {
         let rec: Vec<String> = vec!(
             self.id.to_string(),
             self.updated.to_string(),
-            self.headline.to_string(),
+            self.headline.replace(",", ";").to_string(),
             self.reason.to_string(),
             self.path.to_string(),
             self.channel.name.to_string(),
+            self.channel.path.to_string(),
             );
         return rec;
     }
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Channel {
-    pub path: String,
-    pub name: String,
-}
-
-
 // https://video-api.wsj.com/api-video/find_all_videos.asp
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WSJ {
-    pub items: Vec<WSJArticle>,
+    pub items: Vec<WSJVideos>,
 }
+
 impl WSJ {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
         for hl in self.items.iter(){
-            recs.push(WSJArticle::to_record(hl));
+            recs.push(WSJVideos::to_record(hl));
         }
         return recs;
     }
@@ -137,7 +139,7 @@ impl WSJ {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WSJArticle {
+pub struct WSJVideos {
     pub id: String,
     pub unix_creation_date: i64,
     pub name: String,
@@ -154,17 +156,18 @@ pub struct WSJArticle {
     pub column: String,
 }
 
-impl WSJArticle {
+impl WSJVideos {
     pub fn to_record(&self) -> Vec<String> {
         let rec: Vec<String> = vec!(
             self.id.to_string(),
             self.unix_creation_date.to_string(),
-            self.name.to_string(),
-            self.description.to_string(),
+            self.name.replace(",", ";").to_string(),
+            self.description.replace(",", ";").to_string(),
             self.duration.to_string(),
             self.column.to_string(),
             self.doctype_id.to_string(),
             self.email_url.to_string(),
+            self.thumbnail_url.to_string(),
             );
         return rec;
     }
@@ -203,8 +206,6 @@ pub struct NYTFeedArticle {
     pub abstract_field: String,
     pub url: String,
     pub byline: String,
-    #[serde(rename = "thumbnail_standard")]
-    pub thumbnail_standard: Option<String>,
     #[serde(rename = "item_type")]
     pub item_type: String,
     pub source: String,
@@ -234,28 +235,55 @@ pub struct NYTFeedArticle {
     pub geo_facet: Option<Vec<String>>,
     #[serde(rename = "related_urls")]
     pub related_urls: ::serde_json::Value,
-    pub uri: String,
     pub multimedia: Option<Vec<NYTFeedMultimedia>>,
+    #[serde(rename = "thumbnail_standard")]
+    pub thumbnail_standard: Option<String>,
 }
 
 impl NYTFeedArticle {
     pub fn to_record(&self) -> Vec<String> {
-        
+        //limiting 1 for tags
+        let geo = match &self.geo_facet {
+            Some(s) => s[0].replace(",", ";").to_string(),
+            None => "".to_string(),
+        };
+        let org = match &self.org_facet {
+            Some(s) => s[0].replace(",", ";").to_string(),
+            None => "".to_string(),
+        };
+        let des = match &self.des_facet {
+        Some(s) => s[0].replace(",", ";").to_string(),
+            None => "".to_string(),
+        };
+        let per= match &self.per_facet {
+            Some(s) => s[0].replace(",", ";").to_string(),
+            None => "".to_string(),
+        };
+
+        let thumbnail_url = lilmatcher(self.thumbnail_standard.clone());
+
         let rec: Vec<String> = vec!(
             self.slug_name.to_string(),
+            self.first_published_date.to_string(),
             self.section.to_string(),
             self.subsection.to_string(),
+            self.byline.replace(",", ";").to_string(),
             self.title.replace(",", ";").to_string(),
+            self.subheadline.replace(",", ";").to_string(),
             self.abstract_field.replace(",", ";").to_string(),
-            self.byline.to_string(),
-            self.item_type.to_string(),
-            self.source.to_string(),
-            self.first_published_date.to_string(),
-            self.created_date.to_string(),
-            self.published_date.to_string(),
-            self.updated_date.to_string(),
             self.material_type_facet.to_string(),
+            geo.to_string(),
+            org.to_string(),
+            des.to_string(),
+            per.to_string(),
+            self.source.to_string(),
+            self.published_date.to_string(),
+            self.created_date.to_string(),
+            self.updated_date.to_string(),
             self.url.to_string(),
+            thumbnail_url.to_string(),
+            self.kicker.to_string(),
+            self.item_type.to_string(),
             );
         return rec;
     }

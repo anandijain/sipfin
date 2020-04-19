@@ -35,7 +35,6 @@ impl Root {
 pub struct Root {
     pub chart: Chart,
 }
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Chart {
@@ -61,14 +60,14 @@ pub struct Meta {
     pub first_trade_date: i64,
     pub regular_market_time: i64,
     pub gmtoffset: i64,
-    pub timezone: String,
+    pub timezone: Option<String>,
     pub exchange_timezone_name: String,
     pub regular_market_price: f64,
     pub chart_previous_close: f64,
     pub previous_close: f64,
     pub scale: i64,
     pub price_hint: i64,
-    pub current_trading_period: Option<CurrentTradingPeriod>,
+    pub current_trading_period: Option<TradingPeriod>,
     pub trading_periods: Option<Vec<Vec<TradingPeriod>>>,
     pub data_granularity: String,
     pub range: String,
@@ -77,46 +76,11 @@ pub struct Meta {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CurrentTradingPeriod {
-    pub pre: Pre,
-    pub regular: Regular,
-    pub post: Post,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Pre {
-    pub timezone: String,
-    pub start: i64,
-    pub end: i64,
-    pub gmtoffset: i64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Regular {
-    pub timezone: String,
-    pub start: i64,
-    pub end: i64,
-    pub gmtoffset: i64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Post {
-    pub timezone: String,
-    pub start: i64,
-    pub end: i64,
-    pub gmtoffset: i64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TradingPeriod {
-    pub timezone: String,
-    pub start: i64,
-    pub end: i64,
-    pub gmtoffset: i64,
+    pub timezone: Option<String>,
+    pub start: Option<i64>,
+    pub end: Option<i64>,
+    pub gmtoffset: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
