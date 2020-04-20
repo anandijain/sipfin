@@ -38,7 +38,7 @@ fn main() -> Result<(), reqwest::Error> {
     // let t1 = Instant::now();
     // sync_main(urls);
     // println!("{}", t1.elapsed().as_secs());
-    let urls2: Vec<utils::Security> = utils::yf_us_urls();
+    let urls2: Vec<utils::Security> = utils::f_securities();
     let t2 = Instant::now();
     async_main(urls2);
     println!("{}", t2.elapsed().as_secs());

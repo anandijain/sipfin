@@ -197,6 +197,11 @@ pub fn yf_F() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
+pub fn f_securities() -> Vec<Security> {
+    let recs: Vec<Security> = &COMMODITIES_SYMBOLS_YF.into_iter().map(|x| Security::F(x.to_string())).collect();
+    return recs;
+}
+
 pub async fn async_yf_F() -> Result<(), reqwest::Error> {
     for s in COMMODITIES_SYMBOLS_YF.iter() {
         write_yf(Security::F(s.to_string()));
