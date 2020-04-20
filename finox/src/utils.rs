@@ -198,7 +198,7 @@ pub fn yf_F() -> Result<(), reqwest::Error> {
 }
 
 pub fn f_securities() -> Vec<Security> {
-    let recs: Vec<Security> = &COMMODITIES_SYMBOLS_YF.into_iter().map(|x| Security::F(x.to_string())).collect();
+    let recs: Vec<Security> = COMMODITIES_SYMBOLS_YF.into_iter().map(|x| Security::F(x.to_string())).collect();
     return recs;
 }
 
