@@ -69,6 +69,19 @@ pub fn writerecs(
     Ok(())
 }
 
+pub fn writerecs_strvec(
+    file_name: String,
+    header: Vec<String>,
+    records: Vec<csv::StringRecord>,
+) -> Result<(), Box<dyn Error>> {
+    let mut wtr = csv::Writer::from_path(file_name.to_string())?;
+    wtr.write_record(header);
+    for r in records.iter() {
+        wtr.write_record(r);
+    }
+    Ok(())
+}
+
 pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
     let f = File::open(filename).expect("no such file");
     let buf = BufReader::new(f);
@@ -245,19 +258,50 @@ pub fn nytarchive() -> Result<(), csv::Error> {
 }
 
 
-pub fn steam_new() -> Result<(), csv::Error> {
-    let url = "https://steamcommunity.com/market/recent?country=US&language=english&currency=1";
+// pub fn steam_listings() -> Result<(), csv::Error> {
+//     let url = "https://steamcommunity.com/market/recent?country=US&language=english&currency=1";
+//     if let Ok(body) = getters::simple_get(url.to_string()) {
+//         let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
+//         // println!("{:#?}", root);
+//         let recs = steam::Steam::listings(&root)
+//             .into_iter()
+//             .map(|x| csv::StringRecord::from(x))
+//             .collect();
+//         let mut heading: Vec<String> = vec!(steam::STEAM_LISTING_HEADER.clone());
+//         heading.append(&mut steam::STEAM_ASSET_HEADER.clone().to_vec());
+//         writerecs("./steam_new_listings.csv".to_string(), heading, recs);
+//     }
+//     Ok(())
+// }
+
+pub fn steam_purchases() -> Result<(), csv::Error> {
+    let url = "https://steamcommunity.com/market/recentcompleted";
     if let Ok(body) = getters::simple_get(url.to_string()) {
         let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
-        println!("{:#?}", root);
-        // let recs = steam::Steam::to_records(&root)
-        //     .into_iter()
-        //     .map(|x| csv::StringRecord::from(x))
-        //     .collect();
-        // writerecs("./steam_new.csv".to_string(), &STEAM_HEADER, recs);
+        // println!("{:#?}", root);
+        let recs = steam::Steam::purchases(&root)
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        writerecs("./steam_recent_purchases.csv".to_string(), &steam::STEAM_PURCHASE_HEADER2, recs);
     }
     Ok(())
 }
+
+pub fn lilmatcher(s: Option<String>) -> String {
+    match s{
+            Some(s) => s.to_string(),
+            None => "".to_string(),
+    }
+}
+
+pub fn lilmatcher_i64(s: Option<i64>) -> String {
+    match s{
+            Some(s) => s.to_string(),
+            None => "".to_string(),
+    }
+}
+
 
 // pub fn steam_sold() -> Result<(), csv::Error> {
 //     let url = "https://steamcommunity.com/market/recentcompleted";

@@ -101,7 +101,7 @@ pub struct Root {
 
 impl Root {
     pub fn to_record(&self) -> csv::StringRecord {
-        let rec = &[
+        let rec = vec!(
             self.id.to_string(),
             self.short_name.to_string(),
             self.market_cap.to_string(),
@@ -117,8 +117,8 @@ impl Root {
             self.number_of_employees.to_string(),
             self.price_earnings_ratio.to_string(),
             self.shares_outstanding.to_string(),
-        ];
-        return csv::StringRecord::from(rec.to_vec());
+        );
+        return csv::StringRecord::from(rec);
     }
 
     pub fn to_headlines(&self) -> Result<Vec<csv::StringRecord>, &'static str> {

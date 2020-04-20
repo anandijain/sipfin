@@ -3,6 +3,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+use crate::utils;
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewsVec {
@@ -260,7 +262,7 @@ impl NYTFeedArticle {
             None => "".to_string(),
         };
 
-        let thumbnail_url = lilmatcher(self.thumbnail_standard.clone());
+        let thumbnail_url = utils::lilmatcher(self.thumbnail_standard.clone());
 
         let rec: Vec<String> = vec!(
             self.slug_name.to_string(),
@@ -380,10 +382,10 @@ impl NYTArchiveArticle {
         // let first_name = lilmatcher(self.byline.person.lastname);
         
         let orig: String = byline_orig(self.byline.clone());
-        let snip = lilmatcher(self.snippet.clone());
-        let abs_field = lilmatcher(self.abstract_field.clone());
-        let page = lilmatcher(self.print_page.clone());
-        let kicker = lilmatcher(self.headline.kicker.clone());
+        let snip = utils::lilmatcher(self.snippet.clone());
+        let abs_field = utils::lilmatcher(self.abstract_field.clone());
+        let page = utils::lilmatcher(self.print_page.clone());
+        let kicker = utils::lilmatcher(self.headline.kicker.clone());
         
         let rec: Vec<String> = vec!(
             self.id.to_string(),
@@ -451,14 +453,8 @@ pub struct Person {
 
 pub fn byline_orig(byline: Option<Byline>) -> String {
     if let Some(byline) = byline {
-        return lilmatcher(byline.original);
+        return utils::lilmatcher(byline.original);
     }
     return "".to_string();
 }
 
-pub fn lilmatcher(s: Option<String>) -> String {
-    match s{
-            Some(s) => s.to_string(),
-            None => "".to_string(),
-    }
-}

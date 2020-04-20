@@ -36,7 +36,7 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::wsj_videos();
     // utils::sa();
 
-    utils::steam_new();
+    utils::steam_purchases();
     println!("{}", t1.elapsed().as_secs());
 
     Ok(())

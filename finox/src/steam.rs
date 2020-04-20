@@ -4,6 +4,8 @@ extern crate serde_derive;
 extern crate serde_json;
 use std::collections::HashMap;
 
+
+use crate::utils;
 /*
 
 https://steamcommunity.com/market/recent?country=US&language=english&currency=1 new listings
@@ -20,7 +22,7 @@ pub struct Steam {
     #[serde(rename = "results_html")]
     pub results_html: ::serde_json::Value,
     pub listinginfo: HashMap<String, Listing>, //Listings
-    pub purchaseinfo: ::serde_json::Value, //Purchases
+    pub purchaseinfo: Option<HashMap<String, Listing>>, //Purchases
     pub assets: Games,
     pub currency:  ::serde_json::Value,
     pub hovers: String,
@@ -30,6 +32,23 @@ pub struct Steam {
     pub last_time: i64,
     #[serde(rename = "last_listing")]
     pub last_listing: String,
+}
+
+impl Steam {
+    pub fn listings(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for (k, v) in self.listinginfo.iter() {
+            recs.push(Listing::to_record(v));
+        } 
+        return recs;
+    }
+    pub fn purchases(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for (k, v) in self.listinginfo.iter() {
+            recs.push(Listing::to_record(v));
+        } 
+        return recs;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -43,13 +62,13 @@ pub struct Listings {
 #[serde(rename_all = "camelCase")]
 pub struct Listing {
     pub listingid: String,
-    pub price: i64,
-    pub fee: i64,
+    pub price: Option<i64>,
+    pub fee: Option<i64>,
     #[serde(rename = "publisher_fee_app")]
-    pub publisher_fee_app: i64,
+    pub publisher_fee_app: Option<i64>,
     #[serde(rename = "publisher_fee_percent")]
     pub publisher_fee_percent: String,
-    pub currencyid: i64,
+    pub currencyid: ::serde_json::Value,
     #[serde(rename = "steam_fee")]
     pub steam_fee: Option<i64>,
     #[serde(rename = "publisher_fee")]
@@ -73,6 +92,21 @@ pub struct Listing {
     #[serde(rename = "converted_publisher_fee_per_unit")]
     pub converted_publisher_fee_per_unit: Option<i64>,
     pub asset: Asset,
+}
+
+impl Listing {
+    pub fn to_record(&self) -> Vec<String> {
+        let mut rec = vec!(
+            self.listingid.to_string(),
+            utils::lilmatcher_i64(self.fee.clone()),
+            utils::lilmatcher_i64(self.price.clone()),
+            utils::lilmatcher_i64(self.publisher_fee_app.clone()),
+            self.publisher_fee_percent.clone(),
+            self.currencyid.to_string(),
+        );
+        rec.append(&mut Asset::to_record(&self.asset));
+        return rec;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -129,6 +163,21 @@ pub struct Asset {
     pub new_contextid: Option<String>,
 }
 
+impl Asset {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec: Vec<String> = vec!(
+            utils::lilmatcher(self.id.clone()),
+            utils::lilmatcher(self.name.clone()),
+            utils::lilmatcher_i64(self.appid.clone()),
+            utils::lilmatcher(self.amount.clone()),
+            utils::lilmatcher_i64(self.status.clone()),
+            utils::lilmatcher_i64(self.currency.clone()),
+            utils::lilmatcher_i64(self.tradable.clone()),
+        );
+        return rec;
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Description {
@@ -180,6 +229,23 @@ pub struct Purchase {
     pub asset: Asset,
 }
 
+impl Purchase {
+    pub fn to_record(&self) -> Vec<String> {
+        let mut rec = vec!(
+            self.listingid.to_string(),
+            self.purchaseid.to_string(),
+            self.paid_amount.to_string(),
+            self.paid_fee.to_string(),
+            self.steam_fee.to_string(),
+            self.publisher_fee.to_string(),
+            self.publisher_fee_app.to_string(),
+            self.publisher_fee_percent.to_string(),
+        );
+        rec.append(&mut Asset::to_record(&self.asset));
+        return rec;
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SteamAppData {
@@ -187,6 +253,16 @@ pub struct SteamAppData {
     pub name: String,
     pub icon: String,
     pub link: String,
+}
+
+impl SteamAppData {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec = vec!(
+            self.appid.to_string(),
+            self.name.to_string(),
+        );
+        return rec;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -197,5 +273,55 @@ pub struct AppDatas {
 }
 
 // pub const STEAM_ASSET_HEADER: [&'static str; 6] = [];
-// pub const STEAM_LISTING_HEADER: [&'static str; 6] = [];
+pub const STEAM_LISTING_HEADER: [&'static str; 6] = [
+    "l_id",
+    "l_price",
+    "l_fee",
+    "l_pub_fee_app",
+    "l_pub_fee_pct",
+    "l_currency_id",
+];
+
+// pub const STEAM_ASSET_HEADER: [&'static str; 6] = [];
+pub const STEAM_PURCHASE_HEADER: [&'static str; 8] = [
+    "p_listing_id",
+    "p_id",
+    "p_paid_amt",
+    "p_paid_fee",
+    "p_cur_id",
+    "p_steam_fee",
+    "p_pub_fee",
+    "p_pub_fee_pct",
+];
+
+pub const STEAM_ASSET_HEADER: [&'static str; 7] = [
+    "a_id",
+    "a_name",
+    "a_appid",
+    "a_amount",
+    "a_status",
+    "a_currency",
+    "a_tradable",
+];
+
+// pub const STEAM_ASSET_HEADER: [&'static str; 6] = [];
+pub const STEAM_PURCHASE_HEADER2: [&'static str; 15] = [
+    "p_listing_id",
+    "p_id",
+    "p_paid_amt",
+    "p_paid_fee",
+    "p_cur_id",
+    "p_steam_fee",
+    "p_pub_fee",
+    "p_pub_fee_pct",
+    "a_id",
+    "a_name",
+    "a_appid",
+    "a_amount",
+    "a_status",
+    "a_currency",
+    "a_tradable",
+];
 // pub const STEAM_PURCHASE_HEADER: [&'static str; 6] = [];
+
+
