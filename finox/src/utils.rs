@@ -169,6 +169,14 @@ pub fn yf_x_urls() -> Vec<Security> {
     return symbs;
 }
 
+pub fn yf_us_urls() -> Vec<Security> {
+    let symbs: Vec<Security> = read_tickers("./ref_data/sp500tickers_yf.txt")
+        .into_iter()
+        .map(|x| Security::US(x))
+        .collect();
+    return symbs;
+}
+
 pub async fn async_yf_X() -> Result<(), reqwest::Error> {
     for s1 in CURRENCY_SYMBOLS_YF.iter() {
         for s2 in CURRENCY_SYMBOLS_YF.iter() {

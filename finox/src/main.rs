@@ -34,12 +34,13 @@ mod yf;
 // utils::hs_and_st()
 
 fn main() -> Result<(), reqwest::Error> {
-    let t1 = Instant::now();
-    sync_main();
-    println!("{}", t1.elapsed().as_secs());
-
+    // let urls: Vec<String> = utils::yf_us_urls();
+    // let t1 = Instant::now();
+    // sync_main(urls);
+    // println!("{}", t1.elapsed().as_secs());
+    let urls2: Vec<utils::Security> = utils::yf_us_urls();
     let t2 = Instant::now();
-    async_main();
+    async_main(urls2);
     println!("{}", t2.elapsed().as_secs());
     // utils::yf_US(Some("RDNT".to_string()));
     // block_on(async_main());
@@ -58,28 +59,46 @@ fn main() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-fn sync_main() -> Result<(), Box<dyn std::error::Error>> {
-    let xs: Vec<utils::Security> = utils::yf_x_urls();
-    utils::yf_Xs(xs.to_owned());
+fn sync_main(secs: Vec<utils::Security>) -> Result<(), Box<dyn std::error::Error>> {
+    // let xs: Vec<utils::Security> = utils::yf_x_urls();
+    // utils::yf_Xs(xs.to_owned());
+    for x in secs.iter() {
+        if let Some(recs) = getters::yf_from_url(utils::yf_url(x.to_owned())) {
+            println!("{}", recs.len());
+            // for r in recs.iter() {
+            //     println!("{:?}", r);
+            // }
+        }
+    }
     Ok(())
 }
 
 #[tokio::main]
-async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
-    let urls: Vec<String> = utils::yf_x_urls().into_iter().map(|x| utils::yf_url(x)).collect();
+async fn async_main(secs: Vec<utils::Security>) -> Result<(), Box<dyn std::error::Error>> {
+    // let urls: Vec<String> = utils::yf_x_urls().into_iter().map(|x| utils::yf_url(x)).collect();
     // let client = reqwest::Client::builder().build()?;
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        match reqwest::get(&url).await {
+    let fetches = futures::stream::iter(secs.into_iter().map(|symb| async move {
+        match reqwest::get(&utils::yf_url(symb.clone())).await {
             Ok(resp) => match resp.json::<yf::Root>().await {
-                Ok(_) => {
-                    println!("RESPONSE: bytes from {}", url);
+                Ok(root) => {
+                    let recs: Vec<csv::StringRecord> = yf::Root::to_records(&root)
+                        .into_iter()
+                        .map(|x| csv::StringRecord::from(x))
+                        .collect();
+                    // println!("{}", recs.len());
+
+                    // for r in recs.iter() {
+                    //     println!("{:?}", r);
+                    // }
+                    println!("RESPONSE: # records {}", recs.len());
+                    utils::writerecs(utils::simppath(symb), &utils::YF_HEADER, recs);
                 }
-                Err(_) => println!("ERROR reading {}", url),
+                Err(_) => println!("ERROR reading"),
             },
-            Err(_) => println!("ERROR downloading {}", url),
+            Err(_) => println!("ERROR downloading"),
         }
-    })
-    ).buffer_unordered(8)
+    }))
+    .buffer_unordered(16)
     .collect::<Vec<()>>();
     fetches.await;
     Ok(())
