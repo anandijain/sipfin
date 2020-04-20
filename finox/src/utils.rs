@@ -17,10 +17,9 @@ use crate::getters;
 use crate::keys;
 use crate::news;
 use crate::sa;
+use crate::steam;
 use crate::types;
 use crate::yf;
-use crate::steam;
-
 
 // // IND COM CUR US GOV
 // pub enum Security {
@@ -137,14 +136,40 @@ pub fn yf_symb(url: String) -> Option<Vec<csv::StringRecord>> {
 }
 
 pub fn yf_US() -> Result<(), reqwest::Error> {
-    let symbs = read_tickers("./data/sp500tickers_yf.txt");
+    let mut symbs = read_tickers("./ref_data/tickers.txt");
+    // let index = symbs
+    //     .iter()
+    //     .position(|r| r.to_string() == start_slug)
+    //     .unwrap();
+    // let todo_symbs = &symbs[index..symbs.len()];
     for s in symbs.iter() {
         write_yf(Security::US(s.to_string()));
     }
     Ok(())
 }
 
-pub fn yf_X() -> Result<(), reqwest::Error> {
+pub fn yf_Xs(xs: Vec<Security>) -> Result<(), reqwest::Error> {
+    for x in xs.iter() {
+        write_yf(x.to_owned());
+    }
+    Ok(())
+}
+
+pub fn yf_x_urls() -> Vec<Security> {
+    let mut symbs: Vec<Security> = Vec::new();
+    for s1 in CURRENCY_SYMBOLS_YF.iter() {
+        for s2 in CURRENCY_SYMBOLS_YF.iter() {
+            if s1 == s2 {
+                continue;
+            }
+            let symb = format!("{}{}", s1.to_string(), s2.to_string());
+            symbs.push(Security::X(symb));
+        }
+    }
+    return symbs;
+}
+
+pub async fn async_yf_X() -> Result<(), reqwest::Error> {
     for s1 in CURRENCY_SYMBOLS_YF.iter() {
         for s2 in CURRENCY_SYMBOLS_YF.iter() {
             if s1 == s2 {
@@ -164,6 +189,13 @@ pub fn yf_F() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
+pub async fn async_yf_F() -> Result<(), reqwest::Error> {
+    for s in COMMODITIES_SYMBOLS_YF.iter() {
+        write_yf(Security::F(s.to_string()));
+    }
+    Ok(())
+}
+
 pub fn sa() -> Result<(), reqwest::Error> {
     let url = "https://seekingalpha.com/get_trending_articles";
     if let Ok(body) = getters::simple_get(url.to_string()) {
@@ -177,7 +209,7 @@ pub fn sa() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-pub fn reuters() -> Result<(), csv::Error>{
+pub fn reuters() -> Result<(), csv::Error> {
     let file_name = "./reuters.csv".to_string();
     let mut wtr = csv::Writer::from_path(file_name.to_string())?;
     wtr.write_record(&REUTERS_HEADER);
@@ -189,9 +221,9 @@ pub fn reuters() -> Result<(), csv::Error>{
                 .into_iter()
                 .map(|x| csv::StringRecord::from(x))
                 .collect();
-                for r in recs.iter(){
-                    wtr.write_record(r);
-                }
+            for r in recs.iter() {
+                wtr.write_record(r);
+            }
         }
     }
     wtr.flush();
@@ -257,7 +289,6 @@ pub fn nytarchive() -> Result<(), csv::Error> {
     Ok(())
 }
 
-
 // pub fn steam_listings() -> Result<(), csv::Error> {
 //     let url = "https://steamcommunity.com/market/recent?country=US&language=english&currency=1";
 //     if let Ok(body) = getters::simple_get(url.to_string()) {
@@ -283,25 +314,28 @@ pub fn steam_purchases() -> Result<(), csv::Error> {
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        writerecs("./steam_recent_purchases.csv".to_string(), &steam::STEAM_PURCHASE_HEADER2, recs);
+        writerecs(
+            "./steam_recent_purchases.csv".to_string(),
+            &steam::STEAM_PURCHASE_HEADER2,
+            recs,
+        );
     }
     Ok(())
 }
 
 pub fn lilmatcher(s: Option<String>) -> String {
-    match s{
-            Some(s) => s.to_string(),
-            None => "".to_string(),
+    match s {
+        Some(s) => s.to_string(),
+        None => "".to_string(),
     }
 }
 
 pub fn lilmatcher_i64(s: Option<i64>) -> String {
-    match s{
-            Some(s) => s.to_string(),
-            None => "".to_string(),
+    match s {
+        Some(s) => s.to_string(),
+        None => "".to_string(),
     }
 }
-
 
 // pub fn steam_sold() -> Result<(), csv::Error> {
 //     let url = "https://steamcommunity.com/market/recentcompleted";

@@ -5,9 +5,10 @@ import requests
 import glob
 import datetime
 import matplotlib.pyplot as plt
-import sentiment
 
 from functools import reduce
+from transformers import pipeline
+import pandas as pd
 
 
 def page(link: str) -> bs4.BeautifulSoup:
@@ -56,7 +57,7 @@ def convert_dts(dfs, colname):
 
 
 def col_to_txt(df, col: str, fn: str):
-    l = df[[col]].to_csv(index=False, sep='\n')
+    df[[col]].to_csv(index=False, sep='\n', header=False)
 
 
 def getem():
@@ -84,72 +85,61 @@ def yf_com() -> pd.DataFrame:
 def candle_plot(tick: str):
     dt = datetime.date.today()
     root = "~/sipfin/finox/"
-    path = f"{root}data/{tick}:US_2020_4_18.csv"
-    print(path)
+    path = f"{root}data/{tick}:US_{dt.year}_{dt.month}_{dt.day}.csv"
     df = pd.read_csv(path)
-    df2 = pd.read_csv(root + "sa.csv")
-    df2 = sentiment.add_sentiments(df2, "title")
-    df2 = df2[df2.slug == tick.lower()]
+
+    df2 = pd.read_csv(root + "ref_data/sa.csv")
+    df2 = add_sentiments(df2, "title")
+    union_rows = df2[df2.slug == tick.lower()]
+    print(tick, union_rows)
 
     fig = go.Figure(data=[go.Candlestick(x=df['t'],
                                          open=df[f'o_{tick}:US'], high=df[f'h_{tick}:US'],
                                          low=df[f'o_{tick}:US'], close=df[f'c_{tick}:US'])
                           ])
-    for index, row in df2.iterrows():
-        print(row)
-        fig.update_layout(
-            title=f"{tick}: {row['title']}, {row['sentiment_label']}, {row['sentiment_score']}",
-            yaxis_title=f'{tick} candlestick',
-            shapes=[dict(
-                x0=row['publish_on'], x1=row['publish_on'], y0=0, y1=1, xref='x', yref='paper',
-                line_width=2)],
-            annotations=[dict(
-                x=row['publish_on'], y=0.05, xref='x', yref='paper',
-                showarrow=False, xanchor='left', text=row['title'])],
+    shapes = []
+    annotes = []
+    i = 1
+    for index, row in union_rows.iterrows():
+        shapes.append(dict(
+            x0=row['publish_on'], x1=row['publish_on'], y0=0, y1=1, xref='x', yref='paper',
+            line_width=2))
+        annotes.append(dict(
+            x=row['publish_on'], y=i*0.1, xref='x', yref='paper',
+            showarrow=False, xanchor='left', text=row['title'])
         )
+        i += 1
+    row = union_rows.iloc[0]
+    fig.update_layout(
+        title=f"{tick}: {row.title}, {row['sentiment_label']}, {row['sentiment_score']}",
+        yaxis_title=f'{tick} candlestick',
+        shapes=shapes,
+        annotations=annotes,
+    )
 
     fig.show()
 
 
-def steam_market_listings():
-    root = 'https://steamcommunity.com/market/listings/'
+def add_sentiments(df: pd.DataFrame, col: str, label_col="sentiment_label", score_col="sentiment_score") -> pd.DataFrame:
+    nlp = pipeline('sentiment-analysis')
+    sentiments = [nlp(text)[0] for text in df[col]]
+
+    labels = [s['label'] for s in sentiments]
+    labels = pd.Series(labels, name=label_col)
+
+    scores = [s['score'] for s in sentiments]
+    scores = pd.Series(scores, name=score_col)
+
+    return pd.concat([df, labels, scores], axis=1)
 
 
 if __name__ == "__main__":
-    # df = merge_em()
-    # df.to_csv('intraday_merged.csv')
-    # df = yf_com()
-    # print(df.Symbol.to_list())
-    intersects = [
-        "atvi",
-        "amzn",
-        "aos",
-        "ba",
-        "cah",
-        "cop",
-        "dvn",
-        "dfs",
-        "etr",
-        "eog",
-        "gild",
-        "ibm",
-        "iqv",
-        "ksu",
-        "key",
-        "kr",
-        "ms",
-        "nflx",
-        "nke",
-        "rtx",
-        "o",
-        "rf",
-        "stt",
-        "syy",
-        "vlo",
-        "wba",
-        "wfc"
-    ]
+    max_plots = 5
 
-    # todo covariance of 5-10 mins out with sentiment score
-    for elt in intersects:
-        candle_plot(elt.upper())
+    f = open("../finox/ref_data/intersect_sa_yf.txt", "r")
+    intersects = f.read().splitlines()
+
+    for i, elt in enumerate(intersects):
+        candle_plot(elt)
+        # if i >= max_plots:
+        #     break

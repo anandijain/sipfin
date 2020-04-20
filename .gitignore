@@ -1,4 +1,5 @@
 data/
+ref_data/
 finox/target/
 finox/Cargo.lock
 .vscode/
@@ -7,3 +8,4 @@ __pycache__/
 sipfin/config.py
 *.csv
 *.json
+*.txt
