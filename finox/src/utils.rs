@@ -19,6 +19,7 @@ use crate::news;
 use crate::sa;
 use crate::types;
 use crate::yf;
+use crate::steam;
 
 
 // // IND COM CUR US GOV
@@ -243,6 +244,32 @@ pub fn nytarchive() -> Result<(), csv::Error> {
     Ok(())
 }
 
+
+pub fn steam_new() -> Result<(), csv::Error> {
+    let url = "https://steamcommunity.com/market/recent?country=US&language=english&currency=1";
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
+        println!("{:#?}", root);
+        // let recs = steam::Steam::to_records(&root)
+        //     .into_iter()
+        //     .map(|x| csv::StringRecord::from(x))
+        //     .collect();
+        // writerecs("./steam_new.csv".to_string(), &STEAM_HEADER, recs);
+    }
+    Ok(())
+}
+
+// pub fn steam_sold() -> Result<(), csv::Error> {
+//     let url = "https://steamcommunity.com/market/recentcompleted";
+//     if let Ok(body) = getters::simple_get(url.to_string()) {
+//         let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
+//         // let recs = news::WSJ::to_records(&root)
+//         //     .into_iter()
+//         //     .map(|x| csv::StringRecord::from(x))
+//         //     .collect();
+//         // writerecs("./steam_sold.csv".to_string(), &STEAM_HEADER, recs);
+//     }
+// }
 // todo , generalizing, refactor
 // struct SGen<T>(T);
 

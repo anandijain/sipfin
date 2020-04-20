@@ -13,6 +13,7 @@ mod news;
 mod utils;
 mod yf;
 mod sa;
+mod steam;
 mod keys;
 
 fn main() -> Result<(), reqwest::Error> {
@@ -25,7 +26,7 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::hs_and_st()
     let t1 = Instant::now();
 
-    utils::yf_US(); 
+    // utils::yf_US(); 
     // utils::yf_X();
     // utils::yf_F();
 
@@ -34,6 +35,8 @@ fn main() -> Result<(), reqwest::Error> {
     // utils::reuters();
     // utils::wsj_videos();
     // utils::sa();
+
+    utils::steam_new();
     println!("{}", t1.elapsed().as_secs());
 
     Ok(())

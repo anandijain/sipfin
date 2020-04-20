@@ -111,6 +111,10 @@ def candle_plot(tick: str):
     fig.show()
 
 
+def steam_market_listings():
+    root = 'https://steamcommunity.com/market/listings/'
+
+
 if __name__ == "__main__":
     # df = merge_em()
     # df.to_csv('intraday_merged.csv')
