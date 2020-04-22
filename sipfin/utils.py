@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import bs4
 import pandas as pd
-import requests
+import requests as r
 import glob
 import datetime
 import matplotlib.pyplot as plt
@@ -15,15 +15,17 @@ def page(link: str) -> bs4.BeautifulSoup:
     """
 
     """
-    p = bs4.BeautifulSoup(requests.get(link).text, 'html.parser')
+    p = bs4.BeautifulSoup(r.get(link).text, 'html.parser')
     return p
 
 
-def get_dfs(link: str) -> list:
+def get_dfs(link: str, fn=None) -> list:
     """
-
+    // fn only writes first, (most common)
     """
     dfs = [pd.read_html(p.prettify()) for p in page(link).find_all('table')]
+    if fn:
+        dfs[0][0].to_csv(fn, index=False)
     return dfs
 
 

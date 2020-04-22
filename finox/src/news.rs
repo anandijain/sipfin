@@ -15,9 +15,8 @@ impl NewsVec {
     pub fn to_records(&self) -> Result<Vec<csv::StringRecord>, csv::Error> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
         for article in self.news.iter() {
-                ret.push(News::to_record(article));
-            }
-        
+            ret.push(News::to_record(article));
+        }
         Ok(ret)
     }
 }
@@ -44,14 +43,12 @@ impl News {
     }
 }
 
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Channel {
     pub path: String,
     pub name: String,
 }
-
 
 // https://sope.prod.reuters.tv/program/rcom/v1/article-recirc?edition=cn&modules=rightrail,ribbon,bottom
 
@@ -72,7 +69,6 @@ impl TR {
         return recs;
     }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -108,7 +104,7 @@ pub struct TRStory {
 
 impl TRStory {
     pub fn to_record(&self) -> Vec<String> {
-        let rec: Vec<String> = vec!(
+        let rec: Vec<String> = vec![
             self.id.to_string(),
             self.updated.to_string(),
             self.headline.replace(",", ";").to_string(),
@@ -116,7 +112,7 @@ impl TRStory {
             self.path.to_string(),
             self.channel.name.to_string(),
             self.channel.path.to_string(),
-            );
+        ];
         return rec;
     }
 }
@@ -131,13 +127,12 @@ pub struct WSJ {
 impl WSJ {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
-        for hl in self.items.iter(){
+        for hl in self.items.iter() {
             recs.push(WSJVideos::to_record(hl));
         }
         return recs;
     }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -160,7 +155,7 @@ pub struct WSJVideos {
 
 impl WSJVideos {
     pub fn to_record(&self) -> Vec<String> {
-        let rec: Vec<String> = vec!(
+        let rec: Vec<String> = vec![
             self.id.to_string(),
             self.unix_creation_date.to_string(),
             self.name.replace(",", ";").to_string(),
@@ -170,7 +165,7 @@ impl WSJVideos {
             self.doctype_id.to_string(),
             self.email_url.to_string(),
             self.thumbnail_url.to_string(),
-            );
+        ];
         return rec;
     }
 }
@@ -189,7 +184,7 @@ pub struct NYTFeed {
 impl NYTFeed {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
-        for article in self.results.iter(){
+        for article in self.results.iter() {
             recs.push(NYTFeedArticle::to_record(article));
         }
         return recs;
@@ -254,17 +249,17 @@ impl NYTFeedArticle {
             None => "".to_string(),
         };
         let des = match &self.des_facet {
-        Some(s) => s[0].replace(",", ";").to_string(),
+            Some(s) => s[0].replace(",", ";").to_string(),
             None => "".to_string(),
         };
-        let per= match &self.per_facet {
+        let per = match &self.per_facet {
             Some(s) => s[0].replace(",", ";").to_string(),
             None => "".to_string(),
         };
 
         let thumbnail_url = utils::lilmatcher(self.thumbnail_standard.clone());
 
-        let rec: Vec<String> = vec!(
+        let rec: Vec<String> = vec![
             self.slug_name.to_string(),
             self.first_published_date.to_string(),
             self.section.to_string(),
@@ -286,7 +281,7 @@ impl NYTFeedArticle {
             thumbnail_url.to_string(),
             self.kicker.to_string(),
             self.item_type.to_string(),
-            );
+        ];
         return rec;
     }
 }
@@ -316,13 +311,12 @@ pub struct NYTArchive {
 impl NYTArchive {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
-        for article in self.response.docs.iter(){
+        for article in self.response.docs.iter() {
             recs.push(NYTArchiveArticle::to_record(article));
         }
         return recs;
     }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -380,14 +374,13 @@ impl NYTArchiveArticle {
         // let first_name = lilmatcher(self.byline.person.firstname);
         // let first_name = lilmatcher(self.byline.person.middlename);
         // let first_name = lilmatcher(self.byline.person.lastname);
-        
         let orig: String = byline_orig(self.byline.clone());
         let snip = utils::lilmatcher(self.snippet.clone());
         let abs_field = utils::lilmatcher(self.abstract_field.clone());
         let page = utils::lilmatcher(self.print_page.clone());
         let kicker = utils::lilmatcher(self.headline.kicker.clone());
-        
-        let rec: Vec<String> = vec!(
+
+        let rec: Vec<String> = vec![
             self.id.to_string(),
             self.word_count.to_string(),
             orig.replace(",", ";").to_string(),
@@ -400,11 +393,10 @@ impl NYTArchiveArticle {
             abs_field.replace(",", ";").to_string(),
             self.web_url.to_string(),
             self.source.to_string(),
-            );
+        ];
         return rec;
     }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -416,8 +408,8 @@ pub struct NYTArchiveHeadline {
     #[serde(rename = "print_headline")]
     pub print_headline: Option<String>,
     pub name: Option<serde_json::Value>,
-    pub seo:  Option<serde_json::Value>,
-    pub sub:  Option<serde_json::Value>,
+    pub seo: Option<serde_json::Value>,
+    pub sub: Option<serde_json::Value>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -458,3 +450,117 @@ pub fn byline_orig(byline: Option<Byline>) -> String {
     return "".to_string();
 }
 
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JPXNews {
+    pub kind: String,
+    pub category: Vec<String>,
+    pub corporation: Vec<String>,
+    #[serde(rename = "ir_category")]
+    pub ir_category: Vec<String>,
+    #[serde(rename = "product_category")]
+    pub product_category: Vec<String>,
+    pub title: String,
+    pub url: String,
+    #[serde(rename = "updated_date")]
+    pub updated_date: JPXUpdatedDate,
+    #[serde(rename = "display_type")]
+    pub display_type: String,
+    #[serde(rename = "external_flg")]
+    pub external_flg: Vec<String>,
+    #[serde(rename = "extension_icon")]
+    pub extension_icon: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JPXUpdatedDate {
+    pub year: String,
+    pub month: String,
+    pub day: String,
+}
+
+impl JPXNews {
+    pub fn to_record(&self) -> Vec<String> {
+        let ret: Vec<String> = vec![
+            self.kind.to_string(),
+            self.category[0].to_string(),
+            self.corporation[0].to_string(),
+            self.ir_category[0].to_string(),
+            self.product_category[0].to_string(),
+            self.title.replace(",", " "),
+            self.url.to_string(),
+            self.updated_date.year.to_string(),
+            self.updated_date.month.to_string(),
+            self.updated_date.day.to_string(),
+        ];
+        return ret;
+    }
+}
+
+pub const JPXNewsHeader: [&'static str; 10] = [
+    "kind",
+    "category",
+    "corporation",
+    "ir_category",
+    "product_category",
+    "title",
+    "url",
+    "year",
+    "month",
+    "day",
+];
+
+/*
+admin
+arts
+automobiles
+books
+briefing
+business
+climate
+corrections
+crosswords \u0026 games
+education
+en español
+fashion
+food
+guides
+health
+home \u0026 garden
+home page
+job market
+lens
+magazine
+movies
+multimedia/photos
+new york
+obituaries
+opinion
+parenting
+podcasts
+reader center
+real estate
+science
+smarter living
+sports
+style
+sunday review
+t brand
+t magazine
+technology
+the learning network
+the upshot
+the weekly
+theater
+times insider
+today’s paper
+travel
+u.s.
+universal
+video
+well
+world
+your money
+
+*/

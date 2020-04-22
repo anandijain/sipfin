@@ -11,6 +11,7 @@ use std::{
     path::Path,
     thread,
     time::{Duration, Instant},
+
 };
 
 use crate::getters;
@@ -62,6 +63,18 @@ pub fn writerecs(
 ) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_path(file_name.to_string())?;
     wtr.write_record(header);
+    for r in records.iter() {
+        wtr.write_record(r);
+    }
+    Ok(())
+}
+
+pub fn appendrecs(
+    file_name: String,
+    records: Vec<csv::StringRecord>,
+) -> Result<(), Box<dyn Error>> {
+    let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
+    let mut wtr = csv::Writer::from_writer(file);
     for r in records.iter() {
         wtr.write_record(r);
     }
@@ -155,7 +168,7 @@ pub fn yf_Xs(xs: Vec<Security>) -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-pub fn yf_x_urls() -> Vec<Security> {
+pub fn x_securities() -> Vec<Security> {
     let mut symbs: Vec<Security> = Vec::new();
     for s1 in CURRENCY_SYMBOLS_YF.iter() {
         for s2 in CURRENCY_SYMBOLS_YF.iter() {
@@ -166,10 +179,11 @@ pub fn yf_x_urls() -> Vec<Security> {
             symbs.push(Security::X(symb));
         }
     }
+    println!("{}", symbs.len());
     return symbs;
 }
 
-pub fn yf_us_urls() -> Vec<Security> {
+pub fn us_securities() -> Vec<Security> {
     let symbs: Vec<Security> = read_tickers("./ref_data/sp500tickers_yf.txt")
         .into_iter()
         .map(|x| Security::US(x))
@@ -257,7 +271,7 @@ pub fn wsj_videos() {
 
 pub fn nytfeed() -> Result<(), reqwest::Error> {
     let url = format!(
-        "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}",
+        "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}&limit=200",
         keys::NYT_KEY.to_string()
     );
     if let Ok(body) = getters::simple_get(url.to_string()) {
@@ -451,3 +465,4 @@ pub const NYT_ARCHIVE_HEADER: [&'static str; 12] = [
     "id", "wc", "by", "pub", "doctype", "page", "headline", "kicker", "snippet", "abstract", "url",
     "source",
 ];
+
