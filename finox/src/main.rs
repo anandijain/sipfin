@@ -21,10 +21,10 @@ mod getters;
 mod news;
 mod sa;
 mod steam;
-mod types;
 mod utils;
 mod yf;
 mod weather;
+mod bloomberg;
 //old
 // utils::currencies_intraday("INR".to_string())
 // utils::sp500("CMCSA".to_string(), false)
@@ -63,14 +63,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // utils::sa();
     // utils::steam_purchases();
 
-    let urls: Vec<String> = vec!(
-        // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22currencies%22%5D".to_string(),
-        // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22commodities%22%5D".to_string(),
-        // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22bonds%22%5D".to_string(),
-        "https://www.jpx.co.jp/english/news/news_ym_01.json".to_string(),
+    // let urls: Vec<String> = vec!(
+    //     // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22currencies%22%5D".to_string(),
+    //     // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22commodities%22%5D".to_string(),
+    //     // "https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;listIds=%5B%22bonds%22%5D".to_string(),
+    //     "https://www.jpx.co.jp/english/news/news_ym_01.json".to_string(),
         
-    );
-    async_yflist(urls);
+    // );
+    // async_yflist(urls);
+    let urls = bloomberg::currency_urls();
+    println!("{:#?}", urls);
     Ok(())
 }
 

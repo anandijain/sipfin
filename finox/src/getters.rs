@@ -2,7 +2,6 @@ extern crate csv;
 extern crate serde;
 
 use crate::news;
-use crate::types;
 use crate::yf;
 use std::collections::HashMap;
 

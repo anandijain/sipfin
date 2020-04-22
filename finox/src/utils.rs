@@ -19,7 +19,6 @@ use crate::keys;
 use crate::news;
 use crate::sa;
 use crate::steam;
-use crate::types;
 use crate::yf;
 
 // // IND COM CUR US GOV
@@ -398,9 +397,7 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
     "mx", "ru",
 ];
 
-pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 
-pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
 pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
 
