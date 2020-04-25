@@ -77,6 +77,7 @@ pub fn appendrecs(
     for r in records.iter() {
         wtr.write_record(r);
     }
+    wtr.flush()?;
     Ok(())
 }
 
@@ -396,7 +397,6 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
     "cn", "de", "in", "jp", "uk", "us", "af", "ar", "ara", "br", "ca", "es", "fr", "it", "lta",
     "mx", "ru",
 ];
-
 
 
 pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];

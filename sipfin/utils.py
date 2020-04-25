@@ -59,7 +59,7 @@ def convert_dts(dfs, colname):
 
 
 def col_to_txt(df, col: str, fn: str):
-    df[[col]].to_csv(index=False, sep='\n', header=False)
+    df[[col]].to_csv(fn, index=False, sep='\n', header=False)
 
 
 def getem():

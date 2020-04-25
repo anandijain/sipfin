@@ -70,34 +70,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     "https://www.jpx.co.jp/english/news/news_ym_01.json".to_string(),
         
     // );
-    // async_yflist(urls);
-    let urls = bloomberg::currency_urls();
-    println!("{:#?}", urls);
+    let urls = bloomberg::us_tickers();
+    // println!("{:#?}", urls);
+    for url in urls.iter() {
+        if let Some(yup) = bloomberg::get_intraday_or_history(url.clone()) {
+            let recs: Vec<csv::StringRecord> = bloomberg::Intraday::price_records(&yup[0])
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+            println!("{:#?}", recs);
+            }
+    }
+    // async_urls(urls.clone());
     Ok(())
 }
 
 
 #[tokio::main]
-async fn async_yflist(urls: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
+async fn async_urls(urls: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     
     // let client = reqwest::Client::builder().build()
-    let file_name = "jpxnewstest.csv".clone().to_string();
-    let mut wtr = csv::Writer::from_path(file_name.clone())?;
-    wtr.write_record(&mut news::JPXNewsHeader.iter());
+    let file_name = "bloomberg_test2.csv".clone().to_string();
+    // let mut wtr = csv::Writer::from_path(file_name.clone())?;
+    // wtr.write_record(&mut bloomberg::PRICE_HEADER.iter());
     
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         match reqwest::get(&url.clone()).await {
-            Ok(resp) => match resp.json::<Vec<news::JPXNews>>().await {
+            Ok(resp) => match resp.json::<bloomberg::Intraday>().await {
                 Ok(root) => {
-                    let recs: Vec<csv::StringRecord> = root
+                    // for r in root.iter() {
+                        let recs: Vec<csv::StringRecord> = bloomberg::Intraday::price_records(&root)
                         .into_iter()
-                        .map(|x| csv::StringRecord::from(news::JPXNews::to_record(&x)))
+                        .map(|x| csv::StringRecord::from(x))
                         .collect();
-                    println!("RESPONSE: # records {}", recs.len());
-                    // println!("RESPONSE: {:#?}", recs);
-                    utils::appendrecs("jpxnewstest.csv".to_string(), recs);
+                        println!("RESPONSE: # records {}", recs.len());
+                        // println!("RESPONSE: {:#?}", recs);
+                        utils::writerecs(format!("./blom/{}.csv", url[48..url.len()].to_string()).to_string(), &bloomberg::PRICE_HEADER.to_vec(), recs);
+                    // }
                 }
-                Err(_) => println!("ERROR reading"),
+                Err(s) => println!("ERROR reading {} {:#?}", url.to_string(), s),
             },
             Err(_) => println!("ERROR downloading"),
         }
@@ -107,7 +118,7 @@ async fn async_yflist(urls: Vec<String>) -> Result<(), Box<dyn std::error::Error
     fetches.await;
     Ok(())
 }
-
+// https://www.bloomberg.com/markets2/api/intraday/ZSL:US?days=1
 fn sync_main(secs: Vec<utils::Security>) -> Result<(), Box<dyn std::error::Error>> {
     // let xs: Vec<utils::Security> = utils::yf_x_urls();
     // utils::yf_Xs(xs.to_owned());
@@ -121,6 +132,7 @@ fn sync_main(secs: Vec<utils::Security>) -> Result<(), Box<dyn std::error::Error
     }
     Ok(())
 }
+
 
 #[tokio::main]
 async fn async_main(secs: Vec<utils::Security>) -> Result<(), Box<dyn std::error::Error>> {
