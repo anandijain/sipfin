@@ -1,70 +1,68 @@
-using Plots, CSV, DataFrames, Glob, Dates
-using Statistics, StatsBase, Dates
+module Utils
+using Plots, Dates
+using CSV, DataFrames, Glob
 using DelimitedFiles 
 
-;pwd
-;cd ..
+function sa_yf()
+    # we're assuming we just ran finox w cargo run,
+    now = Dates.today()
+    yr = string(year(now))
+    month = string(Dates.month(now))
+    day = string(Dates.day(now))
+    # fns = Glob.glob("*:US_$(yr)_$(month)_$(day).csv", "./data/")
+    sa = CSV.read("./ref_data/sa.csv")
+    sa_slugs = uppercase.(unique(dropmissing(sa, :slug).slug))
+    # reg = r"data\/(.*):"
+    # matches = match.(reg, fns)
+    # yf_slugs = map(x -> x.captures[1], matches)
+    yf_slugs = readlines("./ref_data/tickers.txt")
+    intersect_ticks = intersect(sa_slugs, yf_slugs)
+    println(intersect_ticks)
+    str_arr_to_txt("./ref_data/intersect_sa_yf.txt", intersect_ticks)
+end
 
-now = Dates.today()
-yr = string(year(now))
-month = string(Dates.month(now))
-day = string(Dates.day(now))
-regex_d = Regex(":US_$(yr)_$(month)_$(day).csv")
+function df_col_to_txt(fn::String, df::AbstractDataFrame, s::Symbol)
+    open(fn, "w") do io
+        writedlm(io, df[:, s], "\n")
+    end
+end
 
-
-stock_fns = Glob.glob("*:US_$(yr)_$(month)_$(day).csv*", "./data/")
-com_fns = Glob.glob("*:F_$(yr)_$(month)_$(day).csv*", "./data/")
-cur_fns = Glob.glob("*:X_$(yr)_$(month)_$(day).csv*", "./data/")
-
-USs = CSV.read.(stock_fns)
-Fs = CSV.read.(com_fns)
-Xs = CSV.read.(cur_fns)
-
-norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
-norm_mat(m::AbstractMatrix) = hcat(map(a -> (a .- mean(a)) ./ std(a), eachcol(m))...)
-norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
-
-
-# df = CSV.read("../intraday_inner.csv")
-# pv = df[:, 3:end]
-# df = df[:, 2:end]
-ndf = norm_df(pv)
-# df = dfs[1]
-dtfmt = DateFormat("Y-m-d H:M:S+H:S")
-ndf.date_time = Date.(ndf.date_time, dtfmt)
-
-colnames = names(ndf)
-colnames = names(df)[2:end]
-ndf.date_time
-
-plot(ndf.date_time, [df.AAPL_price, df.AAPL_volume])
-
-df = join(dfs..., on=:t, makeunique=true)
-
-desc = sort(describe(df), :nmissing)
-
-for cn in colnames
-    display(plot(df.date_time, df[:, cn], label=cn))
-    print(cn)
+function str_arr_to_txt(fn::String, arr::Array{String, 1})
+    open(fn, "w") do io
+        writedlm(io, arr, "\n")
+    end
 end
 
 
-df[:, r":US_$(yr)_$(month)_$(day).csv"]
-df[:, r"h.*.:X"]
-df[:, r"h.*.:F"]
+function sec13f_fix()
+    for fn in Glob.glob("./ref_data/rentec/*.csv")
+        header = Symbol.(["nameOfIssuer",
+        "titleOfClass",
+        "cusip",
+        "value",
+        "sshPrnamt",
+        "sshPrnamtType",
+        "investmentDiscretion",
+        "otherManager",
+        "Sole",
+        "Shared",
+        "None"])
+        df = DataFrame(permutedims(Matrix(CSV.read(fn, header=false))), header)
+        print(df)
+        CSV.write(fn, df)
+    end
+end
 
-ticks = CSV.read("./data/sp500tickers.txt", header=false)
-slugs = CSV.read("./sa.csv")
 
-funds = CSV.read("/home/sippycups/sipfin/mfundslist.txt", delim="|")[1:end-1, :]
+# sa_yf()
+# sec13f_fix()
 
-to_plot = intersect(lowercase.(ticks.Column1), slugs.slug)
+function change_sep(fn) 
+    df = CSV.read("$fn.txt", delim="|")
+    rename!(x -> Symbol(replace(string(x), " "=>"_")), df)
+    CSV.write("$fn.csv", df)
+    return df
+end
 
 
-
-
-df_col_to_txt("ndaq_funds.txt", funds, Symbol("Fund Symbol"))
-
-
-reg = r"data\/(.*):"
-
+end

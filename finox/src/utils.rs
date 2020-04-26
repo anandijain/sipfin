@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate csv;
 use chrono::{Datelike, Utc};
+use regex::Regex;
 
 use std::{
     clone,
@@ -20,6 +21,8 @@ use crate::news;
 use crate::sa;
 use crate::steam;
 use crate::yf;
+use crate::gs;
+use crate::jpxnews;
 
 // // IND COM CUR US GOV
 // pub enum Security {
@@ -45,6 +48,28 @@ impl fmt::Display for Security {
     }
 }
 
+// impl Security {
+//     pub fn to_yf(&self) -> String {
+
+//     }
+// }
+
+// fn some_helper_function(text: &str) -> bool {
+//     lazy_static! {
+//         static ref RE: Regex = Regex::new(r"chart\/(?<symb>.+?(?=\?))?").unwrap();
+//     }
+//     RE.is_match(text)
+// }
+
+pub fn yf_symb_from_url(url: String) -> Option<String> {
+    //example 
+    let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
+    if let Some(caps) = re.captures(&url) {
+        return Some(caps.name("symb").unwrap().as_str().to_string());
+    }
+    return None;
+}
+
 pub fn yf_url(s: Security) -> String {
     let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
     let sfx = "&range=7d&interval=1m";
@@ -53,6 +78,10 @@ pub fn yf_url(s: Security) -> String {
         Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
         Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
     }
+}
+
+pub fn xueqiu_url(s: String) -> String {
+    return format!("https://stock.xueqiu.com/v5/stock/realtime/quotec.json?symbol={}", s.to_string());
 }
 
 pub fn writerecs(
@@ -102,7 +131,7 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
         .collect()
 }
 
-pub fn simppath(s: Security) -> String {
+pub fn simppath(s: String) -> String {
     //sfx enum x, f, us
     let now = Utc::now();
     return format!(
@@ -125,7 +154,7 @@ pub fn chart_headers(s: String) -> Vec<String> {
 
 pub fn write_yf(s: Security) -> Result<(), csv::Error> {
     if let Some(recs) = yf_symb(yf_url(s.clone())) {
-        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.clone())) {
+        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string())) {
             let headers = chart_headers(s.to_string());
             wtr.write_record(headers);
             for r in recs.iter() {
@@ -269,6 +298,33 @@ pub fn wsj_videos() {
     }
 }
 
+pub fn jpxnews() -> Result<(), reqwest::Error> {
+    let url = "https://www.jpx.co.jp/english/news/news_ym_01.json";
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let root: Vec<jpxnews::Root> = serde_json::from_str(&body.to_string()).unwrap();
+        let mut recs: Vec<csv::StringRecord> = Vec::new();
+        for r in root.iter() {
+            recs.push(csv::StringRecord::from(jpxnews::Root::to_record(r)));
+        }
+        writerecs("./jpxnews.csv".to_string(), &jpxnews::JPXNewsHeader, recs);
+    }
+    Ok(())
+}
+
+pub fn gsnews() -> Result<(), reqwest::Error> {
+    let url = "https://www.goldmansachs.com/insights/insights-articles.json";
+    if let Ok(body) = getters::simple_get(url.to_string()) {
+        let root: gs::Root = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = gs::Root::to_records(&root)
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        writerecs("./gsnews.csv".to_string(), &gs::GS_HEADER, recs);
+    }
+    Ok(())
+}
+
+
 pub fn nytfeed() -> Result<(), reqwest::Error> {
     let url = format!(
         "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}&limit=200",
@@ -284,6 +340,7 @@ pub fn nytfeed() -> Result<(), reqwest::Error> {
     }
     Ok(())
 }
+
 
 pub fn nytarchive() -> Result<(), csv::Error> {
     let filename = "./nyt_archive.csv".to_string();

@@ -11,11 +11,11 @@ from transformers import pipeline
 import pandas as pd
 
 
-def page(link: str) -> bs4.BeautifulSoup:
+def page(link: str, parser:str = 'html.parser') -> bs4.BeautifulSoup:
     """
 
     """
-    p = bs4.BeautifulSoup(r.get(link).text, 'html.parser')
+    p = bs4.BeautifulSoup(r.get(link).text, parser)
     return p
 
 
@@ -27,6 +27,15 @@ def get_dfs(link: str, fn=None) -> list:
     if fn:
         dfs[0][0].to_csv(fn, index=False)
     return dfs
+
+
+def sec_cik_listings(cik:int) -> pd.DataFrame:
+    return get_dfs(f'https://www.sec.gov/Archives/edgar/data/{cik}/')
+
+
+def sec_xml(cik:int, form='13'):
+    link = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type={form}%25&output=atom"
+    return [href.text for href in page(link, 'lxml').find_all('filing-href')]
 
 
 def sp500_df() -> pd.DataFrame:

@@ -9,7 +9,6 @@ use crate::utils;
 // https://stock.xueqiu.com/v5/stock/history/trade.json?symbol=AAPL&count=20
 // https://stock.xueqiu.com/v5/stock/chart/minute.json?symbol=.DJI&period=1d
 
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RealtimeQuotec {
@@ -18,6 +17,18 @@ pub struct RealtimeQuotec {
     pub error_code: i64,
     #[serde(rename = "error_description")]
     pub error_description: ::serde_json::Value,
+}
+
+
+impl RealtimeQuotec {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for t in self.data.iter() {
+            // println!("{:#?}", t);
+            recs.push(Quote::to_record(t));
+        }
+        return recs;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -78,7 +89,7 @@ impl Quote {
             self.high.to_string(),
             self.low.to_string(),
             self.last_close.to_string(),
-            self.avg_price
+            self.avg_price.to_string(),
             self.amount.to_string(),
             self.percent.to_string(),
             self.chg.to_string(),
@@ -116,21 +127,34 @@ pub const snowballQuoteHeader: [&'static str; 19] = [
     "trade_session",
 ];
 
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeHistory {
-    pub data: Data,
+    pub data: Trades,
     #[serde(rename = "error_code")]
     pub error_code: i64,
     #[serde(rename = "error_description")]
     pub error_description: String,
 }
 
+
+impl TradeHistory {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for t in self.data.items.iter() {
+            println!("{:#?}", t);
+            recs.push(Trade::to_record(t));
+        }
+        return recs;
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Trades {
     pub symbol: String,
-    pub items: Vec<Item>,
+    pub items: Vec<Trade>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -158,57 +182,36 @@ pub struct Trade {
 }
 
 
-
-impl Quote {
+impl Trade {
     pub fn to_record(&self) -> Vec<String> {
         let rec: Vec<String> = vec!(
             self.symbol.to_string(),
             self.timestamp.to_string(),
             self.current.to_string(),
-            utils::lilmatcher_i64(self.trade_volume),
-            self.volume.to_string(),
-            self.open.to_string(),
-            self.high.to_string(),
-            self.low.to_string(),
-            self.last_close.to_string(),
-            self.avg_price
-            self.amount.to_string(),
-            self.percent.to_string(),
             self.chg.to_string(),
-            self.market_capital.to_string(),
-            self.turnover_rate.to_string(),
-            self.amplitude.to_string(),
-            self.current_year_percent.to_string(),
+            self.percent.to_string(),
+            self.trade_volume.to_string(),
+            self.side.to_string(),
             self.level.to_string(),
-            self.trade_session.to_string(),
+            utils::lilmatcher(self.trade_type.clone()),
+            self.trade_unique_id.to_string(),
         );
-
         return rec;
     }
 }
 
-pub const snowballQuoteHeader: [&'static str; 19] = [
+pub const snowballTradeHeader: [&'static str; 10] = [
     "symbol",
     "timestamp",
     "current",
-    "trade_volume",
-    "volume",
-    "open",
-    "high",
-    "low",
-    "last_close",
-    "avg_price",
-    "amount",
-    "percent",
     "chg",
-    "market_capital",
-    "turnover_rate",
-    "amplitude",
-    "current_year_percent",
+    "percent",
+    "trade_volume",
+    "side",
     "level",
-    "trade_session",
+    "trade_type",
+    "trade_unique_id",
 ];
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
