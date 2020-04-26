@@ -20,9 +20,6 @@ USs = CSV.read.(stock_fns)
 Fs = CSV.read.(com_fns)
 Xs = CSV.read.(cur_fns)
 
-norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
-norm_mat(m::AbstractMatrix) = hcat(map(a -> (a .- mean(a)) ./ std(a), eachcol(m))...)
-norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 
 
 # df = CSV.read("../intraday_inner.csv")

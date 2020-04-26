@@ -1,7 +1,12 @@
 module Utils
 using Plots, Dates
 using CSV, DataFrames, Glob
-using DelimitedFiles 
+using DelimitedFiles, Statistics
+
+norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
+norm_mat(m::AbstractMatrix) = hcat(map(a -> (a .- mean(a)) ./ std(a), eachcol(m))...)
+norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
+
 
 function sa_yf()
     # we're assuming we just ran finox w cargo run,
@@ -63,6 +68,15 @@ function change_sep(fn)
     CSV.write("$fn.csv", df)
     return df
 end
+
+mavg(vs,n) = [sum(@view vs[i:(i+n-1)])/n for i in 1:(length(vs)-(n-1))]
+
+fib(n) = ([1 1 ; 1 0] ^ n)[1, 1]
+
+function plot_fibs(arr::AbstractArray, range=5:10)
+    plot([mavg(arr, fib(i)) for i in range])
+end
+    
 
 
 end
