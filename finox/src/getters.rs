@@ -17,7 +17,8 @@ pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
     let res = client.get(&url).send().await?;
     thread::sleep(DELAY);
     let body = res.text().await?;
-    println!("{}: {:#?}", url, body);
+    // println!("{}: {:#?}", url, body);
+    println!("{}", url);
     Ok(body)
 }
 

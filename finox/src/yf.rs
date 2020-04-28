@@ -33,6 +33,11 @@ impl Root {
         }
         return ret;
     }
+
+    pub fn meta_record(&self) -> Vec<String> {
+        let rec = Meta::to_record(&self.chart.result[0].meta);
+        return rec;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -55,29 +60,81 @@ pub struct Result {
     pub indicators: Indicators,
 }
 
+// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+// #[serde(rename_all = "camelCase")]
+// pub struct Meta {
+//     pub currency: String,
+//     pub symbol: String,
+//     pub exchange_name: String,
+//     pub instrument_type: String,
+//     pub first_trade_date: i64,
+//     pub regular_market_time: i64,
+//     pub gmtoffset: i64,
+//     pub timezone: String,
+//     pub exchange_timezone_name: String,
+//     pub regular_market_price: f64,
+//     pub chart_previous_close: f64,
+//     pub previous_close: f64,
+//     pub scale: Option<i64>,
+//     pub price_hint: Option<i64>,
+//     pub current_trading_period: Option<TradingPeriod>,
+//     // pub trading_periods: Option<Vec<Vec<TradingPeriod>>>,
+//     pub data_granularity: Option<String>,
+//     pub range: Option<String>,
+//     pub valid_ranges: Vec<String>,
+// }
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
-    pub currency: Option<String>,
-    pub symbol: Option<String>,
-    pub exchange_name: Option<String>,
+    pub currency: String,
+    pub symbol: String,
+    pub exchange_name: String,
     pub instrument_type: String,
-    pub first_trade_date: Option<i64>,
-    pub regular_market_time: Option<i64>,
-    pub gmtoffset: Option<i64>,
-    pub timezone: Option<String>,
+    pub first_trade_date: i64,
+    pub regular_market_time: i64,
+    pub gmtoffset: i64,
+    pub timezone: String,
     pub exchange_timezone_name: String,
-    pub regular_market_price: Option<f64>,
-    pub chart_previous_close: Option<f64>,
-    pub previous_close: Option<f64>,
-    pub scale: Option<i64>,
-    pub price_hint: Option<i64>,
-    pub current_trading_period: Option<TradingPeriod>,
-    pub trading_periods: Option<Vec<Vec<TradingPeriod>>>,
-    pub data_granularity: Option<String>,
-    pub range: Option<String>,
+    pub regular_market_price: f64,
+    pub chart_previous_close: f64,
+    pub price_hint: i64,
+    pub current_trading_period: TradingPeriod,
+    pub data_granularity: String,
+    pub range: String,
     pub valid_ranges: Vec<String>,
 }
+
+impl Meta {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec: Vec<String> = vec![
+            self.symbol.to_string(),
+            self.exchange_name.to_string(),
+            self.instrument_type.to_string(),
+            self.currency.to_string(),
+            self.first_trade_date.to_string(),
+            self.regular_market_time.to_string(),
+            self.gmtoffset.to_string(),
+            self.timezone.to_string(),
+            self.exchange_timezone_name.to_string(),
+        ];
+        return rec;
+    }
+}
+
+
+
+pub const YF_META_HEADER: [&'static str; 9] = [
+"symbol",
+"exchange",
+"instrument",
+"currency",
+"first_trade_date",
+"reg_mkt_time",
+"gmtoffset",
+"tz",
+"exchange_tz",
+];
+
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -92,6 +149,7 @@ pub struct TradingPeriod {
 #[serde(rename_all = "camelCase")]
 pub struct Indicators {
     pub quote: Vec<Option<Quote>>,
+    pub adjclose: Option<::serde_json::Value>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]

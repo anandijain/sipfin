@@ -72,7 +72,8 @@ pub fn yf_symb_from_url(url: String) -> Option<String> {
 
 pub fn yf_url(s: Security) -> String {
     let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
-    let sfx = "&range=7d&interval=1m";
+    // let sfx = "&range=7d&interval=1m";
+    let sfx = "&range=1d&period1={}&period2={}";
     match s {
         Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
         Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
@@ -135,7 +136,7 @@ pub fn simppath(s: String) -> String {
     //sfx enum x, f, us
     let now = Utc::now();
     return format!(
-        "./data/{}_{}_{}_{}.csv",
+        "./data/{}_7d_{}_{}_{}.csv",
         s.to_string(),
         now.year(),
         now.month(),
