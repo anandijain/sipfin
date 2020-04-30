@@ -3,3 +3,4 @@ data/
 Cargo.lock
 *.csv
 keys.rs
+example-Quote-0.db/

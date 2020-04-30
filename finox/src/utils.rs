@@ -70,6 +70,15 @@ pub fn yf_symb_from_url(url: String) -> Option<String> {
     return None;
 }
 
+pub fn symb_from_ndaq_url(url: String) -> Option<String> {
+    //example 
+    let re = Regex::new(r"/quote/(?P<symb>.+).*/info").unwrap();
+    if let Some(caps) = re.captures(&url) {
+        return Some(caps.name("symb").unwrap().as_str().to_string());
+    }
+    return None;
+}
+
 pub fn yf_url(s: Security) -> String {
     let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
     // let sfx = "&range=7d&interval=1m";
@@ -111,6 +120,17 @@ pub fn appendrecs(
     Ok(())
 }
 
+pub fn appendrec(
+    file_name: String,
+    rec: csv::StringRecord,
+) -> Result<(), Box<dyn Error>> {
+    let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
+    let mut wtr = csv::Writer::from_writer(file);
+    wtr.write_record(&rec);
+    wtr.flush()?;
+    Ok(())
+}
+
 pub fn writerecs_strvec(
     file_name: String,
     header: Vec<String>,
@@ -136,7 +156,7 @@ pub fn simppath(s: String) -> String {
     //sfx enum x, f, us
     let now = Utc::now();
     return format!(
-        "./data/{}_7d_{}_{}_{}.csv",
+        "./data/{}_ndaq_{}_{}_{}.csv",
         s.to_string(),
         now.year(),
         now.month(),
@@ -444,6 +464,55 @@ pub fn lilmatcher_i64(s: Option<i64>) -> String {
 //         .collect();
 // }
 
+fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
+    // let file = File::open("rentec_13f.xml")?;
+    // let mut buf_reader = BufReader::new(file);
+    // let mut contents = String::new();
+    let res = vec![
+        Regex::new(r"<nameOfIssuer>(?P<val>.+)</nameOfIssuer>.*()").unwrap(),
+        Regex::new(r"<titleOfClass>(?P<val>.+)</titleOfClass>.*()").unwrap(),
+        Regex::new(r"<cusip>(?P<val>.+)</cusip>.*()").unwrap(),
+        Regex::new(r"<value>(?P<val>.+)</value>.*()").unwrap(),
+        Regex::new(r"<sshPrnamt>(?P<val>.+)</sshPrnamt>.*()").unwrap(),
+        Regex::new(r"<sshPrnamtType>(?P<val>.+)</sshPrnamtType>.*()").unwrap(),
+        Regex::new(r"<investmentDiscretion>(?P<val>.+)</investmentDiscretion>.*()").unwrap(),
+        Regex::new(r"<otherManager>(?P<val>.+)</otherManager>.*()").unwrap(),
+        Regex::new(r"<Sole>(?P<val>.+)</Sole>.*()").unwrap(),
+        Regex::new(r"<Shared>(?P<val>.+)</Shared>.*()").unwrap(),
+        Regex::new(r"<None>(?P<val>.+)</None>.*()").unwrap(),
+    ];
+    // buf_reader.read_to_string(&mut contents)?;
+    let filenames = read_tickers("./rentec13urls.txt");
+    for (i, url) in filenames.iter().enumerate() {
+        let mut allcaps: Vec<Vec<String>> = Vec::new();
+        let contents = getters::simple_get(url.to_string()).unwrap();
+        for re in res.iter() {
+            let mut rec: Vec<String> = Vec::new();
+            for cap in re.captures_iter(&contents.to_string()) {
+                if let Some(val) = cap.name("val") {
+                    rec.push(val.as_str().to_string());
+                } else {
+                    println!("OH FUCK");
+                    rec.push("".to_string());
+                }
+            }
+            allcaps.push(rec);
+        }
+        let path = format!(
+            "./ref_data/rentec/regex_rentec_holdings_{}.csv",
+            i.to_string()
+        );
+        let mut wtr = csv::Writer::from_path(path)?;
+        let len = allcaps[0].len();
+        for vec in allcaps.iter() {
+            assert_eq!(len, vec.len());
+            let rec = csv::StringRecord::from(vec.clone());
+            wtr.write_record(&rec);
+        }
+    }
+    Ok(())
+}
+
 pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD"];
 
 pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
@@ -521,3 +590,17 @@ pub const NYT_ARCHIVE_HEADER: [&'static str; 12] = [
     "source",
 ];
 
+
+pub const SEC13F_HEADER: [&'static str; 11] = [
+    "nameOfIssuer",
+    "titleOfClass",
+    "cusip",
+    "value",
+    "sshPrnamt",
+    "sshPrnamtType",
+    "investmentDiscretion",
+    "otherManager",
+    "Sole",
+    "Shared",
+    "None",
+];

@@ -11,3 +11,4 @@ sipfin/config.py
 *.json
 *.txt
 *.csv#
+*.db

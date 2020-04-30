@@ -50,3 +50,14 @@ slugs = CSV.read("./sa.csv")
 funds = CSV.read("/home/sippycups/sipfin/mfundslist.txt", delim="|")[1:end-1, :]
 to_plot = intersect(lowercase.(ticks.Column1), slugs.slug)
 Utils.df_col_to_txt("ndaq_funds.txt", funds, Symbol("Fund Symbol"))
+
+desc = describe(joined)
+descc = describe(joinedc)
+cols = desc[desc.nmissing .== 1, :variable]
+colsc = descc[descc.nmissing .== 1, :variable]
+ss = dropmissing(joined[:, cols])
+avg_vols = mean.(eachcol(ss))
+scaled = avg_vols / minimum(avg_vols)
+ssc = dropmissing(joinedc[:, colsc])
+
+joinedc = quick(glob_pat, re2, join_n, filt_n)

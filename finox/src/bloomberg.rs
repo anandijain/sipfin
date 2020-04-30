@@ -32,8 +32,7 @@ pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
     "BRL", "CLP", "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF",
     "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
     "THB",
-    ];
-    
+];
 // USD,EUR,XAU,XAG,XPT,XPD,JPY,GBP,AUD,CAD,CHF,KRW,MXN,BRL,CLP,COP,PEN,CRC,ARS,SEK,DKK,NOK,CZK,SKK,PLN,HUF,RUB,TRY,ILS,KES,ZAR,MAD,NZD,PHP,SGD,IDR,CNY,INR,MYR,THB,
 pub const NEWS_SYMBOLS: [&'static str; 5] = [
     "GOVERNMENT_BOND",
@@ -164,7 +163,7 @@ pub const NEWS_HEADER: [&'static str; 3] = ["url", "headline", "date_time"];
 pub const HEADLINES_HEADER: [&'static str; 4] = ["id", "url", "headline", "lastmod"];
 
 pub fn news() -> Result<(), csv::Error> {
-    let write_fn = "./data/news.csv";
+    let write_fn = "./ref_data/news.csv";
     let mut wtr = csv::Writer::from_path(&write_fn)?;
     wtr.write_record(&NEWS_HEADER);
     for s in NEWS_SYMBOLS.iter() {
@@ -176,11 +175,13 @@ pub fn news() -> Result<(), csv::Error> {
             }
         }
     }
+    wtr.flush();
+
     Ok(())
 }
 
 pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
-    let symbs = utils::read_tickers("./data/sp500tickers.txt");
+    let symbs = utils::read_tickers("./ref_data/sp500tickers.txt");
     let index = symbs
         .iter()
         .position(|r| r.to_string() == start.to_string())
@@ -188,8 +189,8 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
 
     let todo_symbs = &symbs[index..symbs.len()];
 
-    let headlines_fn = "./data/sp500_headlines.csv".to_string();
-    let metadata_fn = "./data/sp500.csv".to_string();
+    let headlines_fn = "./ref_data/sp500_headlines.csv".to_string();
+    let metadata_fn = "./ref_data/sp500.csv".to_string();
     let mut meta_wtr = csv::Writer::from_path(&metadata_fn)?;
     let mut lines_wtr = csv::Writer::from_path(&headlines_fn)?;
     meta_wtr.write_record(&STOCK_HEADER);
@@ -554,7 +555,7 @@ pub struct Price {
 
 impl Price {
     pub fn to_record(&self) -> Vec<String> {
-        //csv::StringRecord::from 
+        //csv::StringRecord::from
         return vec![self.date_time.to_string(), self.value.to_string()];
     }
 }

@@ -96,7 +96,9 @@ def yf_com() -> pd.DataFrame:
 def candle_plot(tick: str):
     dt = datetime.date.today()
     root = "~/sipfin/finox/"
-    path = f"{root}data/{tick}:US_{dt.year}_{dt.month}_{dt.day}.csv"
+    pat = f"{root}data/{tick}_7d*.csv"
+    path = glob.glob(pat)
+    print(path)
     df = pd.read_csv(path)
 
     df2 = pd.read_csv(root + "ref_data/sa.csv")
@@ -151,6 +153,9 @@ if __name__ == "__main__":
     intersects = f.read().splitlines()
 
     for i, elt in enumerate(intersects):
+        # try: 
         candle_plot(elt)
+        # except:
+        #     continue
         # if i >= max_plots:
         #     break
