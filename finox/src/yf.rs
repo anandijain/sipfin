@@ -15,18 +15,25 @@ https://query2.finance.yahoo.com/ws/insights/v2/finance/insights?region=US&symbo
 https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;count=3;listIds=%5B%22commodities%22%2C%22currencies%22%2C%22bonds%22%5D
 https://www.marketwatch.com/DockingBar/Dock/Markets#
 */
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Root {
+    pub chart: Chart,
+}
+
 impl Root {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut ret: Vec<Vec<String>> = Vec::new();
         let ts = &self.chart.result[0].timestamp;
+        let meta = &self.chart.result[0].meta;
         if let Some(quote) = &self.chart.result[0].indicators.quote[0] {
             for i in 0..ts.len() {
-                let mut rec: Vec<String> = Vec::new();
+                let mut rec: Vec<String> = vec![meta.symbol.to_string()]; //Vec::new();
                 if let Some(ohlcv) = Quote::to_record(quote, i) {
                     rec.push(ts[i].to_string());
-                    for elt in ohlcv.iter() {
-                        rec.push(elt.to_string());
-                    }
+                    rec.append(&mut ohlcv.clone());
                     ret.push(rec);
                 }
             }
@@ -42,19 +49,14 @@ impl Root {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Root {
-    pub chart: Chart,
-}
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Chart {
-    pub result: Vec<Result>,
+    pub result: Vec<YFResult>,
     pub error: ::serde_json::Value,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Result {
+pub struct YFResult {
     pub meta: Meta,
     pub timestamp: Vec<i64>,
     pub indicators: Indicators,

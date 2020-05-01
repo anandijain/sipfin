@@ -2,7 +2,7 @@
 
 plot_news() {
     # cargo run
-    julia utils.jl
+    julia ../jl/utils.jl
     python3.6 ../sipfin/utils.py
 }
 # time plot_news

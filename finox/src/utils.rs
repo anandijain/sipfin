@@ -152,12 +152,13 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
         .collect()
 }
 
-pub fn simppath(s: String) -> String {
+pub fn simppath(s: String, sfx: String) -> String {
     //sfx enum x, f, us
     let now = Utc::now();
     return format!(
-        "./data/{}_ndaq_{}_{}_{}.csv",
+        "../data/{}_{}_{}_{}_{}.csv",
         s.to_string(),
+        sfx.to_string(),
         now.year(),
         now.month(),
         now.day()
@@ -175,7 +176,7 @@ pub fn chart_headers(s: String) -> Vec<String> {
 
 pub fn write_yf(s: Security) -> Result<(), csv::Error> {
     if let Some(recs) = yf_symb(yf_url(s.clone())) {
-        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string())) {
+        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "yf".to_string())) {
             let headers = chart_headers(s.to_string());
             wtr.write_record(headers);
             for r in recs.iter() {
@@ -526,7 +527,7 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
 ];
 
 
-pub const YF_HEADER: [&'static str; 6] = ["t", "o", "h", "l", "c", "v"];
+pub const YF_HEADER: [&'static str; 7] = ["symb", "t", "o", "h", "l", "c", "v"];
 
 pub const SA_HEADER: [&'static str; 8] = [
     "id",

@@ -1,9 +1,6 @@
 module Utils
 using Plots, Dates
 using CSV, DataFrames, Glob
-using DelimitedFiles, Statistics
-
-using CSV, DataFrames, Glob
 using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
 using LightGraphs, GraphPlot, SimpleWeightedGraphs, MetaGraphs, GraphRecipes
 
@@ -92,7 +89,7 @@ function plot_fibs(arr::AbstractArray, range = 5:10)
     plot([mavg(arr, fib(i)) for i in range])
 end
     
-diff(df) = df[2:end, 2:end] .- df[1:end - 1, :2:end]
+diff(df) = df[2:end, :] .- df[1:end - 1, :]
 
 # thanks seth
 to_prune(g, n) = findall(LightGraphs.weights(g) .> n)
@@ -144,7 +141,9 @@ df_to_cor_graph(df::AbstractDataFrame, threshold::Float64 = 0.8) = edges_df_to_g
 df_to_meta_cor_graph(df::AbstractDataFrame) = edges_df_to_meta_graph(cor_df_to_edge_weights(cor_df(df)))
 
 
-function get_dfs(fns = glob(glob_pat)) 
+function get_dfs(glob_pat) 
+    fns = glob(glob_pat)
+    print(fns)
     df_dict = Dict(zip(map(x->split(x, "_")[1], fns), CSV.read.(fns)))
     collect(values(df_dict))
 end
@@ -158,5 +157,10 @@ function quick(dfs = get_dfs(), glob_pat::String = "./data/*7d*.csv", re::Regex 
     join(catted..., on = :x1)
 end
 
+function df_from_str(s::String)
+       fn = glob("./data/$(s)_yf7d*.csv")[1]
+       df = CSV.read(fn)
 
- 
+       end
+
+end
