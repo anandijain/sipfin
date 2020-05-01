@@ -195,11 +195,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     root.data.stock_type.to_string(),
                     root.data.exchange.to_string(),
                     root.data.primary_data.last_trade_timestamp.to_string(),
-                    root.data.primary_data.last_sale_price.to_string(),
+                    root.data.primary_data.last_sale_price[1..].to_string(),
                     root.data.primary_data.net_change.to_string(),
-                    root.data.primary_data.percentage_change.to_string(),
-                    root.data.primary_data.is_real_time.to_string().to_string(),
+                    root.data.primary_data.percentage_change.replace("%", "").to_string(),
+                    root.data.primary_data.is_real_time.to_string(),
                     root.data.primary_data.delta_indicator.to_string(),
+                    root.data.key_stats.market_cap.value.replace(",", "").to_string(),
+                    root.data.key_stats.volume.value.replace(",", "").to_string(),
                 ];
                 let symb = csvq[0].clone();
                 // println!("{}: {}, {:#?}", symb.clone(), num_recs, recs.last());
@@ -217,7 +219,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vecs = fetches.await;
     println!("{:#?}", vecs);
     // tokio::time::delay_for(Duration::from_secs(1)).await;
-    let file_name = "nasdaq_new2.csv".to_string();
+    let file_name = "nasdaq_new8.csv".to_string();
     // let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
     // let mut wtr = csv::Writer::from_writer(file);
     let mut wtr = csv::Writer::from_path(file_name)?;
@@ -231,6 +233,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "percentage_change",
         "is_real_time",
         "delta_indicator",
+        "market_cap",
+        "volume",
     ]);
     
     let mut i: i64 = 0;

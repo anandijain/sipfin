@@ -160,7 +160,7 @@ end
 function df_from_str(s::String)
        fn = glob("./data/$(s)_yf7d*.csv")[1]
        df = CSV.read(fn)
-
+        
        end
 
 end
