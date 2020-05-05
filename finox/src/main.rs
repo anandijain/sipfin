@@ -218,8 +218,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .collect::<Vec<Option<Vec<String>>>>();
     let vecs = fetches.await;
     println!("{:#?}", vecs);
+    let cur_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     // tokio::time::delay_for(Duration::from_secs(1)).await;
-    let file_name = "nasdaq_new8.csv".to_string();
+    let file_name = format!("nasdaq_{}.csv", cur_time.to_string());
     // let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
     // let mut wtr = csv::Writer::from_writer(file);
     let mut wtr = csv::Writer::from_path(file_name)?;
