@@ -205,10 +205,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ];
                 let symb = csvq[0].clone();
                 // println!("{}: {}, {:#?}", symb.clone(), num_recs, recs.last());
-                println!("{}", symb.clone());
+                // println!("{}", symb.clone());
                 return Some(csvq);
             }
-            println!("no");
+            // println!("no");
             return None;
         }
         println!("no2");
@@ -217,7 +217,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .buffer_unordered(16)
     .collect::<Vec<Option<Vec<String>>>>();
     let vecs = fetches.await;
-    println!("{:#?}", vecs);
+    // println!("{:#?}", vecs);
     let cur_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     // tokio::time::delay_for(Duration::from_secs(1)).await;
     let file_name = format!("nasdaq_{}.csv", cur_time.to_string());

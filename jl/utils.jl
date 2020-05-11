@@ -2,7 +2,6 @@ module Utils
 using Plots, Dates
 using CSV, DataFrames, Glob
 using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
-using LightGraphs, GraphPlot, SimpleWeightedGraphs, MetaGraphs, GraphRecipes
 
 # https://assets.bwbx.io/s3/mediaservices/superelastic/data.json
 norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
@@ -72,9 +71,6 @@ function sec13f_fix()
 end
 
 
-# sa_yf()
-# sec13f_fix()
-
 function change_sep(fn) 
     df = CSV.read("$fn.txt", delim = "|")
     rename!(x->Symbol(replace(string(x), " " => "_")), df)
@@ -91,61 +87,25 @@ end
     
 diff(df) = df[2:end, :] .- df[1:end - 1, :]
 
-# thanks seth
-to_prune(g, n) = findall(LightGraphs.weights(g) .> n)
-to_prune_nodes(g, n::Integer) = findall((g) .> n)
-
 cor_df(df::AbstractDataFrame)::AbstractDataFrame = DataFrame(cor(Matrix(df)), names(df))
 re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
 
-function cor_df_to_edge_weights(df::AbstractDataFrame, ret_df::Bool = true)::Union{AbstractDataFrame,Matrix}
-    @assert size(df, 1) == size(df, 2)
-    dim = size(df, 1)
-    if ret_df
-        DataFrame(ones(dim, dim) - Matrix(df), names(df))
-    else
-        ones(dim, dim) - Matrix(df)
-    end
-end
-
-function edges_df_to_graph(df::AbstractDataFrame, threshold = 0.6)::SimpleWeightedGraph
-    @assert size(df, 1) == size(df, 2) # assert square
-    dim = size(df, 1)
-    g = SimpleWeightedGraph(dim)
-    # zero weights do nothing thankfully
-    for i in 1:dim
-        for j in 1:dim
-            val = df[i, j]
-            val < threshold ? add_edge!(g, i, j, val) : continue
-        end
-    end
-    g
-end
-
-function edges_df_to_meta_graph(df::AbstractDataFrame)::MetaGraph
-    @assert size(df, 1) == size(df, 2) # assert square
-    dim = size(df, 1)
-    g = MetaGraph(dim)
-    for i in 1:dim
-        for j in 1:dim
-            val = df[i, j]
-            add_edge!(g, i, j)
-            set_prop!(g, Edge(i, j), :weight, val)
-        end
-    end
-    g
-end
-
-
-df_to_cor_graph(df::AbstractDataFrame, threshold::Float64 = 0.8) = edges_df_to_graph(cor_df_to_edge_weights(cor_df(df)), threshold)
-df_to_meta_cor_graph(df::AbstractDataFrame) = edges_df_to_meta_graph(cor_df_to_edge_weights(cor_df(df)))
-
-
-function get_dfs(glob_pat) 
+function df_dict(glob_pat)::Dict{String, DataFrame}
     fns = glob(glob_pat)
-    print(fns)
-    df_dict = Dict(zip(map(x->split(x, "_")[1], fns), CSV.read.(fns)))
-    collect(values(df_dict))
+    Dict(zip(map(x->split(x, "_")[1], fns), CSV.read.(fns)))
+end
+
+# used w nasdaq_o2
+# takes a dataframe dictionary and returns the len of each df value
+sizes(d::Dict{String, DataFrame})::DataFrame = sort(DataFrame(ticker = collect(keys(d)), nrows=map(x -> x[1], size.(collect(values(d))))), :nrows, rev=true)
+
+function lilmetrics()
+    #  
+
+
+
+function get_dfs(glob_pat)::Array{DataFrame, 1}
+    CSV.read.(glob(glob_pat))
 end
 
 
@@ -160,7 +120,6 @@ end
 function df_from_str(s::String)
        fn = glob("./data/$(s)_yf7d*.csv")[1]
        df = CSV.read(fn)
-        
        end
 
 end

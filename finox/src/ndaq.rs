@@ -4,9 +4,12 @@ ftp://ftp.nasdaqtrader.com/SymbolDirectory/
 ftp://ftp.nasdaqtrader.com/SymbolDirectory/bondslist.txt
 ftp://ftp.nasdaqtrader.com/SymbolDirectory/bxoptions.txt
 
+https://api.nasdaq.com/api/quote/EURUSD/summary?assetclass=currencies
+
 */
 
 //https://api.nasdaq.com/api/calendar/upcoming
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarRoot {
@@ -351,7 +354,105 @@ pub struct KeyStats {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct KeyStatsCurs {
+    #[serde(rename = "Open")]
+    pub open: AssetItem,
+    #[serde(rename = "Bid")]
+    pub bid: AssetItem,
+    #[serde(rename = "Ask")]
+    pub ask: AssetItem,
+    #[serde(rename = "High")]
+    pub high: AssetItem,
+    #[serde(rename = "Low")]
+    pub low: AssetItem,
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AssetItem {
     pub label: String,
     pub value: String,
+}
+
+
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionRoot {
+    pub data: OptionData,
+    pub message: ::serde_json::Value,
+    pub status: Status,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionData {
+    pub total_record: i64,
+    pub last_trade: String,
+    pub option_chain_list: OptionChainList,
+    pub month_filter: Vec<MonthFilter>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionChainList {
+    pub headers: OptionHeaders,
+    pub rows: Vec<OptionRow>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionHeaders {
+    pub call: OptionHeader,
+    pub put: OptionHeader,
+    pub other_or_common: OtherOrCommon,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionHeader {
+    pub last: String,
+    pub change: String,
+    pub bid: String,
+    pub ask: String,
+    pub volume: String,
+    pub openinterest: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OtherOrCommon {
+    pub strike: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionRow {
+    pub call: OptionRow2,
+    pub put: OptionRow2,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionRow2 {
+    pub symbol: String,
+    pub last: String,
+    pub change: String,
+    pub bid: String,
+    pub ask: String,
+    pub volume: String,
+    pub openinterest: String,
+    pub strike: String,
+    pub expiry_date: String,
+    pub colour: bool,
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MonthFilter {
+    pub month: String,
+    pub dates: Vec<AssetItem>,
 }
