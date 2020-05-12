@@ -6,13 +6,23 @@ use crate::nasdaq::gen;
 pub struct InfoRoot {
     pub data: InfoData,
     pub message: ::serde_json::Value,
-    pub status: Status,
+    pub status: gen::Status,
 }
 
 impl InfoRoot {
     pub fn to_record(&self) -> Vec<String> {
         let rec = InfoData::to_record(&self.data);
         return rec;
+    }
+
+    pub fn get_id(&self) -> String {
+        let mut id: String = self.data.symbol.to_string();
+        id.push('i');
+        return id;
+    }
+
+    pub fn gen_header(&self) -> Vec<String> {
+        return NDAQ_QUOTE_HEADER.iter().map(|x| x.clone().to_string()).collect();
     }
 }
 

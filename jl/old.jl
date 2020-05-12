@@ -23,23 +23,24 @@ Xs = CSV.read.(cur_fns)
 
 
 dtfmt = DateFormat("Y-m-d H:M:S+H:S")
-ndf.date_time = Date.(ndf.date_time, dtfmt)
+fix_times(df) = Date.(ndf.date_time, dtfmt)
 
-colnames = names(ndf)
-colnames = names(df)[2:end]
-ndf.date_time
+function plot_ndf(ndf, df) 
+    colnames = names(ndf)
+    colnames = names(df)[2:end]
+    ndf.date_time
 
-plot(ndf.date_time, [df.AAPL_price, df.AAPL_volume])
+    plot(ndf.date_time, [df.AAPL_price, df.AAPL_volume])
 
-df = join(dfs..., on=:t, makeunique=true)
+    df = join(dfs..., on=:t, makeunique=true)
 
-desc = sort(describe(df), :nmissing)
+    desc = sort(describe(df), :nmissing)
 
-for cn in colnames
-    display(plot(df.date_time, df[:, cn], label=cn))
-    print(cn)
+    for cn in colnames
+        display(plot(df.date_time, df[:, cn], label=cn))
+        print(cn)
+    end
 end
-
 
 df[:, r":US_$(yr)_$(month)_$(day).csv"]
 df[:, r"h.*.:X"]

@@ -17,7 +17,21 @@ impl ChartRoot {
             .map(|c| vec![c.x.to_string(), c.y.to_string()])
             .collect();
     }
+
+    pub fn get_id(&self) -> String {
+        let mut id: String = self.data.symbol.to_string();
+        id.push('c');
+        return id;
+    }
+
+    pub fn gen_header(&self) -> Vec<String> {
+        return vec!["t".to_string(), self.data.symbol.to_string()]; //chart header
+    }
 }
+
+// impl Record for ChartRoot {
+    
+// }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -49,3 +63,4 @@ pub struct Z {
     pub date_time: String,
     pub value: String,
 }
+

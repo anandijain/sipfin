@@ -17,7 +17,7 @@ impl OptionChainRoot {
         return recs;
     }
 
-    pub fn get_ticker(&self) -> String {
+    pub fn get_id(&self) -> String {
         return self.data.option_chain_list.rows[0]
             .call
             .symbol
@@ -26,6 +26,10 @@ impl OptionChainRoot {
             .next()
             .expect("wtf option ticker")
             .to_string();
+    }
+
+    pub fn gen_header(&self) -> Vec<String> {
+        return NDAQ_OPTION_HEADER.iter().map(|x| x.clone().to_string()).collect();
     }
 }
 

@@ -1,8 +1,5 @@
-// mod lib;
-// mod gen;
-// mod chart;
-// mod option_chain;
 
 fn main() {
     println!("Hello, world!");
+    // lib::nasdaq::option_chain::Data
 }
