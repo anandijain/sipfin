@@ -6,6 +6,13 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
+// extern crate nasdaq;
+mod nasdaq;
+use nasdaq::{
+    chart::ChartRoot,
+    option_chain::OptionChainRoot,
+};
+
 use std::{
     fs::File,
     io::{prelude::*, BufReader},
@@ -14,33 +21,26 @@ use std::{
 };
 use futures::stream::StreamExt;
 
-extern crate types;
-
-// pub mod types;
-fn foo() {
-
-    types::
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
     let all_urls = gen_urls();
-    println!("Hello, {:#?}!", all_urls);
-    
-    let fetches = futures::stream::iter(all_urls[1].into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<types::nasdaq::chart::ChartRoot>().await {
-                
-                let symb = root.data.symbol.clone();
-                // println!("{}", symb);
 
-                let chart: Vec<Vec<String>> = root
-                    .data
-                    .chart
-                    .iter()
-                    .map(|c| vec![c.x.to_string(), c.y.to_string()])
-                    .collect();
+    let option_urls: Vec<String> = all_urls[0].clone();
+    let chart_urls: Vec<String> = all_urls[1].clone();
+    let info_urls: Vec<String> = all_urls[2].clone();
+
+
+    let fetches = futures::stream::iter(option_urls.into_iter().map(|url| async move {
+        if let Ok(res) = reqwest::get(&url).await {
+            if let Ok(root) = res.json::<OptionChainRoot>().await {
+                println!("{:#?}", root.clone());
+                
+                // let symb = root.data.symbol.clone(); // used in chart
+                let symb = root.get_ticker(); // used in op chart
+                let chart: Vec<Vec<String>> = root.to_recs();
+                println!("{:#?}", chart.clone());
 
                 let t = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
@@ -48,17 +48,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .as_secs()
                     .to_string();
 
+                let filename: String = format!("./data/{}_{}.csv", symb, t);
                 match write_csv(
-                    format!("/home/sippycups/nasdaq_o2/data/{}_{}.csv", symb, t),
+                    filename,
                     chart,
                     vec!["t".to_string(), symb.clone()]
                 ) {
                     Ok(_) => println!("allgood"),
-                    _ => println!("no good"),
+                    _ => println!("CSV FUCKED good"),
                 }
                 return Some(());
             }
-            println!("no good");
+            println!("no good {}", url.clone());
             return None;
         }
         println!("no good1");
@@ -80,8 +81,9 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
 }
 
 pub fn write_csv(filename: String, data: Vec<Vec<String>>, header: Vec<String>) -> Result<(), csv::Error> {
-    let mut wtr = csv::Writer::from_path(&filename)?;
+    let mut wtr = csv::Writer::from_path(filename.to_string()).expect("whtf");
     wtr.write_record(header);
+    wtr.flush();
     // assert_eq!(header.len(), data[0].len() )
     for row in data.iter() {
         wtr.write_record(row);
