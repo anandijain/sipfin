@@ -11,11 +11,9 @@ pub struct OptionChainRoot {
 impl OptionChainRoot {
     pub fn to_recs(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = vec![];
-        self.data
-            .option_chain_list
-            .rows
-            .iter()
-            .map(|x| recs.append(&mut x.to_recs()));
+        for row in self.data.option_chain_list.rows.iter() {
+            recs.append(&mut row.to_recs())
+        }
         return recs;
     }
 
@@ -110,3 +108,16 @@ pub struct MonthFilter {
     pub month: String,
     pub dates: Vec<gen::LabelValue>,
 }
+
+pub const NDAQ_OPTION_HEADER: [&'static str; 10] = [
+    "symbol",
+    "last",
+    "change",
+    "bid",
+    "ask",
+    "volume",
+    "openinterest",
+    "strike",
+    "expiry_date",
+    "colour",
+];
