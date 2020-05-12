@@ -5,7 +5,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
-use futures::stream::StreamExt;
 
 use std::{
     fs::File,
@@ -13,30 +12,25 @@ use std::{
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
+use futures::stream::StreamExt;
 
-// use url::{Url, ParseError};
+extern crate types;
 
-mod chart;
+// pub mod types;
+fn foo() {
+
+    types::
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 16;
     println!("Hello, world!");
-    let tickers: Vec<String> = read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt"); // TODO: get from sql table
-    let urls: Vec<String> = tickers
-        .iter()
-        .map(|x| {
-            format!(
-                "https://api.nasdaq.com/api/quote/{}/chart?assetclass=stocks",
-                x.to_string()
-            )
-        })
-        .collect();
-    println!("{}", tickers[0]);
+    let all_urls = gen_urls();
+    println!("Hello, {:#?}!", all_urls);
     
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+    let fetches = futures::stream::iter(all_urls[1].into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<chart::Root>().await {
+            if let Ok(root) = res.json::<types::nasdaq::chart::ChartRoot>().await {
                 
                 let symb = root.data.symbol.clone();
                 // println!("{}", symb);
@@ -67,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("no good");
             return None;
         }
-        println!("no good");
+        println!("no good1");
         return None;
     }))
     .buffer_unordered(16)
@@ -94,4 +88,25 @@ pub fn write_csv(filename: String, data: Vec<Vec<String>>, header: Vec<String>) 
     }
     wtr.flush();
     Ok(())
+}
+
+
+pub fn gen_urls() -> Vec<Vec<String>> {
+    let tick_sfxs = vec!["option-chain", "chart", "info"];
+    let tickers: Vec<String> = read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt"); // TODO: get from sql table
+    let mut urls: Vec<Vec<String>> = vec![];
+    for sfx in tick_sfxs.iter() {
+        let sfx_urls: Vec<String> = tickers
+        .iter()
+        .map(|x| {
+            format!(
+                "https://api.nasdaq.com/api/quote/{}/{}?assetclass=stocks",
+                x.to_string(),
+                sfx.to_string()
+            )
+        })
+        .collect();
+        urls.push(sfx_urls);
+    }
+    return urls;
 }
