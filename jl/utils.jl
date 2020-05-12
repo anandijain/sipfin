@@ -19,7 +19,7 @@ re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
 # used w nasdaq_o2
 # takes a dataframe dictionary and returns the len of each df value
 sizes(d::Dict{String,DataFrame})::DataFrame = sort(DataFrame(ticker = collect(keys(d)), nrows = map(x->x[1], size.(collect(values(d))))), :nrows, rev = true)
-sizes(dfs::Array{DataFrame, 1})::DataFrame = sort(DataFrame(ticker = map(x -> names(x)[2], dfs), nrows = map(x-> size(x)[1], dfs)), :nrows, rev = true)
+sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names(x)[2], dfs), nrows = map(x->size(x)[1], dfs)), :nrows, rev = true)
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
     open(fn, "w") do io
@@ -51,6 +51,11 @@ function df_dict(glob_pat)::Dict{String,DataFrame}
     Dict(zip(map(x->split(x, "_")[1], fns), CSV.read.(fns)))
 end
 
+function add_tickers(d::Dict{String,DataFrame})
+    for (k, v) in d
+        v[!, :symbol] .= k
+    end
+end
 
 # function lilmetrics()
 
@@ -67,6 +72,7 @@ function quick(dfs = get_dfs("./data/*7d*.csv"), re::Regex = r"(c_*)")::Abstract
     # filt = filter(x->size(x)[1] > filt_n, catted) # history size 5000 or greater
     join(catted..., on = :x1)
 end
+
 
 function df_from_str(s::String)
     fn = glob("./data/$(s)_yf7d*.csv")[1]
