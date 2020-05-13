@@ -134,11 +134,16 @@ end
 
 sol = knapsack(evaldf, 1000)
 
+usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64, 1} = parse.(Float64, replace.(replace.(df[:, col], "\$"=>""), ","=>""))
 
+# used to clean the insiders data
 function garbo(df) 
-  df.last_price = parse.(Float64, replace.(replace.(df.last_price, "\$"=>""), ","=>""))
+  df.last_price = usd_col_to_float(df, :last_price)
   df.shares_traded = parse.(Int, replace.(df.shares_traded, ","=>""))
   df.shares_held =  parse.(Int, replace.(df.shares_held, ","=>""))
   dtfmt = "m/d/y"
   df.last_date = Date.(df.last_date, dtfmt)
 end
+
+function div_garbo(df)
+  
