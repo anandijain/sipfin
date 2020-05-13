@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate diesel;
-use self::diesel::prelude::*;
 extern crate chrono;
 extern crate csv;
 extern crate dotenv;
@@ -10,6 +9,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
+use diesel::prelude::*;
 use dotenv::dotenv;
 use futures::stream::StreamExt;
 
@@ -27,8 +27,8 @@ use nasdaq::{
     insiders::InsidersRoot, option_chain::OptionChainRoot,
 };
 
-mod models;
 mod schema;
+mod models;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +73,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .buffer_unordered(16)
     .collect::<Vec<Option<Vec<String>>>>()
     .await;
-    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    // let recs: Vec<Vec<&str>> = fetches.iter().flat_map(|x| x.as_ref()).collect();
+    // let recs: Vec<models::NewQuote> = fetches.iter().flat_map(|x| models::NewQuote::new(x)).collect();
     let t: String = epoch_str();
     let filename: String = format!("./data/quotes/{}.csv", t);
     let len: usize = recs.len();

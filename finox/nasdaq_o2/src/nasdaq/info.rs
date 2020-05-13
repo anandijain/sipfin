@@ -1,4 +1,5 @@
 use crate::nasdaq::gen;
+use crate::models::NewQuote;
 
 // https://api.nasdaq.com/api/quote/AAPL/info?assetclass=stocks
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -13,6 +14,10 @@ impl InfoRoot {
     pub fn to_rec(&self) -> Vec<String> {
         return InfoData::to_rec(&self.data);
     }
+
+    // pub fn to_quote(&self) -> NewQuote {
+    //     return NewQuote::from(InfoData::to_rec(&self.data));
+    // }
 
     pub fn get_id(&self) -> String {
         let mut id: String = self.data.symbol.to_string();

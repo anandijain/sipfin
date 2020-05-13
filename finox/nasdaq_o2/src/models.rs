@@ -1,5 +1,4 @@
-use super::schema::quotes;
-// nasdaq::schema::quotes;
+use crate::schema::quotes;
 
 #[derive(diesel::Queryable)]
 pub struct Quote {
