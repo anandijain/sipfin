@@ -1,33 +1,40 @@
+#[macro_use]
+extern crate diesel;
+use self::diesel::prelude::*;
 extern crate chrono;
 extern crate csv;
+extern crate dotenv;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
-// extern crate db;
+use dotenv::dotenv;
+use futures::stream::StreamExt;
 
-// use db;
+use std::{
+    env,
+    fs::File,
+    io::{prelude::*, BufReader},
+    path::Path,
+    time::{Instant, SystemTime, UNIX_EPOCH},
+};
+
 mod nasdaq;
 use nasdaq::{
     chart::ChartRoot, dividends::DividendsRoot, info::InfoRoot, info::NDAQ_QUOTE_HEADER,
     insiders::InsidersRoot, option_chain::OptionChainRoot,
 };
 
-use futures::stream::StreamExt;
-use std::{
-    fs::File,
-    io::{prelude::*, BufReader},
-    path::Path,
-    thread::sleep,
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
-};
+mod models;
+mod schema;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
-    // let conn:
+    let conn = establish_connection();
+
     let all_urls = gen_urls();
 
     // let option_urls: Vec<String> = all_urls[0].clone();
@@ -43,8 +50,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(res) = reqwest::get(&url.clone()).await {
             if let Ok(root) = res.json::<InfoRoot>().await {
                 // let recs: Vec<Vec<String>> = root.to_recs(); //
-                let rec: Vec<String> = root.to_rec(); //
-                                                      // let id = root.get_id();
+                let rec: Vec<String> = root.to_rec();
+                // let id = root.get_id();
                 // let id = ndaq_url_to_ticker(url.clone());
                 // println!("{}", id);
                 // let t: String = epoch_str();
@@ -79,7 +86,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect(),
     )?;
     // println!("{:#?}", fetches);
-    println!("{} seconds: {} records", now.elapsed().as_secs(), len.to_string());
+    println!(
+        "{} seconds: {} records",
+        now.elapsed().as_secs(),
+        len.to_string()
+    );
 
     Ok(())
 }
@@ -99,13 +110,13 @@ pub fn write_csv(
 ) -> Result<(), csv::Error> {
     let mut wtr = csv::Writer::from_path(filename.to_string())
         .expect(format!("whtf csv {}", filename).as_ref());
-    wtr.write_record(header.clone());
-    wtr.flush();
+    wtr.write_record(header.clone())?;
+    wtr.flush()?;
     for row in data.iter() {
         assert_eq!(header.len(), row.len()); // perf hit?
-        wtr.write_record(row);
+        wtr.write_record(row)?;
     }
-    wtr.flush();
+    wtr.flush()?;
     Ok(())
 }
 
@@ -146,3 +157,16 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
     return format!("{}_insider", v[5]);
 }
 // pub fn lilfetcher(urls: Vec<String>, )
+
+pub fn establish_connection() -> PgConnection {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+}
+
+pub fn create_quote<'a>(conn: &diesel::pg::PgConnection, q: &'a models::NewQuote) -> models::Quote {
+
+    diesel::insert_into(schema::quotes::table)
+        .values(q)
+        .get_result(conn)
+        .expect("Error saving new post")
+}

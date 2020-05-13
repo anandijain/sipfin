@@ -74,15 +74,17 @@ pub struct PrimaryData {
 
 impl PrimaryData {
     pub fn to_rec(&self) -> Vec<String> {
-        let mut rec: Vec<String> = vec![
-            self.last_trade_timestamp.to_string(),
+        let ts = self.last_trade_timestamp.split("OF ").collect::<Vec<&str>>();
+        // println!("{:#?}", ts);
+        return vec![
+            // self.last_trade_timestamp.to_string().split_at(mid: usize),
+            ts[1].to_string(),
             self.last_sale_price.to_string(),
             self.net_change.to_string(),
             self.percentage_change.to_string(),
             self.is_real_time.to_string(),
             self.delta_indicator.to_string(),
         ];
-        return rec;
     }
 }
 
