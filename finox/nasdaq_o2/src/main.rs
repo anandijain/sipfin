@@ -50,8 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(res) = reqwest::get(&url.clone()).await {
             if let Ok(root) = res.json::<InfoRoot>().await {
                 // let recs: Vec<Vec<String>> = root.to_recs(); //
-                let rec: Vec<&str> = root.to_rec().iter().map(|x| x.as_ref()).collect();
-                let quote: models::NewQuote = quote_from_vec(&rec).clone();
+                // let quote: &models::NewQuote = &quote_from_vec(&rec);
                 // let id = root.get_id();
                 // let id = ndaq_url_to_ticker(url.clone());
                 // println!("{}", id);
@@ -63,7 +62,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     _ => println!("CSV FUCKED good"),
                 // }
                 // println!("{:?}", rec[0]);
-                return Some(quote.clone());
+                return Some(root);
+                // return Some(quote_from_vec(&root.to_rec()));
             }
             println!("serialized json wrong {}", url.clone());
             return None;
@@ -72,14 +72,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<models::NewQuote>>>()
+    .collect::<Vec<Option<InfoRoot>>>()
     .await;
     // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    // let recs: Vec<Vec<&str>> = fetches.iter().flat_map(|x| x.as_ref()).collect();
-    let recs: Vec<models::NewQuote> = fetches.into_iter().flatten().collect();
+    let mut roots: Vec<InfoRoot> = fetches.into_iter().flatten().collect();
+    // let roots: Vec<models::NewQuote> = roots.iter().map(|x| 
+    //      models::NewQuote {
+    //         symbol: x.data.symbol.clone().as_str(),
+    //         company_name: x.data.company_name.clone().as_str(),
+    //         stock_type: x.data.stock_type.clone().as_str(),
+    //         exchange: x.data.exchange.clone().as_str(),
+    //         is_nasdaq_listed: x.data.is_nasdaq_listed.clone().to_string().as_str(),
+    //         is_nasdaq100: x.data.is_nasdaq100.to_string().as_str(),
+    //         is_held: x.data.is_held.to_string().as_str(),
+    //         last_trade_timestamp: x.data.primary_data.last_trade_timestamp.clone().as_str(),
+    //         last_sale_price: x.data.primary_data.last_sale_price.clone().as_str(),
+    //         net_change: x.data.primary_data.net_change.clone().as_str(),
+    //         percentage_change: x.data.primary_data.percentage_change.clone().as_str(),
+    //         is_real_time: x.data.primary_data.is_real_time.to_string().as_str(),
+    //         delta_indicator: x.data.primary_data.delta_indicator.clone().as_str(),
+    //     }).collect();
+    // let recs: Vec<models::NewQuote> = fetches.into_iter().flatten().collect();
     // let t: String = epoch_str();
     // let filename: String = format!("./data/quotes/{}.csv", t);
-    let len: usize = recs.len();
+    let len: usize = roots.len();
     // write_csv(
     //     filename,
     //     recs,
@@ -89,8 +105,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //         .collect(),
     // )?;
     // println!("{:#?}", fetches);
-    let db_quotes: Vec<models::Quote> = recs.iter().map(|x| create_quote(&conn, x)).collect();
-    println!("{:?} ", db_quotes);
+    // let db_quotes: Vec<models::Quote> = roots.iter().map(|x| create_quote(&conn, x)).collect();
+    println!("{:?} ", roots);
     println!(
         "{} seconds: {} records",
         now.elapsed().as_secs(),
@@ -176,21 +192,21 @@ pub fn create_quote<'a>(conn: &diesel::pg::PgConnection, q: &'a models::NewQuote
 }
 
 
-pub fn quote_from_vec<'a>(rec: &'a Vec<&'a str>) -> models::NewQuote<'a> {
+pub fn quote_from_vec<'a>(rec: &'a Vec<String>) ->models::NewQuote {
     // rec.
-    return models::NewQuote {
-        symbol: rec[0],
-        company_name: rec[1],
-        stock_type: rec[2],
-        exchange: rec[3],
-        is_nasdaq_listed: rec[4],
-        is_nasdaq100: rec[5],
-        is_held: rec[6], 
-        last_trade_timestamp: rec[7],
-        last_sale_price: rec[8],
-        net_change: rec[9],
-        percentage_change: rec[10],
-        is_real_time: rec[11],
-        delta_indicator: rec[12],
-        };
+    models::NewQuote {
+        symbol: rec[0].as_str(),
+        company_name: rec[1].as_str(),
+        stock_type: rec[2].as_str(),
+        exchange: rec[3].as_str(),
+        is_nasdaq_listed: rec[4].as_str(),
+        is_nasdaq100: rec[5].as_str(),
+        is_held: rec[6].as_str(),
+        last_trade_timestamp: rec[7].as_str(),
+        last_sale_price: rec[8].as_str(),
+        net_change: rec[9].as_str(),
+        percentage_change: rec[10].as_str(),
+        is_real_time: rec[11].as_str(),
+        delta_indicator: rec[12].as_str(),
+        }.to_owned()
 }

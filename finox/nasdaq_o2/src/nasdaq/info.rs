@@ -13,14 +13,27 @@ pub struct InfoRoot {
 impl InfoRoot {
     pub fn to_rec(&self) -> Vec<String> {
         return InfoData::to_rec(&self.data);
+        println!("{:?}", self.data);
     }
 
-    // pub fn to_quote(&self) -> models::NewQuote {
-    //     // return NewQuote(InfoData::to_rec(&self.data).fla);
-    //     //fml
-    //     let rec = self.to_rec().copy_from_slice().to_owned();
-    //     return from_vec(rec);
+    // pub fn to_quote<'a>(&self) -> models::NewQuote<'a>{
+    //     return models::NewQuote {
+    //         symbol: self.data.symbol.clone().as_str(),
+    //         company_name: self.data.company_name.clone().as_str(),
+    //         stock_type: self.data.stock_type.clone().as_str(),
+    //         exchange: self.data.exchange.clone().as_str(),
+    //         is_nasdaq_listed: self.data.is_nasdaq_listed.clone().to_string().as_str(),
+    //         is_nasdaq100: self.data.is_nasdaq100.to_string().as_str(),
+    //         is_held: self.data.is_held.to_string().as_str(),
+    //         last_trade_timestamp: self.data.primary_data.last_trade_timestamp.clone().as_str(),
+    //         last_sale_price: self.data.primary_data.last_sale_price.clone().as_str(),
+    //         net_change: self.data.primary_data.net_change.clone().as_str(),
+    //         percentage_change: self.data.primary_data.percentage_change.clone().as_str(),
+    //         is_real_time: self.data.primary_data.is_real_time.to_string().as_str(),
+    //         delta_indicator: self.data.primary_data.delta_indicator.clone().as_str(),
+    //     };
     // }
+
 
     pub fn get_id(&self) -> String {
         let mut id: String = self.data.symbol.to_string();
