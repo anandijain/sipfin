@@ -21,6 +21,11 @@ re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
 sizes(d::Dict{String,DataFrame})::DataFrame = sort(DataFrame(ticker = collect(keys(d)), nrows = map(x->x[1], size.(collect(values(d))))), :nrows, rev = true)
 sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names(x)[2], dfs), nrows = map(x->size(x)[1], dfs)), :nrows, rev = true)
 
+feichanghao(glob_pat)::DataFrame = vcat(collect(values(add_tickers(df_dict(glob_pat))))...)
+
+# df[!, :shares_traded] = parse.(Int, map(x-> replace(x, ","=>""), df.shares_traded))
+
+
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
     open(fn, "w") do io
         writedlm(io, df[:, s], "\n")
@@ -51,11 +56,13 @@ function df_dict(glob_pat)::Dict{String,DataFrame}
     Dict(zip(map(x->split(x, "_")[1], fns), CSV.read.(fns)))
 end
 
-function add_tickers(d::Dict{String,DataFrame})
+function add_tickers(d::Dict{String,DataFrame})::Dict{String,DataFrame}
     for (k, v) in d
         v[!, :symbol] .= k
     end
+    d
 end
+
 
 # function lilmetrics()
 
@@ -78,5 +85,7 @@ function df_from_str(s::String)
     fn = glob("./data/$(s)_yf7d*.csv")[1]
     df = CSV.read(fn)
 end
+
+
 
 end

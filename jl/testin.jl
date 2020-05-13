@@ -135,4 +135,10 @@ end
 sol = knapsack(evaldf, 1000)
 
 
-
+function garbo(df) 
+  df.last_price = parse.(Float64, replace.(replace.(df.last_price, "\$"=>""), ","=>""))
+  df.shares_traded = parse.(Int, replace.(df.shares_traded, ","=>""))
+  df.shares_held =  parse.(Int, replace.(df.shares_held, ","=>""))
+  dtfmt = "m/d/y"
+  df.last_date = Date.(df.last_date, dtfmt)
+end
