@@ -1,6 +1,6 @@
 use crate::schema::quotes;
 
-#[derive(diesel::Queryable)]
+#[derive(diesel::Queryable, Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct Quote {
     pub id: i32,
     pub symbol: String,
@@ -19,7 +19,7 @@ pub struct Quote {
 }
 
 
-#[derive(diesel::Insertable)]
+#[derive(diesel::Insertable, Clone)]
 #[table_name="quotes"]
 pub struct NewQuote<'a> {
     pub symbol: &'a str,

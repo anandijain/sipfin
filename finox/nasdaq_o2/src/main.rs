@@ -27,8 +27,8 @@ use nasdaq::{
     insiders::InsidersRoot, option_chain::OptionChainRoot,
 };
 
-mod schema;
 mod models;
+mod schema;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -50,7 +50,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(res) = reqwest::get(&url.clone()).await {
             if let Ok(root) = res.json::<InfoRoot>().await {
                 // let recs: Vec<Vec<String>> = root.to_recs(); //
-                let rec: Vec<String> = root.to_rec();
+                let rec: Vec<&str> = root.to_rec().iter().map(|x| x.as_ref()).collect();
+                let quote: models::NewQuote = quote_from_vec(&rec).clone();
                 // let id = root.get_id();
                 // let id = ndaq_url_to_ticker(url.clone());
                 // println!("{}", id);
@@ -62,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     _ => println!("CSV FUCKED good"),
                 // }
                 // println!("{:?}", rec[0]);
-                return Some(rec);
+                return Some(quote.clone());
             }
             println!("serialized json wrong {}", url.clone());
             return None;
@@ -71,23 +72,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<String>>>>()
+    .collect::<Vec<Option<models::NewQuote>>>()
     .await;
     // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
     // let recs: Vec<Vec<&str>> = fetches.iter().flat_map(|x| x.as_ref()).collect();
-    // let recs: Vec<models::NewQuote> = fetches.iter().flat_map(|x| models::NewQuote::new(x)).collect();
-    let t: String = epoch_str();
-    let filename: String = format!("./data/quotes/{}.csv", t);
+    let recs: Vec<models::NewQuote> = fetches.into_iter().flatten().collect();
+    // let t: String = epoch_str();
+    // let filename: String = format!("./data/quotes/{}.csv", t);
     let len: usize = recs.len();
-    write_csv(
-        filename,
-        recs,
-        NDAQ_QUOTE_HEADER
-            .iter()
-            .map(|x| x.clone().to_string())
-            .collect(),
-    )?;
+    // write_csv(
+    //     filename,
+    //     recs,
+    //     NDAQ_QUOTE_HEADER
+    //         .iter()
+    //         .map(|x| x.clone().to_string())
+    //         .collect(),
+    // )?;
     // println!("{:#?}", fetches);
+    let db_quotes: Vec<models::Quote> = recs.iter().map(|x| create_quote(&conn, x)).collect();
+    println!("{:?} ", db_quotes);
     println!(
         "{} seconds: {} records",
         now.elapsed().as_secs(),
@@ -166,9 +169,28 @@ pub fn establish_connection() -> PgConnection {
 }
 
 pub fn create_quote<'a>(conn: &diesel::pg::PgConnection, q: &'a models::NewQuote) -> models::Quote {
-
     diesel::insert_into(schema::quotes::table)
         .values(q)
         .get_result(conn)
         .expect("Error saving new post")
+}
+
+
+pub fn quote_from_vec<'a>(rec: &'a Vec<&'a str>) -> models::NewQuote<'a> {
+    // rec.
+    return models::NewQuote {
+        symbol: rec[0],
+        company_name: rec[1],
+        stock_type: rec[2],
+        exchange: rec[3],
+        is_nasdaq_listed: rec[4],
+        is_nasdaq100: rec[5],
+        is_held: rec[6], 
+        last_trade_timestamp: rec[7],
+        last_sale_price: rec[8],
+        net_change: rec[9],
+        percentage_change: rec[10],
+        is_real_time: rec[11],
+        delta_indicator: rec[12],
+        };
 }

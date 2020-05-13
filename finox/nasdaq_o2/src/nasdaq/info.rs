@@ -1,5 +1,5 @@
 use crate::nasdaq::gen;
-use crate::models::NewQuote;
+use crate::models;
 
 // https://api.nasdaq.com/api/quote/AAPL/info?assetclass=stocks
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -15,8 +15,11 @@ impl InfoRoot {
         return InfoData::to_rec(&self.data);
     }
 
-    // pub fn to_quote(&self) -> NewQuote {
-    //     return NewQuote::from(InfoData::to_rec(&self.data));
+    // pub fn to_quote(&self) -> models::NewQuote {
+    //     // return NewQuote(InfoData::to_rec(&self.data).fla);
+    //     //fml
+    //     let rec = self.to_rec().copy_from_slice().to_owned();
+    //     return from_vec(rec);
     // }
 
     pub fn get_id(&self) -> String {
