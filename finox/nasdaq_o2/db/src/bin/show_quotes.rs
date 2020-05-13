@@ -11,13 +11,15 @@ fn main() {
     let connection = establish_connection();
     let results = quotes.filter(published.eq(true))
         .limit(5)
-        .load::<Post>(&connection)
+        .load::<Quote>(&connection)
         .expect("Error loading quotes");
 
     println!("Displaying {} quotes", results.len());
-    for post in results {
-        println!("{}", post.title);
+    for quote in results {
+        println!("{}", quote.id);
         println!("----------\n");
-        println!("{}", post.body);
+        println!("{}", quote.ticker);
+        println!("----------\n");
+        println!("{}", quote.price);
     }
 }

@@ -10,9 +10,8 @@ pub struct InfoRoot {
 }
 
 impl InfoRoot {
-    pub fn to_record(&self) -> Vec<String> {
-        let rec = InfoData::to_record(&self.data);
-        return rec;
+    pub fn to_rec(&self) -> Vec<String> {
+        return InfoData::to_rec(&self.data);
     }
 
     pub fn get_id(&self) -> String {
@@ -22,7 +21,10 @@ impl InfoRoot {
     }
 
     pub fn gen_header(&self) -> Vec<String> {
-        return NDAQ_QUOTE_HEADER.iter().map(|x| x.clone().to_string()).collect();
+        return NDAQ_QUOTE_HEADER
+            .iter()
+            .map(|x| x.clone().to_string())
+            .collect();
     }
 }
 
@@ -44,7 +46,7 @@ pub struct InfoData {
 }
 
 impl InfoData {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_rec(&self) -> Vec<String> {
         let mut rec: Vec<String> = vec![
             self.symbol.to_string(),
             self.company_name.to_string(),
@@ -54,7 +56,7 @@ impl InfoData {
             self.is_nasdaq100.to_string(),
             self.is_held.to_string(),
         ];
-        rec.append(&mut PrimaryData::to_record(&self.primary_data));
+        rec.append(&mut PrimaryData::to_rec(&self.primary_data));
         return rec;
     }
 }
@@ -71,7 +73,7 @@ pub struct PrimaryData {
 }
 
 impl PrimaryData {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_rec(&self) -> Vec<String> {
         let mut rec: Vec<String> = vec![
             self.last_trade_timestamp.to_string(),
             self.last_sale_price.to_string(),
@@ -96,7 +98,6 @@ pub struct KeyStats {
     #[serde(rename = "MarketCap")]
     pub market_cap: gen::LabelValue,
 }
-
 
 pub const NDAQ_QUOTE_HEADER: [&'static str; 13] = [
     "symbol",

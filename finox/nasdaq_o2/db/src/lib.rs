@@ -1,8 +1,13 @@
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
+extern crate bigdecimal;
+
+// extern crate bigdecimal;
 pub mod schema;
 pub mod models;
+
+use diesel::sql_types::*;
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -20,16 +25,16 @@ pub fn establish_connection() -> PgConnection {
 
 use self::models::{Quote, NewQuote};
 
-pub fn create_quote<'a>(conn: &PgConnection, id: &'a i64, ticker: &'a str, price: &'a f64) -> Quote {
+pub fn create_quote<'a>(conn: &PgConnection, id: &'a i64, ticker: &'a str, price: &'a f32) -> Quote {
     use schema::quotes;
 
     let new_quote = NewQuote {
-        id: id
-        ticker: ticker
-        price: price
+        id: id,
+        ticker: ticker,
+        price: price.as_sql::<Numeric>()
     };
 
-    diesel::insert_into(posts::table)
+    diesel::insert_into(quotes::table)
         .values(&new_quote)
         .get_result(conn)
         .expect("Error saving new post")
