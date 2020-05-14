@@ -15,6 +15,6 @@ i=0
 while [ $i -le 10 ]
 do
   echo Number: $i
-  cargo run
+  ./target/debug/nasdaq_o2
   ((i++))
 done

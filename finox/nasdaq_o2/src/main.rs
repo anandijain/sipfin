@@ -33,7 +33,7 @@ mod schema;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
-    let conn = establish_connection();
+    // let conn = establish_connection();
 
     let all_urls = gen_urls();
 
@@ -62,71 +62,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     _ => println!("CSV FUCKED good"),
                 // }
                 // println!("{:?}", rec[0]);
-                return Some(root);
+                return Some(root.to_rec());
                 // return Some(quote_from_vec(&root.to_rec()));
             }
-            println!("serialized json wrong {}", url.clone());
+            // println!("serialized json wrong {}", url.clone());
             return None;
         }
         println!("no good1");
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<InfoRoot>>>()
+    .collect::<Vec<Option<Vec<String>>>>()
     .await;
+    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    let len: usize = recs.len();
     // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    let mut roots: Vec<InfoRoot> = fetches.into_iter().flatten().collect();
     // let roots: Vec<models::NewQuote> = roots.iter().map(|x| 
 
     // let recs: Vec<models::NewQuote> = fetches.into_iter().flatten().collect();
-    // let t: String = epoch_str();
-    // let filename: String = format!("./data/quotes/{}.csv", t);
-    let len: usize = roots.len();
-    // write_csv(
-    //     filename,
-    //     recs,
-    //     NDAQ_QUOTE_HEADER
-    //         .iter()
-    //         .map(|x| x.clone().to_string())
-    //         .collect(),
-    // )?;
+    let t: String = epoch_str();
+    let filename: String = format!("./data/quotes/{}.csv", t);
+    write_csv(
+        filename,
+        recs,
+        NDAQ_QUOTE_HEADER
+            .iter()
+            .map(|x| x.clone().to_string())
+            .collect(),
+    )?;
     // println!("{:#?}", fetches);
     // let db_quotes: Vec<models::Quote> = roots.iter().map(|x| create_quote(&conn, x)).collect();
-    let mut quotes: Vec<models::NewQuote>  = vec![];
-    for x in roots.iter() {
-        let symbol = x.data.symbol.to_string();
-        // let company_name = 
-        // let stock_type = 
-        // let exchange = 
-        // let is_nasdaq_listed = 
-        // let is_nasdaq100 = 
-        // let is_held = 
-        // let last_trade_timestamp = 
-        // let last_sale_price = 
-        // let net_change = 
-        // let percentage_change = 
-        // let is_real_time = 
-        // let delta_indicator = 
-        let nq = models::NewQuote {
-            symbol: symbol.as_str(),
-            company_name: x.data.company_name.clone().as_str(),
-            stock_type: x.data.stock_type.clone().as_str(),
-            exchange: x.data.exchange.clone().as_str(),
-            is_nasdaq_listed: x.data.is_nasdaq_listed.clone().to_string().as_str(),
-            is_nasdaq100: x.data.is_nasdaq100.to_string().as_str(),
-            is_held: x.data.is_held.to_string().as_str(),
-            last_trade_timestamp: x.data.primary_data.last_trade_timestamp.clone().as_str(),
-            last_sale_price: x.data.primary_data.last_sale_price.clone().as_str(),
-            net_change: x.data.primary_data.net_change.clone().as_str(),
-            percentage_change: x.data.primary_data.percentage_change.clone().as_str(),
-            is_real_time: x.data.primary_data.is_real_time.to_string().as_str(),
-            delta_indicator: x.data.primary_data.delta_indicator.clone().as_str(),
-        };
-         quotes.push(nq);
-        // quotes.push()
-    }
-    quotes.iter().map(|x| create_quote(&conn, x));
-    println!("{:?} ", roots);
+    // let mut quotes: Vec<models::NewQuote>  = vec![];
+    // for x in roots.iter() {
+
+    //     let nq = models::NewQuote {
+    //         symbol: symbol.as_str(),
+    //         company_name: x.data.company_name.clone().as_str(),
+    //         stock_type: x.data.stock_type.clone().as_str(),
+    //         exchange: x.data.exchange.clone().as_str(),
+    //         is_nasdaq_listed: x.data.is_nasdaq_listed.clone().to_string().as_str(),
+    //         is_nasdaq100: x.data.is_nasdaq100.to_string().as_str(),
+    //         is_held: x.data.is_held.to_string().as_str(),
+    //         last_trade_timestamp: x.data.primary_data.last_trade_timestamp.clone().as_str(),
+    //         last_sale_price: x.data.primary_data.last_sale_price.clone().as_str(),
+    //         net_change: x.data.primary_data.net_change.clone().as_str(),
+    //         percentage_change: x.data.primary_data.percentage_change.clone().as_str(),
+    //         is_real_time: x.data.primary_data.is_real_time.to_string().as_str(),
+    //         delta_indicator: x.data.primary_data.delta_indicator.clone().as_str(),
+    //     };
+    //      quotes.push(nq);
+    //     // quotes.push()
+    // }
+    // quotes.iter().map(|x| create_quote(&conn, x));
+    // println!("{:?} ", roots);
     println!(
         "{} seconds: {} records",
         now.elapsed().as_secs(),
@@ -199,17 +187,17 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
 }
 // pub fn lilfetcher(urls: Vec<String>, )
 
-pub fn establish_connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
-}
+// pub fn establish_connection() -> PgConnection {
+//     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+//     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+// }
 
-pub fn create_quote<'a>(conn: &diesel::pg::PgConnection, q: &'a models::NewQuote) -> models::Quote {
-    diesel::insert_into(schema::quotes::table)
-        .values(q)
-        .get_result(conn)
-        .expect("Error saving new post")
-}
+// pub fn create_quote<'a>(conn: &diesel::pg::PgConnection, q: &'a models::NewQuote) -> models::Quote {
+//     diesel::insert_into(schema::quotes::table)
+//         .values(q)
+//         .get_result(conn)
+//         .expect("Error saving new post")
+// }
 
 
 pub fn quote_from_vec<'a>(rec: &'a Vec<String>) ->models::NewQuote {
