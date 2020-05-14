@@ -24,7 +24,7 @@ use std::{
 mod nasdaq;
 use nasdaq::{
     chart::ChartRoot, dividends::DividendsRoot, info::InfoRoot, info::NDAQ_QUOTE_HEADER,
-    insiders::InsidersRoot, option_chain::OptionChainRoot,
+    insiders::InsidersRoot, option_chain::OptionChainRoot, realtime::RealtimeRoot, realtime::NDAQ_REALTIME_HEADER,
 };
 
 mod models;
@@ -32,89 +32,44 @@ mod schema;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Hello, world!");
-    // let conn = establish_connection();
-
-    let all_urls = gen_urls();
-
-    // let option_urls: Vec<String> = all_urls[0].clone();
-    // let chart_urls: Vec<String> = all_urls[1].clone();
+    let tickers: Vec<String> = read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt"); // TODO: get from sql table
+    let all_urls = gen_urls(tickers, vec!["realtime-trades".to_string()]);
     let urls: Vec<String> = all_urls[0].clone();
-    // let div_urls: Vec<String> = all_urls[3].clone();
-    // let insider_urls: Vec<String> = all_urls[0].clone();
     let now = Instant::now();
 
     // make distinct if endpoint serves a vec<rec> or a rec
 
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url.clone()).await {
-            if let Ok(root) = res.json::<InfoRoot>().await {
-                // let recs: Vec<Vec<String>> = root.to_recs(); //
-                // let quote: &models::NewQuote = &quote_from_vec(&rec);
-                // let id = root.get_id();
-                // let id = ndaq_url_to_ticker(url.clone());
-                // println!("{}", id);
-                // let t: String = epoch_str();
-                // let filename: String = format!("./data/insiders/{}_{}.csv", id, t);
-
-                // match write_csv(filename, recs, root.gen_header()) {
-                //     Ok(_) => println!("{}", id),
-                //     _ => println!("CSV FUCKED good"),
-                // }
-                // println!("{:?}", rec[0]);
-                return Some(root.to_rec());
-                // return Some(quote_from_vec(&root.to_rec()));
+            if let Ok(root) = res.json::<RealtimeRoot>().await {
+                return Some(root.to_recs());
             }
-            // println!("serialized json wrong {}", url.clone());
+            println!("serialized json wrong {}", url.clone());
             return None;
         }
         println!("no good1");
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<String>>>>()
+    .collect::<Vec<Option<Vec<Vec<String>>>>>()
     .await;
-    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    let len: usize = recs.len();
     // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    // let roots: Vec<models::NewQuote> = roots.iter().map(|x| 
+    // let recs: Vec<Vec<Vec<String>>> = fetches.into_iter().flatten().collect();
+    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect::<Vec<Vec<Vec<String>>>>().into_iter().flatten().collect();
+    // let recs: Vec<Vec<String>> = fetches.iter().flat_map(|x| x.into_iter().flatten().collect::<Vec<Vec<Vec<String>>>>()).collect();
+    let len: usize = recs.len();
 
-    // let recs: Vec<models::NewQuote> = fetches.into_iter().flatten().collect();
     let t: String = epoch_str();
-    let filename: String = format!("./data/quotes/{}.csv", t);
+    let filename: String = format!("./data/rt/{}.csv", t);
     write_csv(
         filename,
         recs,
-        NDAQ_QUOTE_HEADER
+        NDAQ_REALTIME_HEADER
             .iter()
             .map(|x| x.clone().to_string())
             .collect(),
     )?;
-    // println!("{:#?}", fetches);
-    // let db_quotes: Vec<models::Quote> = roots.iter().map(|x| create_quote(&conn, x)).collect();
-    // let mut quotes: Vec<models::NewQuote>  = vec![];
-    // for x in roots.iter() {
 
-    //     let nq = models::NewQuote {
-    //         symbol: symbol.as_str(),
-    //         company_name: x.data.company_name.clone().as_str(),
-    //         stock_type: x.data.stock_type.clone().as_str(),
-    //         exchange: x.data.exchange.clone().as_str(),
-    //         is_nasdaq_listed: x.data.is_nasdaq_listed.clone().to_string().as_str(),
-    //         is_nasdaq100: x.data.is_nasdaq100.to_string().as_str(),
-    //         is_held: x.data.is_held.to_string().as_str(),
-    //         last_trade_timestamp: x.data.primary_data.last_trade_timestamp.clone().as_str(),
-    //         last_sale_price: x.data.primary_data.last_sale_price.clone().as_str(),
-    //         net_change: x.data.primary_data.net_change.clone().as_str(),
-    //         percentage_change: x.data.primary_data.percentage_change.clone().as_str(),
-    //         is_real_time: x.data.primary_data.is_real_time.to_string().as_str(),
-    //         delta_indicator: x.data.primary_data.delta_indicator.clone().as_str(),
-    //     };
-    //      quotes.push(nq);
-    //     // quotes.push()
-    // }
-    // quotes.iter().map(|x| create_quote(&conn, x));
-    // println!("{:?} ", roots);
     println!(
         "{} seconds: {} records",
         now.elapsed().as_secs(),
@@ -149,18 +104,16 @@ pub fn write_csv(
     Ok(())
 }
 
-pub fn gen_urls() -> Vec<Vec<String>> {
+pub fn gen_urls(tickers: Vec<String>, sfxs: Vec<String>) -> Vec<Vec<String>> {
     // let tick_sfxs = vec!["insider-trades"];
-    let tick_sfxs = vec!["info"];
-    // "option-chain", "chart", "info", "dividends",
-    let tickers: Vec<String> = read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt"); // TODO: get from sql table
+    // "option-chain", "chart", "info", "dividends", realtime-trades
     let mut urls: Vec<Vec<String>> = vec![];
-    for sfx in tick_sfxs.iter() {
+    for sfx in sfxs.iter() {
         let sfx_urls: Vec<String> = tickers
             .iter()
             .map(|x| {
                 format!(
-                    "https://api.nasdaq.com/api/quote/{}/{}?assetclass=stocks",
+                    "https://api.nasdaq.com/api/quote/{}/{}?assetclass=stocks&limit=100",
                     // "https://api.nasdaq.com/api/company/{}/{}?limit=99999&type=ALL",
                     x.to_string(),
                     sfx.to_string()
@@ -198,23 +151,3 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
 //         .get_result(conn)
 //         .expect("Error saving new post")
 // }
-
-
-pub fn quote_from_vec<'a>(rec: &'a Vec<String>) ->models::NewQuote {
-    // rec.
-    models::NewQuote {
-        symbol: rec[0].as_str(),
-        company_name: rec[1].as_str(),
-        stock_type: rec[2].as_str(),
-        exchange: rec[3].as_str(),
-        is_nasdaq_listed: rec[4].as_str(),
-        is_nasdaq100: rec[5].as_str(),
-        is_held: rec[6].as_str(),
-        last_trade_timestamp: rec[7].as_str(),
-        last_sale_price: rec[8].as_str(),
-        net_change: rec[9].as_str(),
-        percentage_change: rec[10].as_str(),
-        is_real_time: rec[11].as_str(),
-        delta_indicator: rec[12].as_str(),
-        }.to_owned()
-}

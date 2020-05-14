@@ -23,7 +23,12 @@ sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names
 
 feichanghao(glob_pat)::DataFrame = vcat(collect(values(add_tickers(df_dict(glob_pat))))...)
 
-# df[!, :shares_traded] = parse.(Int, map(x-> replace(x, ","=>""), df.shares_traded))
+rep_rm(s::String, rmstr::String)::String = replace(s, rmstr =>"")
+to_num(s::String)::Float32 = parse(Float32, rep_rm(s, ",")) 
+
+# obviously dangerous, TODO: FIX
+usd_to_float(s::String)::Float32 = parse(Float32, rep_rm(rep_rm(s, "\$"), ","))
+usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float32, 1} = usd_to_float.(df[:, col])
 
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
@@ -63,10 +68,6 @@ function add_tickers(d::Dict{String,DataFrame})::Dict{String,DataFrame}
     d
 end
 
-
-# function lilmetrics()
-
-
 function get_dfs(glob_pat)::Array{DataFrame,1}
     CSV.read.(glob(glob_pat))
 end
@@ -86,8 +87,21 @@ function df_from_str(s::String)
     df = CSV.read(fn)
 end
 
-function cat_quotes()
-    
+function garbo(p::Array{String, 1})
+    df = vcat(CSV.read.(readdir())...)
+    df.last_sale_price = usd_col_to_float(df, :last_sale_price)
+    rn = df[occursin.("May 14", df.last_trade_timestamp), :]
+    groupby(sort(rn[in.(rn.symbol, Ref(p)), :], :symbol), :symbol)
+
+end
+
+function garbo_rt()
+    df = unique(vcat(CSV.read.(readdir())...))
+    df.x = usd_to_float.(df.x)
+    df.v = to_num.(df.v)
+    df[:, :amt] = df.x .* df.v 
+    sort!(df, :amt, rev=true)
+end
 
 
 end

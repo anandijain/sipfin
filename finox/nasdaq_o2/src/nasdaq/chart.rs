@@ -1,11 +1,10 @@
-// use crate::nasdaq::gen;
+use crate::nasdaq::gen;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChartRoot {
     pub data: ChartData,
     pub message: ::serde_json::Value,
-    // pub status: gen::Status,
     pub status: ::serde_json::Value,
 }
 
@@ -52,15 +51,28 @@ pub struct ChartData {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Chart {
-    pub z: Z,
+    pub z: gen::DateVal,
     pub x: i64,
     pub y: f64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Z {
+pub struct Chart2 {
+    pub z: Z2,
+    pub x: i64,
+    pub y: f64,
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Z2 {
+    pub high: String,
+    pub low: String,
+    pub open: String,
+    pub close: String,
+    pub volume: String,
     pub date_time: String,
     pub value: String,
 }
-

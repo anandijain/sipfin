@@ -134,7 +134,6 @@ end
 
 sol = knapsack(evaldf, 1000)
 
-usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64, 1} = parse.(Float64, replace.(replace.(df[:, col], "\$"=>""), ","=>""))
 
 # used to clean the insiders data
 function garbo(df) 

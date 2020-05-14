@@ -14,3 +14,9 @@ pub struct LabelValue {
     pub value: String,
 }
 
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DateVal {
+    pub date_time: String,
+    pub value: String,
+}

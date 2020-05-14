@@ -1,5 +1,4 @@
 use crate::nasdaq::gen;
-use crate::models;
 
 // https://api.nasdaq.com/api/quote/AAPL/info?assetclass=stocks
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -13,27 +12,7 @@ pub struct InfoRoot {
 impl InfoRoot {
     pub fn to_rec(&self) -> Vec<String> {
         return InfoData::to_rec(&self.data);
-        println!("{:?}", self.data);
     }
-
-    // pub fn to_quote<'a>(&self) -> models::NewQuote<'a>{
-    //     return models::NewQuote {
-    //         symbol: self.data.symbol.clone().as_str(),
-    //         company_name: self.data.company_name.clone().as_str(),
-    //         stock_type: self.data.stock_type.clone().as_str(),
-    //         exchange: self.data.exchange.clone().as_str(),
-    //         is_nasdaq_listed: self.data.is_nasdaq_listed.clone().to_string().as_str(),
-    //         is_nasdaq100: self.data.is_nasdaq100.to_string().as_str(),
-    //         is_held: self.data.is_held.to_string().as_str(),
-    //         last_trade_timestamp: self.data.primary_data.last_trade_timestamp.clone().as_str(),
-    //         last_sale_price: self.data.primary_data.last_sale_price.clone().as_str(),
-    //         net_change: self.data.primary_data.net_change.clone().as_str(),
-    //         percentage_change: self.data.primary_data.percentage_change.clone().as_str(),
-    //         is_real_time: self.data.primary_data.is_real_time.to_string().as_str(),
-    //         delta_indicator: self.data.primary_data.delta_indicator.clone().as_str(),
-    //     };
-    // }
-
 
     pub fn get_id(&self) -> String {
         let mut id: String = self.data.symbol.to_string();
@@ -95,11 +74,11 @@ pub struct PrimaryData {
 
 impl PrimaryData {
     pub fn to_rec(&self) -> Vec<String> {
-        let ts = self.last_trade_timestamp.split("OF ").collect::<Vec<&str>>();
+        // let ts = self.last_trade_timestamp.split("OF ").collect::<Vec<&str>>();
         // println!("{:#?}", ts);
         return vec![
-            // self.last_trade_timestamp.to_string().split_at(mid: usize),
-            ts[1].to_string(),
+            self.last_trade_timestamp.to_string(), //.split_at(mid: usize),
+            // ts[1].to_string(),
             self.last_sale_price.to_string(),
             self.net_change.to_string(),
             self.percentage_change.to_string(),

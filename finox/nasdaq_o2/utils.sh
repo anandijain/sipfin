@@ -12,9 +12,9 @@
 
 i=0
 
-while [ $i -le 10 ]
+while [ $i -le 1000 ]
 do
   echo Number: $i
-  ./target/debug/nasdaq_o2
+  ./target/release/nasdaq_o2
   ((i++))
 done
