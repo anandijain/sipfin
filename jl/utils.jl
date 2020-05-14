@@ -5,7 +5,7 @@ using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
 
 # https://assets.bwbx.io/s3/mediaservices/superelastic/data.json
 norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
-norm_mat(m::AbstractMatrix) = hcat(map(a->(a .- mean(a)) ./ std(a), eachcol(m))...)
+norm_mat(m::AbstractMatrix) = hcat(norm_arr.(eachcol(m))...)
 norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 cor_df(df::AbstractDataFrame) = DataFrame(cor(Matrix(df)), names(df))
 
@@ -87,7 +87,7 @@ function df_from_str(s::String)
     df = CSV.read(fn)
 end
 
-function garbo(p::Array{String, 1})
+function garbo_info(p::Array{String, 1})
     df = vcat(CSV.read.(readdir())...)
     df.last_sale_price = usd_col_to_float(df, :last_sale_price)
     rn = df[occursin.("May 14", df.last_trade_timestamp), :]
@@ -95,13 +95,21 @@ function garbo(p::Array{String, 1})
 
 end
 
-function garbo_rt()
+function garbo_rt()::DataFrame
     df = unique(vcat(CSV.read.(readdir())...))
     df.x = usd_to_float.(df.x)
     df.v = to_num.(df.v)
     df[:, :amt] = df.x .* df.v 
     sort!(df, :amt, rev=true)
+    # spreads = by(df, :symbol, xmax = :x => maximum, xmin = :x => minimum)
+    # amts = by(df, :symbol, :amt => sum)
+    # nrows = by(df, :symbol, nrow)
+    # sum(abs.(gd.x[2:end] .- gd.x[1:end-1]))
+    delts = sort(vcat(map(x -> sum(abs.(x.x[2:end] .- x.x[1:end-1])), gdf)...), :x1)
+
+
 end
+
 
 
 end
