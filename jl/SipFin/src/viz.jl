@@ -5,20 +5,18 @@ using .SipFin
 fns = glob("**.csv", readdir(abspath("/home/sippycups/D/nasdaq_o2/rt"), join = true))
 df = vcat(SipFin.parse_rt.(CSV.read.(fns[end-50:end]))...)
 
-function gen_anims(rt_df::DataFrame)::DataFrame
-    for df in groupby(rt_df)
-        
-
-    end
+function gen_anims(rt_df::DataFrame; size=(1200,1200))::DataFrame
+    # prob way too slow
+    by(rt_df, :symbol, p = (:t, :x, :v) => x->gen_anim(x.t, x,x, x.v))
 end
 
-function gen_anim(df::AbstractDataFrame)::Animation
+function gen_anim(t, x, v::AbstractArray)::Animation
     plt = plot3d(
         1,
-        xlim = (minimum(df.t), maximum(df.t)),
-        ylim = (minimum(df.x), maximum(df.x)),
-        zlim = (minimum(df.v), maximum(df.v)),
-        title = "$(df.symbol[1]): time, price, volume",
+        xlim = (minimum(t), maximum(t)),
+        ylim = (minimum(x), maximum(x)),
+        zlim = (minimum(v), maximum(v)),
+        title =  "time, price, volume",
         marker = 2,
         size=(1200, 1200)
     
@@ -27,7 +25,7 @@ function gen_anim(df::AbstractDataFrame)::Animation
     anim = Animation(
     )
     for i=1:size(df,1)
-        x, y, z = df.t[i], df.x[i], df.v[i]
+        x, y, z = t[i], x[i], v[i]
         push!(plt, (x, y, z))
         frame(anim)
     end
