@@ -1,4 +1,4 @@
-using LightGraphs, GraphPlot, SimpleWeightedGraphs, MetaGraphs, GraphRecipes
+using DataFrames, LightGraphs, GraphPlot, SimpleWeightedGraphs, MetaGraphs, GraphRecipes
 
 function cor_df_to_edge_weights(df::AbstractDataFrame, ret_df::Bool = true)::Union{AbstractDataFrame,Matrix}
     @assert size(df, 1) == size(df, 2)

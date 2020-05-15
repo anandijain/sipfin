@@ -1,0 +1,4 @@
+name = "SipFin"
+uuid = "70013b41-fe71-44ed-a28c-513d48e90f39"
+authors = ["anandijain <anandj@uchicago.edu>"]
+version = "0.1.0"

@@ -1,18 +1,20 @@
-module Utils
+module SipFin
+
 using Plots, Dates
 using CSV, DataFrames, Glob
 using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
 
-# https://assets.bwbx.io/s3/mediaservices/superelastic/data.json
 norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
 norm_mat(m::AbstractMatrix) = hcat(norm_arr.(eachcol(m))...)
 norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 cor_df(df::AbstractDataFrame) = DataFrame(cor(Matrix(df)), names(df))
 
-mavg(vs,n) = [sum(@view vs[i:(i + n - 1)]) / n for i in 1:(length(vs) - (n - 1))]
+mavg(vec,n) = [sum(@view vec[i:(i + n - 1)]) / n for i in 1:(length(vec) - (n - 1))]
 fib(n) = ([1 1 ; 1 0]^n)[1, 1]
     
-diff(df) = df[2:end, :] .- df[1:end - 1, :]
+# diff(df) = df[2:end, :] .- df[1:end - 1, :]
+diff_arr(arr::Array{Number, 1})::Number = sum(abs.(arr[2:end] .- arr[1:end-1]))
+
 cor_df(df::AbstractDataFrame)::AbstractDataFrame = DataFrame(cor(Matrix(df)), names(df))
 re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
 
@@ -29,6 +31,9 @@ to_num(s::String)::Float32 = parse(Float32, rep_rm(s, ","))
 # obviously dangerous, TODO: FIX
 usd_to_float(s::String)::Float32 = parse(Float32, rep_rm(rep_rm(s, "\$"), ","))
 usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float32, 1} = usd_to_float.(df[:, col])
+
+
+dir_to_dfs() = vcat(CSV.read.(readdir())...)
 
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
@@ -95,21 +100,13 @@ function garbo_info(p::Array{String, 1})
 
 end
 
-function garbo_rt()::DataFrame
-    df = unique(vcat(CSV.read.(readdir())...))
+function parse_rt(df::DataFrame)::DataFrame
     df.x = usd_to_float.(df.x)
     df.v = to_num.(df.v)
     df[:, :amt] = df.x .* df.v 
-    sort!(df, :amt, rev=true)
-    # spreads = by(df, :symbol, xmax = :x => maximum, xmin = :x => minimum)
-    # amts = by(df, :symbol, :amt => sum)
-    # nrows = by(df, :symbol, nrow)
-    # sum(abs.(gd.x[2:end] .- gd.x[1:end-1]))
-    delts = sort(vcat(map(x -> sum(abs.(x.x[2:end] .- x.x[1:end-1])), gdf)...), :x1)
-
-
+    sort(df, :amt, rev=true)
 end
 
 
 
-end
+end # module

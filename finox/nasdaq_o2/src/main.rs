@@ -20,11 +20,11 @@ use std::{
     path::Path,
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
-
 mod nasdaq;
 use nasdaq::{
     chart::ChartRoot, dividends::DividendsRoot, info::InfoRoot, info::NDAQ_QUOTE_HEADER,
-    insiders::InsidersRoot, option_chain::OptionChainRoot, realtime::RealtimeRoot, realtime::NDAQ_REALTIME_HEADER,
+    insiders::InsidersRoot, option_chain::OptionChainRoot, realtime::RealtimeRoot,
+    realtime::NDAQ_REALTIME_HEADER,
 };
 
 mod models;
@@ -55,14 +55,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await;
     // let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
     // let recs: Vec<Vec<Vec<String>>> = fetches.into_iter().flatten().collect();
-    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect::<Vec<Vec<Vec<String>>>>().into_iter().flatten().collect();
+    let recs: Vec<Vec<String>> = fetches
+        .into_iter()
+        .flatten()
+        .collect::<Vec<Vec<Vec<String>>>>()
+        .into_iter()
+        .flatten()
+        .collect();
     // let recs: Vec<Vec<String>> = fetches.iter().flat_map(|x| x.into_iter().flatten().collect::<Vec<Vec<Vec<String>>>>()).collect();
     let len: usize = recs.len();
 
     let t: String = epoch_str();
-    let filename: String = format!("./data/rt/{}.csv", t);
+    let filename: String = format!("/home/sippycups/D/nasdaq_o2/rt/{}.csv", t);
     write_csv(
-        filename,
+        filename.clone(),
         recs,
         NDAQ_REALTIME_HEADER
             .iter()
@@ -71,7 +77,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     println!(
-        "{} seconds: {} records",
+        "{}: {} seconds: {} records",
+        filename,
         now.elapsed().as_secs(),
         len.to_string()
     );
@@ -92,8 +99,8 @@ pub fn write_csv(
     data: Vec<Vec<String>>,
     header: Vec<String>,
 ) -> Result<(), csv::Error> {
-    let mut wtr = csv::Writer::from_path(filename.to_string())
-        .expect(format!("whtf csv {}", filename).as_ref());
+    let path = Path::new(&filename);
+    let mut wtr = csv::Writer::from_path(path).expect(format!("whtf csv {}", filename).as_ref());
     wtr.write_record(header.clone())?;
     wtr.flush()?;
     for row in data.iter() {
