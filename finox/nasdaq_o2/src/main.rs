@@ -145,6 +145,7 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
     let v: Vec<&str> = url.split("/").collect(); // divs
     return format!("{}_insider", v[5]);
 }
+
 // pub fn lilfetcher(urls: Vec<String>, )
 
 // pub fn establish_connection() -> PgConnection {

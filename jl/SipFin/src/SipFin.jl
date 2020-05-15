@@ -25,7 +25,7 @@ re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
 # used w nasdaq_o2
 # takes a dataframe dictionary and returns the len of each df value
 sizes(d::Dict{String,DataFrame})::DataFrame = sort(DataFrame(ticker = collect(keys(d)), nrows = map(x->x[1], size.(collect(values(d))))), :nrows, rev = true)
-sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names(x)[2], dfs), nrows = map(x->size(x)[1], dfs)), :nrows, rev = true)
+sizes(dfs::Array{AbstractDataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names(x)[2], dfs), nrows = map(x->size(x)[1], dfs)), :nrows, rev = true)
 
 feichanghao(glob_pat)::DataFrame = vcat(collect(values(add_tickers(df_dict(glob_pat))))...)
 
@@ -38,14 +38,15 @@ usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64,1} = usd_to_float.(d
 
 dir_to_dfs() = vcat(CSV.read.(readdir())...)
 
-spreads(df::DataFrame)::DataFrame = by(df, :symbol, spread = :x => x->maximum(x) .- minimum(x))
-spreads(df::DataFrame, col::Symbol)::DataFrame = by(df, col, spread = :x => x->maximum(x) .- minimum(x))
+spreads(df::AbstractDataFrame)::AbstractDataFrame = by(df, :symbol, spread = :x => x->maximum(x) .- minimum(x))
+spreads(df::AbstractDataFrame, col::Symbol)::AbstractDataFrame = by(df, col, spread = :x => x->maximum(x) .- minimum(x))
 
 
-charts_df(df::DataFrame; size::Tuple = (1600, 1600))::DataFrame = by(df, :symbol, p = (:t, :x) => x->plot(x.t, x.x, size = size))
-charts_df(df::DataFrame, col::Symbol; size::Tuple = (1600, 1600))::DataFrame = by(df, col, p = (:t, :x) => x->plot(x.t, x.x, size = size))
-save_charts(charts_df::DataFrame) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]]).png"), enumerate(charts_df.p)) 
-save_charts(charts_df::DataFrame, sfx::String) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
+charts_df(df::AbstractDataFrame; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, :symbol, p = (:t, :x) => x->plot(x.t, x.x, size = size))
+charts_df(df::AbstractDataFrame, col::Symbol; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, col, p = (:t, :x) => x->plot(x.t, x.x, size = size))
+save_charts(charts_df::AbstractDataFrame) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]]).png"), enumerate(charts_df.p)) 
+save_charts(charts_df::AbstractDataFrame, sfx::String) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
+gen_anims(rt_df::AbstractDataFrame; size=(1200,1200))::AbstractDataFrame = by(rt_df, :symbol, p = (:t, :x, :v) => x->gen_anim(Array(x.t), Array(x,x), Array(x.v)))
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
     open(fn, "w") do io
@@ -111,9 +112,9 @@ function garbo_info(p::Array{String,1})
 
 end
 
-get_rts() = vcat(SipFin.parse_rt.(CSV.read.(homedir() * "/D/nasdaq_o2/rt/"))...) 
+get_rts()::DataFrame = SipFin.parse_rt(vcat(CSV.read.(glob("**.csv", homedir() * "/D/nasdaq_o2/rt/")))...) 
 
-function parse_rt(df::DataFrame; to_unixtime::Bool = true)::DataFrame
+function parse_rt(df::AbstractDataFrame; to_unixtime::Bool = true)::DataFrame
     df[!, :t] = to_unixtime ? datetime2unix.(today() .+ df[:, :t]) : today() .+ df[:, :t]
     df[!, :x] = usd_to_float.(df.x)
     df[!, :v] = to_num.(df.v)
@@ -141,6 +142,28 @@ function summarize_rt(df::DataFrame)::DataFrame
     # @. sort(by(df, :v, nrow), [:x1, :v], rev=(true, false))
     # by(df, :symbol, tdelt = :t=> x-> maximum(x) - minimum(x))
 
+end
+
+
+# super fucking slow
+function gen_anim(t, x, v)::Animation
+    plt = plot3d(
+        1,
+        xlim = (minimum(t), maximum(t)),
+        ylim = (minimum(x), maximum(x)),
+        zlim = (minimum(v), maximum(v)),
+        title =  "time, price, volume",
+        marker = 2,
+        size=(1200, 1200)
+    )
+    anim = Animation()
+
+    for i=1:10:length(t)
+        xi, yi, zi = t[i], x[i], v[i]
+        push!(plt, (xi, yi, zi))
+        frame(anim)
+    end
+    anim
 end
 
 end # module

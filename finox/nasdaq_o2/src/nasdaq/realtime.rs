@@ -55,8 +55,8 @@ impl Row {
         return vec![
             symbol,
             self.nls_time.to_string(),
-            self.nls_price.to_string(),
-            self.nls_share_volume.to_string(),
+            self.nls_price.to_string().replace("$ " , ""),
+            self.nls_share_volume.to_string().replace(",", ""),
             ];
     }
 }
