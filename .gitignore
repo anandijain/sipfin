@@ -13,3 +13,5 @@ sipfin/config.py
 *.txt
 *.csv#
 *.db
+*.gif
+*.mp4

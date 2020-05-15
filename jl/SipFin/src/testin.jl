@@ -134,7 +134,7 @@ sol = knapsack(evaldf, 1000)
 fns = readdir(abspath("/home/sippycups/D/nasdaq_o2/rt"), join=true)
 
 # only tested once 
-@time vcat(SipFin.parse_rt.(CSV.read.(fns))...) #  70.328380 seconds (1.00 G allocations: 49.264 GiB, 12.25% gc time)
+@time SipFin.get_rts #  70.328380 seconds (1.00 G allocations: 49.264 GiB, 12.25% gc time)
 @time SipFin.parse_rt(vcat(CSV.read.(fns)...)) # 86.028415 seconds (998.05 M allocations: 49.323 GiB, 21.53% gc time) 
 dfs= SipFin.parse_rt.(CSV.read.(fns))
 

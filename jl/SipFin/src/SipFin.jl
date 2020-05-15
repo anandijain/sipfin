@@ -3,7 +3,7 @@ module SipFin
 using Plots, Dates
 using CSV, DataFrames, Glob
 using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
-#=
+#= 
 
 
 =#
@@ -17,7 +17,7 @@ mavg(vec,n) = [sum(@view vec[i:(i + n - 1)]) / n for i in 1:(length(vec) - (n - 
 fib(n) = ([1 1 ; 1 0]^n)[1, 1]
     
 # diff(df) = df[2:end, :] .- df[1:end - 1, :]
-diff_arr(arr::Array) = sum(abs.(arr[2:end] .- arr[1:end-1]))
+diff_arr(arr::Array) = sum(abs.(arr[2:end] .- arr[1:end - 1]))
 
 cor_df(df::AbstractDataFrame)::AbstractDataFrame = DataFrame(cor(Matrix(df)), names(df))
 re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
@@ -29,15 +29,23 @@ sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names
 
 feichanghao(glob_pat)::DataFrame = vcat(collect(values(add_tickers(df_dict(glob_pat))))...)
 
-rep_rm(s::String, rmstr::String)::String = replace(s, rmstr =>"")
+rep_rm(s::String, rmstr::String)::String = replace(s, rmstr => "")
 to_num(s::String)::Float64 = parse(Float64, rep_rm(s, ",")) 
 
 # obviously dangerous, TODO: FIX
 usd_to_float(s::String)::Float64 = parse(Float64, rep_rm(rep_rm(s, "\$"), ","))
-usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64, 1} = usd_to_float.(df[:, col])
-
+usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64,1} = usd_to_float.(df[:, col])
 
 dir_to_dfs() = vcat(CSV.read.(readdir())...)
+
+spreads(df::DataFrame)::DataFrame = by(df, :symbol, spread = :x => x->maximum(x) .- minimum(x))
+spreads(df::DataFrame, col::Symbol)::DataFrame = by(df, col, spread = :x => x->maximum(x) .- minimum(x))
+
+
+charts_df(df::DataFrame; size::Tuple = (1600, 1600))::DataFrame = by(df, :symbol, p = (:t, :x) => x->plot(x.t, x.x, size = size))
+charts_df(df::DataFrame, col::Symbol; size::Tuple = (1600, 1600))::DataFrame = by(df, col, p = (:t, :x) => x->plot(x.t, x.x, size = size))
+save_charts(charts_df::DataFrame) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]]).png"), enumerate(charts_df.p)) 
+save_charts(charts_df::DataFrame, sfx::String) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
     open(fn, "w") do io
@@ -95,7 +103,7 @@ function df_from_str(s::String)
     df = CSV.read(fn)
 end
 
-function garbo_info(p::Array{String, 1})
+function garbo_info(p::Array{String,1})
     df = vcat(CSV.read.(readdir())...)
     df.last_sale_price = usd_col_to_float(df, :last_sale_price)
     rn = df[occursin.("May 14", df.last_trade_timestamp), :]
@@ -103,30 +111,32 @@ function garbo_info(p::Array{String, 1})
 
 end
 
-function parse_rt(df::DataFrame)::DataFrame
+get_rts() = vcat(SipFin.parse_rt.(CSV.read.(homedir() * "/D/nasdaq_o2/rt/"))...) 
+
+function parse_rt(df::DataFrame; to_unixtime::Bool = true)::DataFrame
+    df[!, :t] = to_unixtime ? datetime2unix.(today() .+ df[:, :t]) : today() .+ df[:, :t]
     df[!, :x] = usd_to_float.(df.x)
     df[!, :v] = to_num.(df.v)
     df[!, :amt] = df[:, :x] .* df[:, :v]
+    sort!(df, :t)
     df
-    # df = sort(df, :amt, rev=true)
 end
 
 # used to clean the insiders data
 function parse_insiders(df) 
-  df.last_price = usd_col_to_float(df, :last_price)
-  df.shares_traded = parse.(Int, replace.(df.shares_traded, ","=>""))
-  df.shares_held =  parse.(Int, replace.(df.shares_held, ","=>""))
-  dtfmt = "m/d/y"
-  df.last_date = Date.(df.last_date, dtfmt)
+    df.last_price = usd_col_to_float(df, :last_price)
+    df.shares_traded = parse.(Int, replace.(df.shares_traded, "," => ""))
+    df.shares_held =  parse.(Int, replace.(df.shares_held, "," => ""))
+    dtfmt = "m/d/y"
+    df.last_date = Date.(df.last_date, dtfmt)
 end
 
 
 function summarize_rt(df::DataFrame)::DataFrame
     spreads = by(df, :symbol, xmax = :x => maximum, xmin = :x => minimum)
-    amts = by(df, :symbol, :amt => sum)
-    nrows = by(df, :symbol, nrows = nrow)
-    delts = sort(vcat(map(x -> diff_arr(x.x), gdf)...), :x1)
-    summary = join([amts, spreads, nrows, delts]..., on=:symbol, makeunique=true)
+    summary = by(df, :symbol, nrows = nrow, amt_sum = :amt => sum)
+    delts = sort(vcat(map(x->diff_arr(x.x), gdf)...), :x1)
+    summary = join([amts, spreads, nrows, delts]..., on = :symbol, makeunique = true)
     # by(df, :symbol, describe)
     # @. sort(by(df, :v, nrow), [:x1, :v], rev=(true, false))
     # by(df, :symbol, tdelt = :t=> x-> maximum(x) - minimum(x))
