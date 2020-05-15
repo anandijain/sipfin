@@ -13,7 +13,7 @@ mavg(vec,n) = [sum(@view vec[i:(i + n - 1)]) / n for i in 1:(length(vec) - (n - 
 fib(n) = ([1 1 ; 1 0]^n)[1, 1]
     
 # diff(df) = df[2:end, :] .- df[1:end - 1, :]
-diff_arr(arr::Array{Number, 1})::Number = sum(abs.(arr[2:end] .- arr[1:end-1]))
+diff_arr(arr::Array) = sum(abs.(arr[2:end] .- arr[1:end-1]))
 
 cor_df(df::AbstractDataFrame)::AbstractDataFrame = DataFrame(cor(Matrix(df)), names(df))
 re_cols(dfs::Array{DataFrame,1}, re::Regex) = map(df->df[:, re], dfs)
@@ -101,12 +101,22 @@ function garbo_info(p::Array{String, 1})
 end
 
 function parse_rt(df::DataFrame)::DataFrame
-    df.x = usd_to_float.(df.x)
-    df.v = to_num.(df.v)
-    df[:, :amt] = df.x .* df.v 
-    sort(df, :amt, rev=true)
+    df[:, :x] = usd_to_float.(df[:, :x])
+    df[:, :y] = to_num.(df[:, :y])
+    df[:, :amt] = df[:, :x] .* df[:, :y] 
+    df = sort(df, :amt, rev=true)
 end
 
+function summarize_rt(df::DataFrame)::DataFrame
+    spreads = by(df, :symbol, xmax = :x => maximum, xmin = :x => minimum)
+    amts = by(df, :symbol, :amt => sum)
+    nrows = by(df, :symbol, nrows = nrow)
+    delts = sort(vcat(map(x -> diff_arr(x.x), gdf)...), :x1)
+    summary = join([amts, spreads, nrows, delts]..., on=:symbol, makeunique=true)
+    # by(df, :symbol, describe)
+    # @. sort(by(df, :v, nrow), [:x1, :v], rev=(true, false))
+    # by(df, :symbol, tdelt = :t=> x-> maximum(x) - minimum(x))
 
+end
 
 end # module
