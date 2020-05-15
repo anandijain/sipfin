@@ -3,9 +3,13 @@ module SipFin
 using Plots, Dates
 using CSV, DataFrames, Glob
 using Statistics, StatsBase, Dates, LinearAlgebra, DelimitedFiles, Base
+#=
 
+
+=#
 norm_arr(a::AbstractArray) = (a .- mean(a)) ./ std(a)
 norm_mat(m::AbstractMatrix) = hcat(norm_arr.(eachcol(m))...)
+# todo, ignore string columns
 norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 cor_df(df::AbstractDataFrame) = DataFrame(cor(Matrix(df)), names(df))
 
@@ -26,15 +30,14 @@ sizes(dfs::Array{DataFrame,1})::DataFrame = sort(DataFrame(ticker = map(x->names
 feichanghao(glob_pat)::DataFrame = vcat(collect(values(add_tickers(df_dict(glob_pat))))...)
 
 rep_rm(s::String, rmstr::String)::String = replace(s, rmstr =>"")
-to_num(s::String)::Float32 = parse(Float32, rep_rm(s, ",")) 
+to_num(s::String)::Float64 = parse(Float64, rep_rm(s, ",")) 
 
 # obviously dangerous, TODO: FIX
-usd_to_float(s::String)::Float32 = parse(Float32, rep_rm(rep_rm(s, "\$"), ","))
-usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float32, 1} = usd_to_float.(df[:, col])
+usd_to_float(s::String)::Float64 = parse(Float64, rep_rm(rep_rm(s, "\$"), ","))
+usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64, 1} = usd_to_float.(df[:, col])
 
 
 dir_to_dfs() = vcat(CSV.read.(readdir())...)
-
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
     open(fn, "w") do io
@@ -101,11 +104,22 @@ function garbo_info(p::Array{String, 1})
 end
 
 function parse_rt(df::DataFrame)::DataFrame
-    df[:, :x] = usd_to_float.(df[:, :x])
-    df[:, :y] = to_num.(df[:, :y])
-    df[:, :amt] = df[:, :x] .* df[:, :y] 
-    df = sort(df, :amt, rev=true)
+    df[!, :x] = usd_to_float.(df.x)
+    df[!, :v] = to_num.(df.v)
+    df[!, :amt] = df[:, :x] .* df[:, :v]
+    df
+    # df = sort(df, :amt, rev=true)
 end
+
+# used to clean the insiders data
+function parse_insiders(df) 
+  df.last_price = usd_col_to_float(df, :last_price)
+  df.shares_traded = parse.(Int, replace.(df.shares_traded, ","=>""))
+  df.shares_held =  parse.(Int, replace.(df.shares_held, ","=>""))
+  dtfmt = "m/d/y"
+  df.last_date = Date.(df.last_date, dtfmt)
+end
+
 
 function summarize_rt(df::DataFrame)::DataFrame
     spreads = by(df, :symbol, xmax = :x => maximum, xmin = :x => minimum)

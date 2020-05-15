@@ -1,9 +1,7 @@
-include("utils.jl")
-using .Utils
+include("./SipFin/src/SipFin.jl")
+using .SipFin
 using Plots, Dates
 using CSV, DataFrames, Glob
-using LightGraphs, GraphPlot, SimpleWeightedGraphs, MetaGraphs, GraphRecipes
-
 # rename!(x -> Symbol(replace(string(x), " "=>"_")), df)
 reg = r"data\/(.*):"
 glob_pat = "./data/*H*.csv"
@@ -133,16 +131,10 @@ function knapsack(df, W)
 end
 
 sol = knapsack(evaldf, 1000)
+fns = readdir(abspath("/home/sippycups/D/nasdaq_o2/rt"), join=true)
 
+# only tested once 
+@time vcat(SipFin.parse_rt.(CSV.read.(fns))...) #  70.328380 seconds (1.00 G allocations: 49.264 GiB, 12.25% gc time)
+@time SipFin.parse_rt(vcat(CSV.read.(fns)...)) # 86.028415 seconds (998.05 M allocations: 49.323 GiB, 21.53% gc time) 
+dfs= SipFin.parse_rt.(CSV.read.(fns))
 
-# used to clean the insiders data
-function garbo(df) 
-  df.last_price = usd_col_to_float(df, :last_price)
-  df.shares_traded = parse.(Int, replace.(df.shares_traded, ","=>""))
-  df.shares_held =  parse.(Int, replace.(df.shares_held, ","=>""))
-  dtfmt = "m/d/y"
-  df.last_date = Date.(df.last_date, dtfmt)
-end
-
-function div_garbo(df)
-  
