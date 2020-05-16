@@ -12,9 +12,12 @@ extern crate tokio;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use futures::stream::StreamExt;
+//use url::{ParseError, Url};
 
 use std::{
     env,
+    error::Error,
+    fmt,
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
@@ -31,10 +34,49 @@ mod models;
 mod schema;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tickers: Vec<String> = read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt"); // TODO: get from sql table
-    let all_urls = gen_urls(tickers, vec!["realtime-trades".to_string()]);
-    let urls: Vec<String> = all_urls[0].clone();
+async fn main() -> Result<(), String> {
+    let args: Vec<String> = env::args().collect();
+    assert_eq!(
+        3,
+        args.len(),
+        "CLI: [1]: asset class [`stocks`, `commodities`, `currencies`]
+                                    [2]: sfx [TODO] "
+    );
+    // TODO: get from sql table
+    // let all_urls = gen_urls(tickers, vec!["realtime-trades".to_string()]);
+    // let urls: Vec<String> = all_urls[0].clone();
+
+    let securities: Vec<Security> = match args[1].as_str() {
+        "stocks" => Ok(
+            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt")
+                .iter()
+                .map(|x| Security::Stock(x.to_string()))
+                .collect::<Vec<Security>>(),
+        ),
+        "commodities" => Ok(
+            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt")
+                .iter()
+                .map(|x| Security::Commodity(x.to_string()))
+                .collect::<Vec<Security>>(),
+        ),
+        "currencies" => Ok(
+            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt")
+                .iter()
+                .map(|x| Security::Currency(x.to_string()))
+                .collect::<Vec<Security>>(),
+        ),
+        _ => Err("invalid asset class provided"),
+    }
+    .unwrap();
+
+    let urls: Vec<String> = match args[2].as_str() {
+        "rt" => securities
+            .iter()
+            .map(|x| x.to_nasdaq_rt_url().unwrap())
+            .collect(),
+        s => securities.iter().map(|x| x.to_nasdaq_url(s)).collect(),
+    };
+
     let now = Instant::now();
 
     // make distinct if endpoint serves a vec<rec> or a rec
@@ -110,28 +152,21 @@ pub fn write_csv(
     wtr.flush()?;
     Ok(())
 }
-
-pub fn gen_urls(tickers: Vec<String>, sfxs: Vec<String>) -> Vec<Vec<String>> {
-    // let tick_sfxs = vec!["insider-trades"];
-    // "option-chain", "chart", "info", "dividends", realtime-trades
-    let mut urls: Vec<Vec<String>> = vec![];
-    for sfx in sfxs.iter() {
-        let sfx_urls: Vec<String> = tickers
-            .iter()
-            .map(|x| {
-                format!(
-                    "https://api.nasdaq.com/api/quote/{}/{}?assetclass=stocks&limit=100",
-                    // "https://api.nasdaq.com/api/company/{}/{}?limit=99999&type=ALL",
-                    x.to_string(),
-                    sfx.to_string()
-                )
-            })
-            .collect();
-        urls.push(sfx_urls);
-    }
-    return urls;
-}
-
+//
+//pub fn gen_urls(tickers: Vec<String>, sfxs: Vec<String>) -> Vec<Vec<String>> {
+//   let mut urls: Vec<Vec<String>> = vec![];
+//    for sfx in sfxs.iter() {
+//        let sfx_urls: Vec<String> = tickers
+//            .iter()
+//            .map(|x| {
+//                x.to_nasdaq_url();
+//            })
+//            .collect();
+//        urls.push(sfx_urls);
+//    }
+//    return urls;
+//}
+//
 pub fn epoch_str() -> String {
     let t = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -159,3 +194,38 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
 //         .get_result(conn)
 //         .expect("Error saving new post")
 // }
+
+#[derive(Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+pub enum Security {
+    Commodity(String),
+    Stock(String), // ? might need special treatment, far more endpoints for these
+    Currency(String),
+}
+impl Security {
+    pub fn to_nasdaq_url(&self, sfx: &str) -> String {
+        // let tick_sfxs = vec!["insider-trades"];
+        // historical "option-chain", "chart", "info", "dividends", realtime-trades
+        let pre = "quote";
+        match self {
+            Security::Commodity(s) => garbo(pre, s, sfx, "commodities", ""),
+            Security::Stock(s) => garbo(pre, s, sfx, "stocks", ""),
+            Security::Currency(s) => garbo(pre, s, sfx, "currencies", ""),
+        }
+    }
+
+    // only have stocks on rt
+    pub fn to_nasdaq_rt_url(&self) -> Result<String, Box<dyn Error>> {
+        let sfx = "&limit=100".to_string();
+        match self {
+            Security::Stock(s) => Ok(garbo("quote", s, "realtime-trades", "stocks", "&limit=100")),
+            _ => panic!("Nasdaq only has realtime stock quotes".to_string()),
+        }
+    }
+}
+
+pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
+    format!(
+        "https://api.nasdaq.com/api/{}/{}/{}?assetclass={}{}",
+        pre, s, sfx, sfx2, sfx3
+    )
+}
