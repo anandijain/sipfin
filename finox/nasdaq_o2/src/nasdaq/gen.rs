@@ -20,3 +20,13 @@ pub struct DateVal {
     pub date_time: String,
     pub value: String,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+pub trait HasRecs {
+    fn to_recs(&self) -> Vec<Vec<String>>;
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+pub trait HasRec {
+    fn to_rec(&self) -> Vec<String>;
+}

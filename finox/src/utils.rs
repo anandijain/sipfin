@@ -32,21 +32,7 @@ use crate::jpxnews;
 //     US(String),
 //     GOV(String),
 // }
-#[derive(Clone)]
-pub enum Security {
-    F(String),
-    X(String),
-    US(String),
-}
-impl fmt::Display for Security {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Security::F(s) => write!(f, "{}:F", s.to_string()),
-            Security::X(s) => write!(f, "{}:X", s.to_string()),
-            Security::US(s) => write!(f, "{}:US", s.to_string()),
-        }
-    }
-}
+
 
 // impl Security {
 //     pub fn to_yf(&self) -> String {

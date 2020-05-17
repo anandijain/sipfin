@@ -1,4 +1,5 @@
 use crate::nasdaq::gen;
+use crate::nasdaq::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,11 +9,13 @@ pub struct RealtimeRoot {
     pub status: gen::Status,
 }
 
-impl RealtimeRoot {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
-        return self.data.to_recs(); 
+impl HasRecs for RealtimeRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        return self.data.to_recs();
     }
+}
 
+impl RealtimeRoot {
     pub fn get_id(&self) -> String {
         return format!("{}_rt", self.data.symbol.to_string());
     }
@@ -36,9 +39,13 @@ pub struct Data {
     pub rows: Vec<Row>,
 }
 
-impl Data {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
-        return self.rows.iter().map(|x| x.to_rec(self.symbol.clone())).collect();
+impl HasRecs for Data { // ???
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        return self
+            .rows
+            .iter()
+            .map(|x| x.to_rec(self.symbol.clone()))
+            .collect();
     }
 }
 
@@ -55,16 +62,10 @@ impl Row {
         return vec![
             symbol,
             self.nls_time.to_string(),
-            self.nls_price.to_string().replace("$ " , ""),
+            self.nls_price.to_string().replace("$ ", ""),
             self.nls_share_volume.to_string().replace(",", ""),
-            ];
+        ];
     }
 }
 
-
-pub const NDAQ_REALTIME_HEADER: [&'static str; 4] = [
-    "symbol",
-    "t",
-    "x",
-    "v",
-];
+pub const NDAQ_REALTIME_HEADER: [&'static str; 4] = ["symbol", "t", "x", "v"];

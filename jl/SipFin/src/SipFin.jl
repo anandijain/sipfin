@@ -33,19 +33,17 @@ rep_rm(s::String, rmstr::String)::String = replace(s, rmstr => "")
 to_num(s::String)::Float64 = parse(Float64, rep_rm(s, ",")) 
 
 # obviously dangerous, TODO: FIX
+# pushed problem to upstream to_csv serializer in rust on may 15th 
+# TODO deprecate 
 usd_to_float(s::String)::Float64 = parse(Float64, rep_rm(rep_rm(s, "\$"), ","))
 usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64,1} = usd_to_float.(df[:, col])
-
-dir_to_dfs() = vcat(CSV.read.(readdir())...)
 
 spreads(df::AbstractDataFrame)::AbstractDataFrame = by(df, :symbol, spread = :x => x->maximum(x) .- minimum(x))
 spreads(df::AbstractDataFrame, col::Symbol)::AbstractDataFrame = by(df, col, spread = :x => x->maximum(x) .- minimum(x))
 
-
 charts_df(df::AbstractDataFrame; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, :symbol, p = (:t, :x) => x->plot(x.t, x.x, size = size))
 charts_df(df::AbstractDataFrame, col::Symbol; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, col, p = (:t, :x) => x->plot(x.t, x.x, size = size))
-save_charts(charts_df::AbstractDataFrame) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]]).png"), enumerate(charts_df.p)) 
-save_charts(charts_df::AbstractDataFrame, sfx::String) = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
+save_charts(charts_df::AbstractDataFrame; sfx::String="chart") = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
 gen_anims(rt_df::AbstractDataFrame; size=(1200,1200))::AbstractDataFrame = by(rt_df, :symbol, p = (:t, :x, :v) => x->gen_anim(Array(x.t), Array(x,x), Array(x.v)))
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
@@ -116,8 +114,6 @@ get_rts()::DataFrame = SipFin.parse_rt(vcat(CSV.read.(glob("**.csv", homedir() *
 
 function parse_rt(df::AbstractDataFrame; to_unixtime::Bool = true)::DataFrame
     df[!, :t] = to_unixtime ? datetime2unix.(today() .+ df[:, :t]) : today() .+ df[:, :t]
-    df[!, :x] = usd_to_float.(df.x)
-    df[!, :v] = to_num.(df.v)
     df[!, :amt] = df[:, :x] .* df[:, :v]
     sort!(df, :t)
     df
@@ -143,7 +139,6 @@ function summarize_rt(df::DataFrame)::DataFrame
     # by(df, :symbol, tdelt = :t=> x-> maximum(x) - minimum(x))
 
 end
-
 
 # super fucking slow
 function gen_anim(t, x, v)::Animation
