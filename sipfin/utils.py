@@ -10,12 +10,15 @@ from functools import reduce
 from transformers import pipeline
 import pandas as pd
 
+headers = {
+    'User-Agent': 'My User Agent 1.0',
+}
 
 def page(link: str, parser:str = 'html.parser') -> bs4.BeautifulSoup:
     """
 
     """
-    p = bs4.BeautifulSoup(r.get(link).text, parser)
+    p = bs4.BeautifulSoup(r.get(link, headers=headers).text, parser)
     return p
 
 
