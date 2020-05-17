@@ -1,5 +1,5 @@
 use crate::nasdaq::gen;
-use crate::nasdaq::HasRecs;
+// use crate::nasdaq::gen::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,17 +9,14 @@ pub struct OptionChainRoot {
     pub status: gen::Status,
 }
 
-impl HasRecs for OptionChainRoot {
-    fn to_recs(&self) -> Vec<Vec<String>> {
+impl OptionChainRoot {
+    pub fn to_recs(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = vec![];
         for row in self.data.option_chain_list.rows.iter() {
             recs.append(&mut row.to_recs())
         }
         return recs;
     }
-}
-
-impl OptionChainRoot {
     pub fn get_id(&self) -> String {
         return self.data.option_chain_list.rows[0]
             .call

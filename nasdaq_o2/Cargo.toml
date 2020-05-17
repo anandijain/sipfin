@@ -9,8 +9,8 @@ name = "nasdaq_o2"
 path = "src/lib.rs"
 
 [[bin]]
-name = "nasdaq_o2"
-path = "src/main.rs"
+name = "nasdaq_o2_rt"
+path = "src/bin/rt.rs"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

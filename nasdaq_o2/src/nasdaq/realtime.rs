@@ -1,5 +1,5 @@
 use crate::nasdaq::gen;
-use crate::nasdaq::HasRecs;
+use crate::nasdaq::gen::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,13 +9,17 @@ pub struct RealtimeRoot {
     pub status: gen::Status,
 }
 
-impl HasRecs for RealtimeRoot {
-    fn to_recs(&self) -> Vec<Vec<String>> {
-        return self.data.to_recs();
-    }
-}
+//impl HasRecs for RealtimeRoot {
+//    fn to_recs(&self) -> Vec<Vec<String>> {
+//        return self.data.to_recs();
+//    }
+//}
 
 impl RealtimeRoot {
+    pub fn to_recs(&self) -> Vec<Vec<String>> {
+        return self.data.to_recs();
+    }
+
     pub fn get_id(&self) -> String {
         return format!("{}_rt", self.data.symbol.to_string());
     }
@@ -39,8 +43,8 @@ pub struct Data {
     pub rows: Vec<Row>,
 }
 
-impl HasRecs for Data { // ???
-    fn to_recs(&self) -> Vec<Vec<String>> {
+impl Data {
+    pub fn to_recs(&self) -> Vec<Vec<String>> {
         return self
             .rows
             .iter()

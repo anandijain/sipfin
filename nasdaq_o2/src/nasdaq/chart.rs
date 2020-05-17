@@ -10,10 +10,11 @@ pub struct ChartRoot {
 
 impl ChartRoot {
     pub fn to_recs(&self) -> Vec<Vec<String>> {
+        let symb = self.data.symbol.to_string();
         return self.data
             .chart
             .iter()
-            .map(|c| vec![c.x.to_string(), c.y.to_string()])
+            .map(|c| vec![symb.to_string(), c.x.to_string(), c.y.to_string()])
             .collect();
     }
 
@@ -23,14 +24,12 @@ impl ChartRoot {
         return id;
     }
 
-    pub fn gen_header(&self) -> Vec<String> {
-        return vec!["t".to_string(), self.data.symbol.to_string()]; //chart header
-    }
+    //pub fn gen_header(&self) -> Vec<String> {
+    //    //return vec!["t".to_string(), self.data.symbol.to_string()]; //chart header
+    //    return vec!["t".to_string(), self.data.symbol.to_string()]; //chart header
+    //}
 }
 
-// impl Record for ChartRoot {
-    
-// }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -56,23 +55,10 @@ pub struct Chart {
     pub y: f64,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Chart2 {
-    pub z: Z2,
-    pub x: i64,
-    pub y: f64,
-}
 
+pub const NDAQ_CHART_HEADER: [&'static str; 3] = [
+    "symbol",
+   "t",
+   "x",
+];
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Z2 {
-    pub high: String,
-    pub low: String,
-    pub open: String,
-    pub close: String,
-    pub volume: String,
-    pub date_time: String,
-    pub value: String,
-}

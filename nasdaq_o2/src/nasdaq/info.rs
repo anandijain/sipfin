@@ -33,14 +33,14 @@ impl InfoRoot {
 pub struct InfoData {
     pub symbol: String,
     pub company_name: String,
-    pub stock_type: String,
+    pub stock_type: ::serde_json::Value,
     pub exchange: String,
     pub is_nasdaq_listed: bool,
     pub is_nasdaq100: bool,
     pub is_held: bool,
     pub primary_data: PrimaryData,
     pub secondary_data: ::serde_json::Value,
-    pub key_stats: KeyStats,
+    pub key_stats: ::serde_json::Value,
     pub market_status: String,
     pub asset_class: String,
 }
@@ -88,18 +88,19 @@ impl PrimaryData {
     }
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct KeyStats {
-    #[serde(rename = "Volume")]
-    pub volume: gen::LabelValue,
-    #[serde(rename = "PreviousClose")]
-    pub previous_close: gen::LabelValue,
-    #[serde(rename = "OpenPrice")]
-    pub open_price: gen::LabelValue,
-    #[serde(rename = "MarketCap")]
-    pub market_cap: gen::LabelValue,
-}
+// commodities diff than stocks, serializing to Value
+//#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+//#[serde(rename_all = "camelCase")]
+//pub struct KeyStats {
+//    #[serde(rename = "Volume")]
+//    pub volume: gen::LabelValue,
+//    #[serde(rename = "PreviousClose")]
+//    pub previous_close: gen::LabelValue,
+//    #[serde(rename = "OpenPrice")]
+//    pub open_price: gen::LabelValue,
+//    #[serde(rename = "MarketCap")]
+//    pub market_cap: gen::LabelValue,
+//}
 
 pub const NDAQ_QUOTE_HEADER: [&'static str; 13] = [
     "symbol",
