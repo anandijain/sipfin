@@ -12,6 +12,11 @@ path = "src/lib.rs"
 name = "nasdaq_o2_rt"
 path = "src/bin/rt.rs"
 
+[[bin]]
+name = "nasdaq_o2_se"
+path = "src/bin/se.rs"
+
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,7 +24,7 @@ path = "src/bin/rt.rs"
 serde = { version = "1.0.110" }
 serde_json = "1.0"
 serde_derive = "1.0.110"
-tokio = { version = "0.2", features = ["full"] }
+tokio = { version = "0.2", features = ["full", "macros"] }
 reqwest = { version = "0.10.4", features = ["json"] }
 chrono = "*"
 futures = "0.3"
@@ -29,6 +34,7 @@ dotenv = "0.9.0"
 diesel_derives = "~1.4.1"
 rand = "0.7.3"
 percent-encoding = "2.1.0"
+scraper = "0.12.0"
 
 [profile.release]
 debug = true
