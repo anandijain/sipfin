@@ -2,10 +2,13 @@
 // use crate::models::{NewQuote, Quote};
 // use nasdaq::gen::{HasRec, HasRecs};
 // use crate::main;
-
+//extern crate nasdaq_o2;
+extern crate percent_encoding;
 use futures::stream::StreamExt;
+mod nasdaq;
 
-
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+use nasdaq::gen::HasRecs;
 // mod models;
 // mod schema;
 
@@ -148,13 +151,13 @@ pub fn gen_secs(args: Vec<String>) -> Vec<Security> {
                 .collect::<Vec<Security>>(),
         ),
         "commodities" => Ok(
-            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt")
+            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers_commodities.txt")
                 .iter()
-                .map(|x| Security::Commodity(x.to_string()))
+                .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
                 .collect::<Vec<Security>>(),
         ),
         "currencies" => Ok(
-            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers.txt")
+            read_tickers("/home/sippycups/sipfin/finox/ref_data/tickers_currencies.txt")
                 .iter()
                 .map(|x| Security::Currency(x.to_string()))
                 .collect::<Vec<Security>>(),

@@ -6,14 +6,16 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
+extern crate rand;
+
+use rand::prelude::*;
+use rand::distributions::WeightedIndex;
 
 mod lib;
-mod nasdaq;
 use std::{
     env,
     time::Instant,
 };
-
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -22,18 +24,25 @@ async fn main() -> Result<(), String> {
         3,
         args.len(),
         "CLI:   [1]: asset class [`stocks`, `commodities`, `currencies`] \\
-                [2]: sfx [TODO] "
+        [2]: sfx [TODO] "
     );
-
+    
     let securities = lib::gen_secs(args);
     let urls: Vec<String> = match args[2].as_str() {
         "rt" => securities
-            .iter()
-            .map(|x| x.to_nasdaq_rt_url().unwrap())
-            .collect(),
+        .iter()
+        .map(|x| x.to_nasdaq_rt_url().unwrap())
+        .collect(),
         s => securities.iter().map(|x| x.to_nasdaq_url(s)).collect(),
     };
-
+    println!("{:#?}, {:#?}", securities, urls);
+    // only send choices to fetcher
+    // let freqs = lib::read_tickers()
+    // assert_eq!(urls.len(), freqs.len())
+    
+    // TODO: read csv instead of txt, and unwrap to tuples
+    
+    
     let now = Instant::now();
     let recs = lib::lil_fetchvv(urls).await;
     let len: usize = recs.len();
