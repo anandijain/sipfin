@@ -2,7 +2,7 @@ data/
 old_data/
 ref_data/
 finox/target/
-finox/Cargo.lock
+*.lock
 .vscode/
 __pycache__/
 *.png
