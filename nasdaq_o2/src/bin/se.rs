@@ -1,36 +1,54 @@
-#![deny(warnings)]
-extern crate reqwest;
+//#![deny(warnings)]
 extern crate csv;
+extern crate reqwest;
 extern crate tokio;
+
+use futures::stream::StreamExt;
 use nasdaq_o2;
-//use std::error::Error;
 use scraper::{Html, Selector};
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
-    let links = urls();
-    let sel = Selector::parse("small").unwrap();
-
-    let mut wtr = csv::Writer::from_path("../../../tmp.csv").expect("csv errr");
-
-
-    for elt in links.iter() {
-        let res = reqwest::get(elt).await?.text().await?;
-        let doc = Html::parse_document(&res);
-        //for smol in doc.select(&sel);
-        for n in doc.select(&sel) {
-            println!("{:#?}", n.text());
+    let ciks = nasdaq_o2::read_tickers("../ref_data/ciks_parsed.txt");
+    let filename = "./data/sec/counts.csv";
+    let fp = Path::new(&filename);
+    let fetches = futures::stream::iter(ciks.into_iter().map(|cik| async move {
+        if let Ok(res) = reqwest::get(&cik_to_url(&cik)).await {
+            if let Ok(textrsp) = res.text().await{
+            let sel = Selector::parse("small").unwrap();
+            let doc = Html::parse_document(&textrsp);
+            for n in doc.select(&sel) {
+                let text = n.text().collect::<Vec<_>>();
+                for txtelt in text.iter() {
+                    if txtelt.contains(&"Results") {
+                        let split_txt: Vec<&str> = txtelt.split(' ').collect();
+                        let num_filings = split_txt[2];
+                        println!("{:#?}", cik);
+                        return Some(vec![cik.to_string(), num_filings.to_string()]);
+                    }
+                }
+            }
+            return None;
+            } else {
+                return None;
+            }
+        } else {
+            println!("response err{}", cik.clone());
+            return None;
         }
-        //break;
-    }
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<Vec<String>>>>()
+    .await;
+    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    nasdaq_o2::write_csv(
+        &fp,
+        recs,
+        vec!["cik".to_string(), "num_filings".to_string()],
+    )
+    .expect("csv prob");
     Ok(())
-}
-
-pub fn urls() -> Vec<String> {
-    nasdaq_o2::read_tickers("/home/sippycups/sipfin/ref_data/ciks_parsed.txt")
-        .iter()
-        .map(|x| cik_to_url(x))
-        .collect()
 }
 
 pub fn cik_to_url(s: &str) -> String {

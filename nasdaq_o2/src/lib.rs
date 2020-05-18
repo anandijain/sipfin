@@ -196,18 +196,18 @@ pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
 // fix and percent encoding
 pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
     let securities: Vec<Security> = match args[1].as_str() {
-        "stocks" => Ok(read_tickers("/home/sippycups/sipfin/ref_data/tickers.txt")
+        "stocks" => Ok(read_tickers("../ref_data/tickers.txt")
             .iter()
             .map(|x| Security::Stock(x.to_string()))
             .collect::<Vec<Security>>()),
         "commodities" => Ok(read_tickers(
-            "/home/sippycups/sipfin/ref_data/tickers_commodities.txt",
+            "../ref_data/tickers_commodities.txt",
         )
         .iter()
         .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
         .collect::<Vec<Security>>()),
         "currencies" => Ok(
-            read_tickers("/home/sippycups/sipfin/ref_data/tickers_currencies.txt")
+            read_tickers("../ref_data/tickers_currencies.txt")
                 .iter()
                 .map(|x| Security::Currency(x.to_string()))
                 .collect::<Vec<Security>>(),
