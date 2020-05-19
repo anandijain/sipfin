@@ -15,6 +15,6 @@ i=0
 while [ $i -le 1000 ]
 do
   echo Number: $i
-  ./target/release/nasdaq_o2_rt stocks realtime-trades
+  ./target/release/nasdaq_o2_rt 
   ((i++))
 done

@@ -8,14 +8,16 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
-use rand::prelude::*;
-use rand::distributions::WeightedIndex;
 use nasdaq_o2;
-use nasdaq_o2::nasdaq::{
-    chart::NDAQ_CHART_HEADER, info::NDAQ_QUOTE_HEADER, option_chain::NDAQ_OPTION_HEADER,
-    realtime::NDAQ_REALTIME_HEADER,
+use nasdaq_o2::nasdaq::realtime::NDAQ_REALTIME_HEADER;
+use rand::distributions::WeightedIndex;
+use rand::prelude::*;
+//use chrono::{DateTime, Duration, Utc};
+use std::{
+    //env,
+    path::Path,
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
-use std::{env, path::Path, time::{Instant, SystemTime, UNIX_EPOCH}};
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
@@ -26,6 +28,7 @@ struct Record {
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let now = Instant::now();
+    //let dt = Utc::now();
     //let args: Vec<String> = env::args().collect();
     //assert_eq!(
     //    3,
@@ -34,23 +37,27 @@ async fn main() -> Result<(), String> {
     //    [2]: sfx [TODO] "
     //);
     let filepath = "../ref_data/weighted_tickers.csv";
-    let mut rdr=  csv::Reader::from_path(filepath).expect("tf csv");
+    let mut rdr = csv::Reader::from_path(filepath).expect("tf csv");
     let mut rng = thread_rng();
-    let mut recs : Vec<Record> = vec![];
+    let mut recs: Vec<Record> = vec![];
     for res in rdr.deserialize() {
-        let rec: Record= res.expect("dist weights are bad");
-        println!("rec {:?}", rec);
+        let rec: Record = res.expect("dist weights are bad");
+        //println!("rec {:?}", rec);
         recs.push(rec);
     }
-    //let len = recs.len();    
+    //let len = recs.len();
     let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
-    println!("dist {:?}", dist);
+    //println!("dist {:?}", dist);
     let mut urls = vec![];
-    for _ in 0..2500{
-            urls.push(nasdaq_o2::Security::Stock(recs[dist.sample(&mut rng)].symbol.clone()).to_nasdaq_rt_url().unwrap()); 
-            //urls.push(nasdaq_o2::Security::Stock(recs[dist.sample(&mut rng)].symbol.clone())); 
-        }
-    println!("sampled{:?}", urls);
+    for _ in 0..2500 {
+        urls.push(
+            nasdaq_o2::Security::Stock(recs[dist.sample(&mut rng)].symbol.clone())
+                .to_nasdaq_rt_url()
+                .unwrap(),
+        );
+        //urls.push(nasdaq_o2::Security::Stock(recs[dist.sample(&mut rng)].symbol.clone()));
+    }
+    //println!("sampled{:?}", urls);
 
     //let securities = nasdaq_o2::gen_secs(&args);
     //let urls: Vec<String> = match args[2].as_str() {
@@ -70,15 +77,15 @@ async fn main() -> Result<(), String> {
     //    "info" => NDAQ_QUOTE_HEADER.iter().map(|x| x.to_string()).collect(),
     //    _ => panic!("fix this garbo"),
     //};
-    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect(); 
+    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect();
     let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
-//match args[2].as_str() {
-//        "realtime-trades" => nasdaq_o2::lil_fetchvv_rt(urls).await,
-//        "chart" => nasdaq_o2::lil_fetchvv_chart(urls).await,
-//        "option-chain" => nasdaq_o2::lil_fetchvv_oc(urls).await,
-//        "info" => nasdaq_o2::lil_fetchv(urls).await,
-//        _ => panic!("todo, make fetch generic over <T>"),
-//    };
+    //match args[2].as_str() {
+    //        "realtime-trades" => nasdaq_o2::lil_fetchvv_rt(urls).await,
+    //        "chart" => nasdaq_o2::lil_fetchvv_chart(urls).await,
+    //        "option-chain" => nasdaq_o2::lil_fetchvv_oc(urls).await,
+    //        "info" => nasdaq_o2::lil_fetchv(urls).await,
+    //        _ => panic!("todo, make fetch generic over <T>"),
+    //    };
     let len: usize = recs.len();
     //let filename = format!("./data/{}/{}_{}.csv", args[2], args[1], now);
     let unixtime = SystemTime::now()
@@ -87,10 +94,15 @@ async fn main() -> Result<(), String> {
         .as_micros()
         .to_string();
 
-    let elapsed = now.elapsed().as_secs().to_string(); 
+    let elapsed = now.elapsed().as_secs().to_string();
     let filename = format!("./data/realtime-trades/test_{}.csv", unixtime);
     let fp = Path::new(&filename);
-    println!("{:?} exists: {:?} and is_absolute: {:?}", fp, fp.exists(), fp.is_absolute());
+    println!(
+        "{:?} exists: {:?} and is_absolute: {:?}",
+        fp,
+        fp.exists(),
+        fp.is_absolute()
+    );
     nasdaq_o2::write_csv(&fp, recs, header).expect("csv error");
     println!(
         "{}: {} seconds: {} records",
