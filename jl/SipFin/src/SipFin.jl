@@ -13,7 +13,7 @@ norm_mat(m::AbstractMatrix) = hcat(norm_arr.(eachcol(m))...)
 norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 cor_df(df::AbstractDataFrame) = DataFrame(cor(Matrix(df)), names(df))
 
-tmp = hcat(map(x->pdf.(fit(Normal,x[1]), x[2]), zip([te.c_AAPL, te.c_TSLA], [tr.c_AAPL, tr.c_TSLA]))...)
+# tmp = hcat(map(x->pdf.(fit(Normal,x[1]), x[2]), zip([te.c_AAPL, te.c_TSLA], [tr.c_AAPL, tr.c_TSLA]))...)
 
 mavg(vec,n) = [sum(@view vec[i:(i + n - 1)]) / n for i in 1:(length(vec) - (n - 1))]
 # todo, also optim w dp instead of recomputing each in loop. mavg(vec,ns::Array{Int, 1}) = [[
@@ -187,4 +187,7 @@ function gen_anim(t, x, v)::Animation
     anim
 end
 
+#function frames(dfs::Array{DataFrame,1}) 
+#	for df in dfs
+#		by(df, :symbol,
 end # module
