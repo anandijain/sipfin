@@ -1,6 +1,11 @@
 extern crate percent_encoding;
+#[macro_use]
+extern crate serde;
 use futures::stream::StreamExt;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+//use rand::distributions::WeightedIndex;
+//use rand::prelude::*;
+
 pub mod nasdaq;
 
 use std::{
@@ -8,7 +13,6 @@ use std::{
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
-    time::{SystemTime, UNIX_EPOCH},
 };
 pub async fn lil_fetchvv_insiders(urls: Vec<String>) -> Vec<Vec<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
@@ -32,7 +36,10 @@ pub async fn lil_fetchvv_insiders(urls: Vec<String>) -> Vec<Vec<String>> {
 pub async fn lil_fetchvv_oc(urls: Vec<String>) -> Vec<Vec<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<crate::nasdaq::option_chain::OptionChainRoot>().await {
+            if let Ok(root) = res
+                .json::<crate::nasdaq::option_chain::OptionChainRoot>()
+                .await
+            {
                 return Some(root.to_recs());
             } else {
                 println!("serialize err {}", url.clone());
@@ -58,7 +65,7 @@ pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>> {
                 return None;
             }
         }
-        println!("response err{}", url.clone());
+        println!("response err: {}", url.clone());
         return None;
     }))
     .buffer_unordered(16)
@@ -131,7 +138,6 @@ pub fn write_csv(
     data: Vec<Vec<String>>,
     header: Vec<String>,
 ) -> Result<(), csv::Error> {
-    //let path = Path::new(filename);
     let mut wtr =
         csv::Writer::from_path(filepath).expect(format!("whtf csv {:?}", filepath).as_ref());
     wtr.write_record(header.clone())?;
@@ -145,18 +151,9 @@ pub fn write_csv(
     Ok(())
 }
 
-pub fn epoch_str() -> String {
-    let t = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_secs()
-        .to_string();
-    return t;
-}
-
 pub fn ndaq_url_to_ticker(url: String) -> String {
     let v: Vec<&str> = url.split("/").collect(); // divs
-    return format!("{}_insider", v[5]);
+    return format!("{}", v[5]);
 }
 
 #[derive(Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -164,6 +161,7 @@ pub enum Security {
     Commodity(String),
     Stock(String), // ? might need special treatment, far more endpoints for these
     Currency(String),
+    Etf(String),
 }
 
 impl Security {
@@ -172,7 +170,20 @@ impl Security {
         let pre = "quote";
         match self {
             Security::Commodity(s) => garbo(pre, s, sfx, "commodities", ""),
-            Security::Stock(s) => garbo(pre, s, sfx, "stocks", ""),
+            Security::Stock(s) => garbo(
+                pre,
+                s,
+                sfx,
+                "stocks",
+                "&todate=2025-11-30&fromdate=2020-05-19&limit=99999",
+            ),
+            Security::Etf(s) => garbo(
+                pre,
+                s,
+                sfx,
+                "etf",
+                "&todate=2025-11-30&fromdate=2020-05-19&limit=99999",
+            ),
             Security::Currency(s) => garbo(pre, s, sfx, "currencies", ""),
         }
     }
@@ -196,24 +207,31 @@ pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
 // fix and percent encoding
 pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
     let securities: Vec<Security> = match args[1].as_str() {
-        "stocks" => Ok(read_tickers("../ref_data/tickers.txt")
+        "stocks" => Ok(read_tickers("../ref_data/tickers_stocks.txt")
             .iter()
             .map(|x| Security::Stock(x.to_string()))
             .collect::<Vec<Security>>()),
-        "commodities" => Ok(read_tickers(
-            "../ref_data/tickers_commodities.txt",
-        )
-        .iter()
-        .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
-        .collect::<Vec<Security>>()),
-        "currencies" => Ok(
-            read_tickers("../ref_data/tickers_currencies.txt")
-                .iter()
-                .map(|x| Security::Currency(x.to_string()))
-                .collect::<Vec<Security>>(),
-        ),
+        "commodities" => Ok(read_tickers("../ref_data/tickers_commodities.txt")
+            .iter()
+            .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
+            .collect::<Vec<Security>>()),
+        "currencies" => Ok(read_tickers("../ref_data/tickers_currencies.txt")
+            .iter()
+            .map(|x| Security::Currency(x.to_string()))
+            .collect::<Vec<Security>>()),
+        "etf" => Ok(read_tickers("../ref_data/tickers_stocks.txt")
+            .iter()
+            .map(|x| Security::Etf(x.to_string()))
+            .collect::<Vec<Security>>()),
+
         _ => Err("invalid asset class provided"),
     }
     .unwrap();
     return securities;
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Record {
+    symbol: String,
+    weight: f64,
 }

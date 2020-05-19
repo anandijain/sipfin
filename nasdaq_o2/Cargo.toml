@@ -21,7 +21,7 @@ path = "src/bin/se.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.110" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0.110"
 tokio = { version = "0.2", features = ["full", "macros"] }

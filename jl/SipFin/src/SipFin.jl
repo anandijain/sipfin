@@ -13,9 +13,31 @@ norm_mat(m::AbstractMatrix) = hcat(norm_arr.(eachcol(m))...)
 norm_df(df::AbstractDataFrame) = DataFrame(norm_mat(Matrix(df)), names(df))
 cor_df(df::AbstractDataFrame) = DataFrame(cor(Matrix(df)), names(df))
 
+tmp = hcat(map(x->pdf.(fit(Normal,x[1]), x[2]), zip([te.c_AAPL, te.c_TSLA], [tr.c_AAPL, tr.c_TSLA]))...)
+
 mavg(vec,n) = [sum(@view vec[i:(i + n - 1)]) / n for i in 1:(length(vec) - (n - 1))]
+# todo, also optim w dp instead of recomputing each in loop. mavg(vec,ns::Array{Int, 1}) = [[
 fib(n) = ([1 1 ; 1 0]^n)[1, 1]
-    
+masps(df::AbstractDataFrame, ns) = by(df, :symbol, p=:x=>x->garbo_plot_mas(x, ns))
+function moreg(df)
+       ps = []
+       for sdf in groupby(df, :symbol)
+       p = garbo_plot_mas(sdf.x, 1:2:20)
+       plot!(p, title="$(sdf.symbol[1])")
+       push!(ps, p)
+       end
+       ps
+       end
+
+function garbo_plot_mas(v, ns) 
+	mas = [mavg(v, n) for n in ns]
+	p = plot()
+	for (n, ma) in zip(ns, mas)
+		plot!(ma, label="$(n) mavg", size=(1600, 1600))
+	end
+	plot(p)
+end
+
 # diff(df) = df[2:end, :] .- df[1:end - 1, :]
 diff_arr(arr::Array) = sum(abs.(arr[2:end] .- arr[1:end - 1]))
 
@@ -41,9 +63,13 @@ usd_col_to_float(df::DataFrame, col::Symbol)::Array{Float64,1} = usd_to_float.(d
 spreads(df::AbstractDataFrame)::AbstractDataFrame = by(df, :symbol, spread = :x => x->maximum(x) .- minimum(x))
 spreads(df::AbstractDataFrame, col::Symbol)::AbstractDataFrame = by(df, col, spread = :x => x->maximum(x) .- minimum(x))
 
+fits(df::AbstractDataFrame) = by(df, :symbol, xfit=:x=>x->fit(Normal,x), vfit=:v=>x-> fit(Normal, x))
+fits(df::AbstractDataFrame, col::Union{Symbol, Array{Symbol, 1}}) = by(df, :symbol, xfit=:x=>x->fit(Normal,x), vfit=:v=>x-> fit(Normal, x))
+
+
 charts_df(df::AbstractDataFrame; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, :symbol, p = (:t, :x) => x->plot(x.t, x.x, size = size))
 charts_df(df::AbstractDataFrame, col::Symbol; size::Tuple = (1600, 1600))::AbstractDataFrame = by(df, col, p = (:t, :x) => x->plot(x.t, x.x, size = size))
-save_charts(charts_df::AbstractDataFrame; sfx::String="chart") = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
+save_charts(charts_df::DataFrame; sfx::String="chart") = map(x->savefig(x[2], "$(charts_df.symbol[x[1]])_$(sfx).png"), enumerate(charts_df.p)) 
 gen_anims(rt_df::AbstractDataFrame; size=(1200,1200))::AbstractDataFrame = by(rt_df, :symbol, p = (:t, :x, :v) => x->gen_anim(Array(x.t), Array(x,x), Array(x.v)))
 
 function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
