@@ -72,9 +72,12 @@ async fn main() -> Result<(), String> {
         recs.push(rec);
     }
     let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
+
+    let mut i = 0;
+
     loop {
         let dt = Utc::now();
-
+        i = i + 1;
         //println!("{:?}\n", now);
         if dt.hour() <= 13 && dt.minute() < 30 {
             println!("premarket {:?}\n", dt.timestamp());
@@ -83,9 +86,7 @@ async fn main() -> Result<(), String> {
             println!("market is closed");
             break;
         } else {
-            println!("market is open{:?}\n", dt.timestamp());
-
-            //println!("dist {:?}", dist);
+            //println!("market is open{:?}\n", dt.timestamp());
             let mut urls = vec![];
             for _ in 0..2500 {
                 urls.push(
@@ -94,12 +95,10 @@ async fn main() -> Result<(), String> {
                         .unwrap(),
                 );
             }
-            //println!("sampled{:?}", urls);
-            
             let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect();
             let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
             let len: usize = recs.len();
-            //let filename = format!("./data/{}/{}_{}.csv", args[2], args[1], now);
+            
             let unixtime = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .expect("Time went backwards")
@@ -118,14 +117,13 @@ async fn main() -> Result<(), String> {
 
             nasdaq_o2::write_csv(&fp, recs, header).expect("csv error");
             println!(
-                "{}: {} seconds: {} records",
+                "{}: {} {} seconds: {} records",
+                i,
                 filename,
                 elapsed,
-                len.to_string(), 
-
+                len.to_string(),
             );
         }
     }
     Ok(())
 }
-

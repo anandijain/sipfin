@@ -10,11 +10,4 @@
 #         sed -i "1 s/^/t, $(\n/" $NAME
 # }
 
-i=0
-
-while [ $i -le 1000 ]
-do
-  echo Number: $i
-  ./target/release/nasdaq_o2_rt 
-  ((i++))
-done
+./target/release/nasdaq_o2_rt 
