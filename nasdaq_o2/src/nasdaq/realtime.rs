@@ -1,5 +1,6 @@
 use crate::nasdaq::gen;
-use crate::nasdaq::gen::HasRecs;
+use chrono::{DateTime, FixedOffset, TimeZone, Utc};
+//use crate::nasdaq::gen::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,7 +49,7 @@ impl Data {
         return self
             .rows
             .iter()
-            .map(|x| x.to_rec(self.symbol.clone()))
+            .flat_map(|x| x.to_rec(self.symbol.clone()))
             .collect();
     }
 }
@@ -62,14 +63,21 @@ pub struct Row {
 }
 
 impl Row {
-    pub fn to_rec(&self, symbol: String) -> Vec<String> {
-        return vec![
-            symbol,
-            self.nls_time.to_string(),
-            self.nls_price.to_string().replace("$ ", ""),
-            self.nls_share_volume.to_string().replace(",", ""),
-        ];
+    pub fn to_rec(&self, symbol: String) -> Option<Vec<String>> {
+        if let Ok(t) = nls_to_dt(&self.nls_time) {
+            return Some(vec![
+                symbol,
+                t.to_rfc3339(),
+                self.nls_price.to_string().replace("$ ", ""),
+                self.nls_share_volume.to_string().replace(",", ""),
+            ]);
+        }
+        return None;
     }
+}
+pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {
+    let t = format!("{} {} +05:00", Utc::now().format("%Y-%m-%d"), s);
+    return DateTime::parse_from_str(&t, "%Y-%m-%d %H:%M:%S %z");
 }
 
 pub const NDAQ_REALTIME_HEADER: [&'static str; 4] = ["symbol", "t", "x", "v"];
