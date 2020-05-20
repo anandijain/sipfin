@@ -8,13 +8,13 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
-use chrono::{Timelike, Utc};
+use chrono::{Utc, Timelike};
 use nasdaq_o2;
 use nasdaq_o2::nasdaq::realtime::NDAQ_REALTIME_HEADER;
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 use std::{
-    //env,
+    env,
     path::Path,
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -60,8 +60,7 @@ struct Record {
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    let now = Instant::now();
-
+    let debug = if env::args().collect::<Vec<String>>().len() > 1 {true} else {false};
     let filepath = "../ref_data/weighted_tickers.csv";
     let mut rdr = csv::Reader::from_path(filepath).expect("tf csv");
     let mut rng = thread_rng();
@@ -76,17 +75,20 @@ async fn main() -> Result<(), String> {
     let mut i = 0;
 
     loop {
+        let now = Instant::now();
         let dt = Utc::now();
         i = i + 1;
-        //println!("{:?}\n", now);
-        if dt.hour() <= 13 && dt.minute() < 30 {
+        println!("{}: {:?}\n", i, dt);
+        let s = dt.num_seconds_from_midnight();
+        // fix this spagetti 
+        if  !debug && s < 13 * 3060 + 30 * 60 { 
             println!("premarket {:?}\n", dt.timestamp());
             thread::sleep(Duration::from_secs(10));
-        } else if dt.hour() >= 20 {
-            println!("market is closed");
+        } else if !debug && s > 20 * 3600 {
+            println!("market is closed{:?}\n", dt.timestamp());
             break;
         } else {
-            //println!("market is open{:?}\n", dt.timestamp());
+            println!("market is open{:?}\n", dt.timestamp());
             let mut urls = vec![];
             for _ in 0..2500 {
                 urls.push(
@@ -106,7 +108,7 @@ async fn main() -> Result<(), String> {
                 .to_string();
 
             let elapsed = now.elapsed().as_secs().to_string();
-            let filename = format!("./data/realtime-trades/test_{}.csv", unixtime);
+            let filename = format!("./data/realtime-trades/rfc3339_test_{}.csv", unixtime);
             let fp = Path::new(&filename);
             println!(
                 "{:?} exists: {:?} and is_absolute: {:?}",
