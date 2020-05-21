@@ -4,48 +4,21 @@ use chrono::{Datelike, Utc};
 use regex::Regex;
 
 use std::{
-    clone,
     error::Error,
-    fmt,
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
     thread,
-    time::{Duration, Instant},
+    time::{Duration},
 
 };
 
-use crate::getters;
 use crate::keys;
 use crate::news;
 use crate::sa;
 use crate::steam;
-use crate::yf;
 use crate::gs;
 use crate::jpxnews;
-
-// // IND COM CUR US GOV
-// pub enum Security {
-//     IND(String),
-//     COM(String),
-//     CUR(String),
-//     US(String),
-//     GOV(String),
-// }
-
-
-// impl Security {
-//     pub fn to_yf(&self) -> String {
-
-//     }
-// }
-
-// fn some_helper_function(text: &str) -> bool {
-//     lazy_static! {
-//         static ref RE: Regex = Regex::new(r"chart\/(?<symb>.+?(?=\?))?").unwrap();
-//     }
-//     RE.is_match(text)
-// }
 
 pub fn yf_symb_from_url(url: String) -> Option<String> {
     //example 
@@ -65,16 +38,16 @@ pub fn symb_from_ndaq_url(url: String) -> Option<String> {
     return None;
 }
 
-pub fn yf_url(s: Security) -> String {
-    let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
-    // let sfx = "&range=7d&interval=1m";
-    let sfx = "&range=1d&period1={}&period2={}";
-    match s {
-        Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
-        Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
-        Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
-    }
-}
+//pub fn yf_url(s: Security) -> String {
+//    let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
+//    // let sfx = "&range=7d&interval=1m";
+//    let sfx = "&range=1d&period1={}&period2={}";
+//    match s {
+//        Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
+//        Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
+//        Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
+//    }
+//}
 
 pub fn xueqiu_url(s: String) -> String {
     return format!("https://stock.xueqiu.com/v5/stock/realtime/quotec.json?symbol={}", s.to_string());
@@ -160,19 +133,6 @@ pub fn chart_headers(s: String) -> Vec<String> {
     return headers;
 }
 
-pub fn write_yf(s: Security) -> Result<(), csv::Error> {
-    if let Some(recs) = yf_symb(yf_url(s.clone())) {
-        if let Ok(mut wtr) = csv::Writer::from_path(simppath(s.to_string(), "yf".to_string())) {
-            let headers = chart_headers(s.to_string());
-            wtr.write_record(headers);
-            for r in recs.iter() {
-                wtr.write_record(r);
-            }
-            wtr.flush();
-        }
-    }
-    Ok(())
-}
 
 pub fn yf_symb(url: String) -> Option<Vec<csv::StringRecord>> {
     if let Some(tohlcv) = getters::yf_from_url(url.to_string()) {
@@ -184,82 +144,6 @@ pub fn yf_symb(url: String) -> Option<Vec<csv::StringRecord>> {
     }
     return None;
 }
-
-pub fn yf_US() -> Result<(), reqwest::Error> {
-    let mut symbs = read_tickers("./ref_data/tickers.txt");
-    // let index = symbs
-    //     .iter()
-    //     .position(|r| r.to_string() == start_slug)
-    //     .unwrap();
-    // let todo_symbs = &symbs[index..symbs.len()];
-    for s in symbs.iter() {
-        write_yf(Security::US(s.to_string()));
-    }
-    Ok(())
-}
-
-pub fn yf_Xs(xs: Vec<Security>) -> Result<(), reqwest::Error> {
-    for x in xs.iter() {
-        write_yf(x.to_owned());
-    }
-    Ok(())
-}
-
-pub fn x_securities() -> Vec<Security> {
-    let mut symbs: Vec<Security> = Vec::new();
-    for s1 in CURRENCY_SYMBOLS_YF.iter() {
-        for s2 in CURRENCY_SYMBOLS_YF.iter() {
-            if s1 == s2 {
-                continue;
-            }
-            let symb = format!("{}{}", s1.to_string(), s2.to_string());
-            symbs.push(Security::X(symb));
-        }
-    }
-    println!("{}", symbs.len());
-    return symbs;
-}
-
-pub fn us_securities() -> Vec<Security> {
-    let symbs: Vec<Security> = read_tickers("./ref_data/sp500tickers_yf.txt")
-        .into_iter()
-        .map(|x| Security::US(x))
-        .collect();
-    return symbs;
-}
-
-pub async fn async_yf_X() -> Result<(), reqwest::Error> {
-    for s1 in CURRENCY_SYMBOLS_YF.iter() {
-        for s2 in CURRENCY_SYMBOLS_YF.iter() {
-            if s1 == s2 {
-                continue;
-            }
-            let symb = format!("{}{}", s1.to_string(), s2.to_string());
-            write_yf(Security::X(symb));
-        }
-    }
-    Ok(())
-}
-
-pub fn yf_F() -> Result<(), reqwest::Error> {
-    for s in COMMODITIES_SYMBOLS_YF.iter() {
-        write_yf(Security::F(s.to_string()));
-    }
-    Ok(())
-}
-
-pub fn f_securities() -> Vec<Security> {
-    let recs: Vec<Security> = COMMODITIES_SYMBOLS_YF.into_iter().map(|x| Security::F(x.to_string())).collect();
-    return recs;
-}
-
-pub async fn async_yf_F() -> Result<(), reqwest::Error> {
-    for s in COMMODITIES_SYMBOLS_YF.iter() {
-        write_yf(Security::F(s.to_string()));
-    }
-    Ok(())
-}
-
 pub fn sa() -> Result<(), reqwest::Error> {
     let url = "https://seekingalpha.com/get_trending_articles";
     if let Ok(body) = getters::simple_get(url.to_string()) {
@@ -500,94 +384,3 @@ fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD"];
-
-pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
-    "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",
-    "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
-];
-
-pub const REUTERS_COUNTRIES: [&'static str; 17] = [
-    "cn", "de", "in", "jp", "uk", "us", "af", "ar", "ara", "br", "ca", "es", "fr", "it", "lta",
-    "mx", "ru",
-];
-
-
-pub const YF_HEADER: [&'static str; 7] = ["symb", "t", "o", "h", "l", "c", "v"];
-
-pub const SA_HEADER: [&'static str; 8] = [
-    "id",
-    "author_id",
-    "publish_on",
-    "title",
-    "slug",
-    "ncomments",
-    "author_name",
-    "path",
-];
-
-pub const REUTERS_HEADER: [&'static str; 7] = [
-    "id",
-    "updated",
-    "headline",
-    "reason",
-    "path",
-    "channel_name",
-    "channel_path",
-];
-
-pub const WSJ_HEADER: [&'static str; 9] = [
-    "id",
-    "created",
-    "name",
-    "description",
-    "duration",
-    "column",
-    "doctype",
-    "email",
-    "thumbnail",
-];
-
-pub const NYT_FEED_HEADER: [&'static str; 21] = [
-    "slug",
-    "first_pub",
-    "section",
-    "subsec",
-    "by",
-    "title",
-    "subheadline",
-    "abs",
-    "matrial_type",
-    "geo_tag",
-    "org_tag",
-    "des_tag",
-    "per_tag",
-    "source",
-    "published",
-    "created",
-    "updated",
-    "url",
-    "thumbnail",
-    "kicker",
-    "item_type",
-];
-
-pub const NYT_ARCHIVE_HEADER: [&'static str; 12] = [
-    "id", "wc", "by", "pub", "doctype", "page", "headline", "kicker", "snippet", "abstract", "url",
-    "source",
-];
-
-
-pub const SEC13F_HEADER: [&'static str; 11] = [
-    "nameOfIssuer",
-    "titleOfClass",
-    "cusip",
-    "value",
-    "sshPrnamt",
-    "sshPrnamtType",
-    "investmentDiscretion",
-    "otherManager",
-    "Sole",
-    "Shared",
-    "None",
-];

@@ -32,6 +32,7 @@ impl Root {
             for i in 0..ts.len() {
                 let mut rec: Vec<String> = vec![meta.symbol.to_string()]; //Vec::new();
                 if let Some(ohlcv) = Quote::to_record(quote, i) {
+                    //rec.push(self.chart.result[0].meta.symbol.to_string());
                     rec.push(ts[i].to_string());
                     rec.append(&mut ohlcv.clone());
                     ret.push(rec);

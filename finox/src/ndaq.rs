@@ -239,18 +239,3 @@ pub struct NewsRoot {
 }
 
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct KeyStatsCurs {
-    #[serde(rename = "Open")]
-    pub open: AssetItem,
-    #[serde(rename = "Bid")]
-    pub bid: AssetItem,
-    #[serde(rename = "Ask")]
-    pub ask: AssetItem,
-    #[serde(rename = "High")]
-    pub high: AssetItem,
-    #[serde(rename = "Low")]
-    pub low: AssetItem,
-}
-
