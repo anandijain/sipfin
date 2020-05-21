@@ -1,5 +1,5 @@
 
-pub const CURRENCY_SYMBOLS_YF: [&'static str; 6] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD"];
+pub const CURRENCY_SYMBOLS_YF: [&'static str; 23] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "BTC", "ETH", "NZD", "SEK", "CHF", "HUF", "CNY", "HKD", "SGD", "INR", "MXN", "PHP", "IDR", "THB", "MYR", "ZAR", "RUB"];
 
 pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
     "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",

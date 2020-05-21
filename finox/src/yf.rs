@@ -101,7 +101,7 @@ pub struct Meta {
     pub regular_market_price: f64,
     pub chart_previous_close: f64,
     pub price_hint: i64,
-    pub current_trading_period: TradingPeriod,
+    pub current_trading_period: ::serde_json::Value,
     pub data_granularity: String,
     pub range: String,
     pub valid_ranges: Vec<String>,
@@ -139,14 +139,6 @@ pub const YF_META_HEADER: [&'static str; 9] = [
 ];
 
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TradingPeriod {
-    pub timezone: Option<String>,
-    pub start: Option<i64>,
-    pub end: Option<i64>,
-    pub gmtoffset: Option<i64>,
-}
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
