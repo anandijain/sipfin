@@ -13,13 +13,6 @@ use std::{
 
 };
 
-use crate::keys;
-use crate::news;
-use crate::sa;
-use crate::steam;
-use crate::gs;
-use crate::jpxnews;
-
 pub fn yf_symb_from_url(url: String) -> Option<String> {
     //example 
     let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
