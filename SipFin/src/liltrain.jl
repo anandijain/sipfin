@@ -63,7 +63,7 @@ end
 # end
 
 # @epochs 100 trainloop!(loss, ps, data, opt)
-function prep(df, cols::Array{Symbol,1}, ycols::Array{Symbol,1}, ps::Array{Int, 1}=primes(30))
+function prep(df, cols, ycols, ps::Array{Int, 1}=primes(30))
 		df = dropmissing(df)
         n = length(ps)
         i = maximum(ps) + 1
@@ -73,8 +73,37 @@ function prep(df, cols::Array{Symbol,1}, ycols::Array{Symbol,1}, ps::Array{Int, 
                 push!(xs, Matrix(df[j.-ps, cols]))
                 push!(ys, Matrix(df[j.+ps, ycols]))
         end
-        m = Chain(Dense(10, 30, σ), Dense(30, 10))
-        outs = m.(xs)
-		return xs, ys, outs
+		return xs, ys
 end
+
+using Flux: @epochs, throttle, train!
+df = CSV.read(fn)
+gdf = [DataFrame(x) for x in groupby(df)]
+test_losses= []
+train_losses = []
+function evalcb()
+	push!(train_losses, loss_fn(train_xs, train_ys))
+	push!(test_losses, loss_fn(test_xs, test_ys))
+
+end
+@epochs 50 train!(loss_fn, params(m), data, cb=trottle(evalcb, 5))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

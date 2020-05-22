@@ -18,10 +18,10 @@ use std::{
     env,
     //fs::File,
     path::Path,
-    sync::{Arc, Mutex},
+    //sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
-    collections::HashMap,
+    //collections::HashMap,
 };
 
 #[derive(Debug, serde::Deserialize)]
@@ -29,10 +29,10 @@ struct Record {
     symbol: String,
     weight: f64,
 }
-#[derive(Debug, serde::Deserialize)]
-struct Database {
-    map: Mutex<HashMap<String, Vec<String>>>,
-}
+//#[derive(Debug, serde::Deserialize)]
+//struct Database {
+//    map: Mutex<HashMap<String, Vec<String>>>,
+//}
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -53,10 +53,10 @@ async fn main() -> Result<(), String> {
 
     //let mut wtr: Mutex<csv::Writer<File>> = Mutex::new(csv::Writer::from_path(fp).expect("fuck"));
     //let ay = Arc::new(wtr);
-    let init_db: HashMap<String, Vec<String>>= HashMap::new();
-    let db = Arc::new(Database {
-        map: Mutex::new(init_db),
-    });
+    //let init_db: HashMap<String, Vec<String>>= HashMap::new();
+    //let db = Arc::new(Database {
+    //    map: Mutex::new(init_db),
+    //});
     loop {
         let now = Instant::now();
         let dt = Utc::now();
@@ -82,7 +82,7 @@ async fn main() -> Result<(), String> {
             thread::sleep(Duration::from_secs(10));
         } else if !debug && s > 20 * 3600 {
             println!("market is closed{:?}\n", dt.timestamp());
-            break;
+            thread::sleep(Duration::from_secs(100));
         } else {
             println!("market is open{:?}", dt.timestamp());
             let mut urls = vec![];
@@ -101,43 +101,43 @@ async fn main() -> Result<(), String> {
                         .json::<RealtimeRoot>()
                         .await
                     {
-                        let recs = root.to_recs();
-			let db = db.clone();
-                        tokio::spawn(async move {
-                            //while let Some(rec) = recs.iter().await {
-                            for rec in recs.iter() {
-                                &db.map.insert(format!("{}:{}", &rec[0], &rec[1]), rec.clone());
-                            }
-                        });
-                        //return Some(root.to_recs());
+                        //let recs = root.to_recs();
+			//let db = db.clone();
+                        //tokio::spawn(async move {
+                        //    //while let Some(rec) = recs.iter().await {
+                        //    for rec in recs.iter() {
+                        //        &db.map.insert(format!("{}:{}", &rec[0], &rec[1]), rec.clone());
+                        //    }
+                        //});
+                        return Some(root.to_recs());
                     } else {
                         println!("serialize err {}", url.clone());
-                        //return None;
+                        return None;
                     }
                 }
                 println!("response err{}", url.clone());
-                //return None;
+                return None;
             }))
             .buffer_unordered(16)
-            .collect::<Vec<_>>()
-            //.collect::<Vec<Option<Vec<Vec<String>>>>>()
+            //.collect::<Vec<_>>()
+            .collect::<Vec<Option<Vec<Vec<String>>>>>()
             .await;
-            //let recs = nasdaq_o2::garbo_collectvv(fetches);
+            let recs = nasdaq_o2::garbo_collectvv(fetches);
             //return recs;
             //let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
-            //let len: usize = recs.len();
+            let len: usize = recs.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
             
-            println!("{:#?}", &db); 
-            //nasdaq_o2::write_csv(&fp, recs, header).expect("csv error");
-            //println!(
-            //    "{}: {} {} seconds: {} records",
-            //    i,
-            //    filename,
-            //    elapsed,
-            //    len.to_string(),
-            //);
+            //println!("{:#?}", &db); 
+            nasdaq_o2::write_csv(&fp, recs, header).expect("csv error");
+            println!(
+                "{}: {} {} seconds: {} records",
+                i,
+                filename,
+                elapsed,
+                len.to_string(),
+            );
         }
     }
     Ok(())

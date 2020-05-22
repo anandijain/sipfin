@@ -8,19 +8,23 @@ extern crate serde_json;
 extern crate tokio;
 
 use futures::stream::StreamExt;
-use headers::{COMMODITIES_SYMBOLS_YF, CURRENCY_SYMBOLS_YF};
+use headers::*;
 use std;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod headers;
 mod yf;
 mod utils;
-
+mod keys;
+mod sa;
+mod news;
+mod gs;
 fn newsmain() -> Result<(), Box<dyn std::error::Error>> {
     // utils::nytarchive();
+
     utils::nytfeed();
     utils::gsnews();
-    utils::jpxnews();
+    //utils::jpxnews();
     utils::reuters();
     utils::wsj_videos();
     utils::sa();

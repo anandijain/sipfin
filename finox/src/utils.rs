@@ -1,20 +1,17 @@
 extern crate chrono;
 extern crate csv;
-use chrono::{Datelike, Utc};
+use chrono::Utc;
 use regex::Regex;
-
 use std::{
     error::Error,
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
     thread,
-    time::{Duration},
-
+    time::Duration,
 };
-
 pub fn yf_symb_from_url(url: String) -> Option<String> {
-    //example 
+    //example
     let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
     if let Some(caps) = re.captures(&url) {
         return Some(caps.name("symb").unwrap().as_str().to_string());
@@ -23,7 +20,7 @@ pub fn yf_symb_from_url(url: String) -> Option<String> {
 }
 
 pub fn symb_from_ndaq_url(url: String) -> Option<String> {
-    //example 
+    //example
     let re = Regex::new(r"/quote/(?P<symb>.+).*/info").unwrap();
     if let Some(caps) = re.captures(&url) {
         return Some(caps.name("symb").unwrap().as_str().to_string());
@@ -43,7 +40,10 @@ pub fn symb_from_ndaq_url(url: String) -> Option<String> {
 //}
 
 pub fn xueqiu_url(s: String) -> String {
-    return format!("https://stock.xueqiu.com/v5/stock/realtime/quotec.json?symbol={}", s.to_string());
+    return format!(
+        "https://stock.xueqiu.com/v5/stock/realtime/quotec.json?symbol={}",
+        s.to_string()
+    );
 }
 
 pub fn writerecs(
@@ -72,7 +72,6 @@ pub fn appendrecs(
     Ok(())
 }
 
-
 pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
     let f = File::open(filename).expect("no such file");
     let buf = BufReader::new(f);
@@ -88,14 +87,14 @@ pub fn simppath(s: String, sfx: String) -> String {
         "../data/{}_{}_{}.csv",
         s.to_string(),
         sfx.to_string(),
-        // epoch_str(),
+        Utc::now().to_rfc3339(),
     );
 }
 
 pub fn chart_headers(s: String) -> Vec<String> {
     let mut headers: Vec<String> = vec!["t".to_string()];
 
-    for elt in YF_HEADER[1..YF_HEADER.len()].iter() {
+    for elt in crate::YF_HEADER[1..crate::YF_HEADER.len()].iter() {
         headers.push(format!("{}_{}", elt.to_string(), s.to_string()));
     }
     return headers;
@@ -103,13 +102,13 @@ pub fn chart_headers(s: String) -> Vec<String> {
 
 pub fn sa() -> Result<(), reqwest::Error> {
     let url = "https://seekingalpha.com/get_trending_articles";
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: sa::Root = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = sa::Root::to_records(&root)
+    if let Ok(body) = simple_get(url.to_string()) {
+        let root: crate::sa::Root = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = crate::sa::Root::to_records(&root)
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        writerecs("./sa.csv".to_string(), &SA_HEADER, recs);
+        writerecs("./sa.csv".to_string(), &crate::SA_HEADER, recs);
     }
     Ok(())
 }
@@ -117,12 +116,12 @@ pub fn sa() -> Result<(), reqwest::Error> {
 pub fn reuters() -> Result<(), csv::Error> {
     let file_name = "./reuters.csv".to_string();
     let mut wtr = csv::Writer::from_path(file_name.to_string())?;
-    wtr.write_record(&REUTERS_HEADER);
-    for country in REUTERS_COUNTRIES.iter() {
+    wtr.write_record(&crate::REUTERS_HEADER);
+    for country in crate::REUTERS_COUNTRIES.iter() {
         let url = format!("https://sope.prod.reuters.tv/program/rcom/v1/article-recirc?edition={}&modules=rightrail,ribbon,bottom", country.to_string());
-        if let Ok(body) = getters::simple_get(url.to_string()) {
-            let root: news::TR = serde_json::from_str(&body.to_string()).unwrap();
-            let recs: Vec<csv::StringRecord> = news::TR::to_records(&root)
+        if let Ok(body) = simple_get(url.to_string()) {
+            let root: crate::news::TR = serde_json::from_str(&body.to_string()).unwrap();
+            let recs: Vec<csv::StringRecord> = crate::news::TR::to_records(&root)
                 .into_iter()
                 .map(|x| csv::StringRecord::from(x))
                 .collect();
@@ -137,77 +136,76 @@ pub fn reuters() -> Result<(), csv::Error> {
 
 pub fn wsj_videos() {
     let url = "https://video-api.wsj.com/api-video/find_all_videos.asp";
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: news::WSJ = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = news::WSJ::to_records(&root)
+    if let Ok(body) = simple_get(url.to_string()) {
+        let root: crate::news::WSJ = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = crate::news::WSJ::to_records(&root)
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        writerecs("./WSJ.csv".to_string(), &WSJ_HEADER, recs);
+        writerecs("./WSJ.csv".to_string(), &crate::WSJ_HEADER, recs);
     }
 }
 
-pub fn jpxnews() -> Result<(), reqwest::Error> {
-    let url = "https://www.jpx.co.jp/english/news/news_ym_01.json";
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: Vec<jpxnews::Root> = serde_json::from_str(&body.to_string()).unwrap();
-        let mut recs: Vec<csv::StringRecord> = Vec::new();
-        for r in root.iter() {
-            recs.push(csv::StringRecord::from(jpxnews::Root::to_record(r)));
-        }
-        writerecs("./jpxnews.csv".to_string(), &jpxnews::JPXNewsHeader, recs);
-    }
-    Ok(())
-}
+//pub fn jpxnews() -> Result<(), reqwest::Error> {
+//    let url = "https://www.jpx.co.jp/english/news/news_ym_01.json";
+//    if let Ok(body) = simple_get(url.to_string()) {
+//        let root: Vec<crate::jpxnews::Root> = serde_json::from_str(&body.to_string()).unwrap();
+//        let mut recs: Vec<csv::StringRecord> = Vec::new();
+//        for r in root.iter() {
+//            recs.push(csv::StringRecord::from(crate::jpxnews::Root::to_record(r)));
+//        }
+//        writerecs("./jpxnews.csv".to_string(), &jpxnews::JPXNewsHeader, recs);
+//    }
+//    Ok(())
+//}
 
 pub fn gsnews() -> Result<(), reqwest::Error> {
     let url = "https://www.goldmansachs.com/insights/insights-articles.json";
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: gs::Root = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = gs::Root::to_records(&root)
+    if let Ok(body) = simple_get(url.to_string()) {
+        let root: crate::gs::Root = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = crate::gs::Root::to_records(&root)
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        writerecs("./gsnews.csv".to_string(), &gs::GS_HEADER, recs);
+        writerecs("./gsnews.csv".to_string(), &crate::gs::GS_HEADER, recs);
     }
     Ok(())
 }
-
 
 pub fn nytfeed() -> Result<(), reqwest::Error> {
     let url = format!(
         "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}&limit=200",
-        keys::NYT_KEY.to_string()
+        crate::keys::NYT_KEY.to_string()
     );
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: news::NYTFeed = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = news::NYTFeed::to_records(&root)
+    if let Ok(body) = simple_get(url.to_string()) {
+        let root: crate::news::NYTFeed = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = crate::news::NYTFeed::to_records(&root)
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        writerecs("./nytfeed.csv".to_string(), &NYT_FEED_HEADER, recs);
+        writerecs("./nytfeed.csv".to_string(), &crate::NYT_FEED_HEADER, recs);
     }
     Ok(())
 }
-
 
 pub fn nytarchive() -> Result<(), csv::Error> {
     let filename = "./nyt_archive.csv".to_string();
     let mut wtr = csv::Writer::from_path(filename)?;
     let nyt_delay: std::time::Duration = Duration::from_millis(6000);
 
-    wtr.write_record(&NYT_ARCHIVE_HEADER);
+    wtr.write_record(&crate::NYT_ARCHIVE_HEADER);
     for i in 1853..2019 {
         for j in 1..13 {
             let url = format!(
                 "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key={}",
                 i,
                 j,
-                keys::NYT_KEY.to_string()
+                crate::keys::NYT_KEY.to_string()
             );
-            if let Ok(body) = getters::simple_get(url.to_string()) {
-                let root: news::NYTArchive = serde_json::from_str(&body.to_string()).unwrap();
-                let recs: Vec<csv::StringRecord> = news::NYTArchive::to_records(&root)
+            if let Ok(body) = simple_get(url.to_string()) {
+                let root: crate::news::NYTArchive =
+                    serde_json::from_str(&body.to_string()).unwrap();
+                let recs: Vec<csv::StringRecord> = crate::news::NYTArchive::to_records(&root)
                     .into_iter()
                     .map(|x| csv::StringRecord::from(x))
                     .collect();
@@ -238,24 +236,24 @@ pub fn nytarchive() -> Result<(), csv::Error> {
 //     Ok(())
 // }
 
-pub fn steam_purchases() -> Result<(), csv::Error> {
-    let url = "https://steamcommunity.com/market/recentcompleted";
-    if let Ok(body) = getters::simple_get(url.to_string()) {
-        let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
-        // println!("{:#?}", root);
-        let recs = steam::Steam::purchases(&root)
-            .into_iter()
-            .map(|x| csv::StringRecord::from(x))
-            .collect();
-        writerecs(
-            "./steam_recent_purchases.csv".to_string(),
-            &steam::STEAM_PURCHASE_HEADER2,
-            recs,
-        );
-    }
-    Ok(())
-}
-
+//pub fn steam_purchases() -> Result<(), csv::Error> {
+//    let url = "https://steamcommunity.com/market/recentcompleted";
+//    if let Ok(body) = getters::simple_get(url.to_string()) {
+//        let root: steam::Steam = serde_json::from_str(&body.to_string()).unwrap();
+//        // println!("{:#?}", root);
+//        let recs = steam::Steam::purchases(&root)
+//            .into_iter()
+//            .map(|x| csv::StringRecord::from(x))
+//            .collect();
+//        writerecs(
+//            "./steam_recent_purchases.csv".to_string(),
+//            &steam::STEAM_PURCHASE_HEADER2,
+//            recs,
+//        );
+//    }
+//    Ok(())
+//}
+//
 pub fn lilmatcher(s: Option<String>) -> String {
     match s {
         Some(s) => s.to_string(),
@@ -302,10 +300,10 @@ fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
         Regex::new(r"<None>(?P<val>.+)</None>.*()").unwrap(),
     ];
     // buf_reader.read_to_string(&mut contents)?;
-    let filenames = read_tickers("./rentec13urls.txt");
+    let filenames = read_tickers("../ref_data/rentec13urls.txt");
     for (i, url) in filenames.iter().enumerate() {
         let mut allcaps: Vec<Vec<String>> = Vec::new();
-        let contents = getters::simple_get(url.to_string()).unwrap();
+        let contents = simple_get(url.to_string()).unwrap();
         for re in res.iter() {
             let mut rec: Vec<String> = Vec::new();
             for cap in re.captures_iter(&contents.to_string()) {
@@ -333,3 +331,33 @@ fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub const DELAY: std::time::Duration = Duration::from_millis(10);
+
+pub const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36";
+
+#[tokio::main]
+pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .user_agent(USER_AGENT.to_string())
+        .build()?;
+    let res = client.get(&url).send().await?;
+    thread::sleep(DELAY);
+    let body = res.text().await?;
+    // println!("{}: {:#?}", url, body);
+    println!("{}", url);
+    Ok(body)
+}
+
+#[tokio::main]
+pub async fn simple_json(url: String) -> Result<::serde_json::Value, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .user_agent(USER_AGENT.to_string())
+        .build()?;
+
+    client
+        .get(&url)
+        .send()
+        .await?
+        .json::<::serde_json::Value>() // CHANGE TYPE
+        .await
+}

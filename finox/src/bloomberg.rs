@@ -27,47 +27,6 @@ https://api.nasdaq.com/api/quote/watchlist?symbol=cl%3anmx%7ccommodities&symbol=
 https://www.bloomberg.com/markets/api/security/currency/cross-rates/USD,EUR,XAU,XAG,XPT,XPD,JPY,GBP,AUD,CAD,CHF,KRW,MXN,BRL,CLP,COP,PEN,CRC,ARS,SEK,DKK,NOK,CZK,SKK,PLN,HUF,RUB,TRY,ILS,KES,ZAR,MAD,NZD,PHP,SGD,IDR,CNY,INR,MYR,THB,
 }
 */
-
-pub const CURRENCY_SYMBOLS: [&'static str; 40] = [
-    "USD", "EUR", "XAU", "XAG", "XPT", "XPD", "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN",
-    "BRL", "CLP", "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF",
-    "RUB", "TRY", "ILS", "KES", "ZAR", "MAD", "NZD", "PHP", "SGD", "IDR", "CNY", "INR", "MYR",
-    "THB",
-];
-// USD,EUR,XAU,XAG,XPT,XPD,JPY,GBP,AUD,CAD,CHF,KRW,MXN,BRL,CLP,COP,PEN,CRC,ARS,SEK,DKK,NOK,CZK,SKK,PLN,HUF,RUB,TRY,ILS,KES,ZAR,MAD,NZD,PHP,SGD,IDR,CNY,INR,MYR,THB,
-pub const NEWS_SYMBOLS: [&'static str; 5] = [
-    "GOVERNMENT_BOND",
-    "COMMODITY",
-    "COMMON_STOCK",
-    "CURRENCY",
-    "BLOOMBERG_BARCLAYS_INDEX",
-];
-
-pub const COMMODITIES_SYMBOLS: [&'static str; 37] = [
-    "CO1", "CL1", "XB1", "NG1", "HO1", "GC1", "SI1", "HG1", "C%201", "W%201", "CC1", "CT1", "LC1",
-    "QS1", "JX1", "MO1", "JG1", "LMCADS03", "LMAHDS03", "LMZSDS03", "LMSNDS03", "O%201", "RR1",
-    "S%201", "SM1", "BO1", "RS1", "KC1", "SB1", "JO1", "CT1", "OL1", "LB1", "JN1", "DL1", "FC1",
-    "LH1",
-];
-
-pub const STOCK_HEADER: [&'static str; 15] = [
-    "id",
-    "short_name",
-    "market_cap",
-    "co_phone",
-    "last_update",
-    "average_volume30_day",
-    "price",
-    "open_price",
-    "high_price",
-    "low_price",
-    "low_price52_week",
-    "high_price52_week",
-    "number_of_employees",
-    "price_earnings_ratio",
-    "shares_outstanding",
-];
-
 // pub fn currencies_intraday(start: String) -> Result<(), reqwest::Error> {
 //     let urls = currency_urls();
 //     for url in urls.iter() {

@@ -12,6 +12,7 @@ use std::{
     io::{prelude::*, BufReader},
     path::Path,
 };
+
 pub async fn lil_fetchvv_insiders(urls: Vec<String>) -> Vec<Vec<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
@@ -31,6 +32,7 @@ pub async fn lil_fetchvv_insiders(urls: Vec<String>) -> Vec<Vec<String>> {
     let recs = garbo_collectvv(fetches);
     return recs;
 }
+
 pub async fn lil_fetchvv_oc(urls: Vec<String>) -> Vec<Vec<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
