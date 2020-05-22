@@ -72,29 +72,6 @@ pub fn appendrecs(
     Ok(())
 }
 
-pub fn appendrec(
-    file_name: String,
-    rec: csv::StringRecord,
-) -> Result<(), Box<dyn Error>> {
-    let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
-    let mut wtr = csv::Writer::from_writer(file);
-    wtr.write_record(&rec);
-    wtr.flush()?;
-    Ok(())
-}
-
-pub fn writerecs_strvec(
-    file_name: String,
-    header: Vec<String>,
-    records: Vec<csv::StringRecord>,
-) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path(file_name.to_string())?;
-    wtr.write_record(header);
-    for r in records.iter() {
-        wtr.write_record(r);
-    }
-    Ok(())
-}
 
 pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
     let f = File::open(filename).expect("no such file");
@@ -108,12 +85,10 @@ pub fn simppath(s: String, sfx: String) -> String {
     //sfx enum x, f, us
     let now = Utc::now();
     return format!(
-        "../data/{}_{}_{}_{}_{}.csv",
+        "../data/{}_{}_{}.csv",
         s.to_string(),
         sfx.to_string(),
-        now.year(),
-        now.month(),
-        now.day()
+        // epoch_str(),
     );
 }
 
@@ -126,17 +101,6 @@ pub fn chart_headers(s: String) -> Vec<String> {
     return headers;
 }
 
-
-pub fn yf_symb(url: String) -> Option<Vec<csv::StringRecord>> {
-    if let Some(tohlcv) = getters::yf_from_url(url.to_string()) {
-        let mut recs: Vec<csv::StringRecord> = tohlcv
-            .into_iter()
-            .map(|x| csv::StringRecord::from(x))
-            .collect();
-        return Some(recs);
-    }
-    return None;
-}
 pub fn sa() -> Result<(), reqwest::Error> {
     let url = "https://seekingalpha.com/get_trending_articles";
     if let Ok(body) = getters::simple_get(url.to_string()) {
@@ -319,14 +283,6 @@ pub fn lilmatcher_i64(s: Option<i64>) -> String {
 // }
 // todo , generalizing, refactor
 // struct SGen<T>(T);
-
-// pub fn serde_to_recs(body: String, to: SGen<T>) -> SGen<T> {
-//     let root: sa::Root = serde_json::from_str(&body.to_string()).unwrap();
-//     let recs = sa::Root::to_records(&root)
-//         .into_iter()
-//         .map(|x| csv::StringRecord::from(x))
-//         .collect();
-// }
 
 fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
     // let file = File::open("rentec_13f.xml")?;

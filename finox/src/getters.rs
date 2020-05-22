@@ -24,22 +24,16 @@ pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
 
 
 #[tokio::main]
-pub async fn simple_json(url: String) -> Result<(yf::YFinList), Box<dyn std::error::Error>> {
+pub async fn simple_json(url: String) -> Option<::serde_json::Value> {
     let client = reqwest::Client::builder().user_agent(USER_AGENT.to_string()).build()?;
     let resp = client.get(&url).send()
         .await?
-        .json::<yf::YFinList>() // CHANGE TYPE
+        .json::<::serde_json::Value>() // CHANGE TYPE
         .await?;
-    println!("yo{}: {:#?}", &url.to_string(), yf::YFinList::to_records(&resp));
-    println!("{}: {:#?}", &url.to_string(), yf::YFinList::to_records(&resp));
-    Ok(resp)
-}
-
-
-pub fn yf_from_url(url: String) -> Option<Vec<Vec<String>>>{
-    if let Ok(body) = simple_get(url) {
-        let ohlcv: yf::Root = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(yf::Root::to_records(&ohlcv));
+    match resp {
+        Ok(v) => Some(v),
+        _ => None
     }
-    return None;
 }
+
+
