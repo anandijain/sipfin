@@ -241,3 +241,25 @@ struct Record {
     symbol: String,
     weight: f64,
 }
+
+pub async fn lil_fetch(urls: Vec<String>) -> Vec<::serde_json::Value> {
+    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+        if let Ok(res) = reqwest::get(&url).await {
+            if let Ok(root) = res.json::<::serde_json::Value>().await {
+                return Some(root);
+            } else {
+                println!("serialize err {}", url.clone());
+                return None;
+            }
+        }
+        println!("response err: {}", url.clone());
+        return None;
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<::serde_json::Value>>>()
+    .await;
+    return fetches
+        .into_iter()
+        .flatten()
+        .collect::<Vec<::serde_json::Value>>();
+}
