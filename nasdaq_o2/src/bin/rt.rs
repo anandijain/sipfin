@@ -57,6 +57,7 @@ async fn main() -> Result<(), String> {
     //let db = Arc::new(Database {
     //    map: Mutex::new(init_db),
     //});
+    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect();
     loop {
         let now = Instant::now();
         let dt = Utc::now();
@@ -94,43 +95,42 @@ async fn main() -> Result<(), String> {
                 );
             }
 
-            let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect();
-            let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-                if let Ok(res) = reqwest::get(&url).await {
-                    if let Ok(root) = res
-                        .json::<RealtimeRoot>()
-                        .await
-                    {
-                        //let recs = root.to_recs();
-			//let db = db.clone();
-                        //tokio::spawn(async move {
-                        //    //while let Some(rec) = recs.iter().await {
-                        //    for rec in recs.iter() {
-                        //        &db.map.insert(format!("{}:{}", &rec[0], &rec[1]), rec.clone());
-                        //    }
-                        //});
-                        return Some(root.to_recs());
-                    } else {
-                        println!("serialize err {}", url.clone());
-                        return None;
-                    }
-                }
-                println!("response err{}", url.clone());
-                return None;
-            }))
-            .buffer_unordered(16)
-            //.collect::<Vec<_>>()
-            .collect::<Vec<Option<Vec<Vec<String>>>>>()
-            .await;
-            let recs = nasdaq_o2::garbo_collectvv(fetches);
+            //let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+            //    if let Ok(res) = reqwest::get(&url).await {
+            //        if let Ok(root) = res
+            //            .json::<RealtimeRoot>()
+            //            .await
+            //        {
+            //            //let recs = root.to_recs();
+	    //    	//let db = db.clone();
+            //            //tokio::spawn(async move {
+            //            //    //while let Some(rec) = recs.iter().await {
+            //            //    for rec in recs.iter() {
+            //            //        &db.map.insert(format!("{}:{}", &rec[0], &rec[1]), rec.clone());
+            //            //    }
+            //            //});
+            //            return Some(root.to_recs());
+            //        } else {
+            //            println!("serialize err {}", url.clone());
+            //            return None;
+            //        }
+            //    }
+            //    println!("response err{}", url.clone());
+            //    return None;
+            //}))
+            //.buffer_unordered(16)
+            ////.collect::<Vec<_>>()
+            //.collect::<Vec<Option<Vec<Vec<String>>>>>()
+            //.await;
+            //let recs = nasdaq_o2::garbo_collectvv(fetches);
             //return recs;
-            //let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
+            let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
             let len: usize = recs.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
             
             //println!("{:#?}", &db); 
-            nasdaq_o2::write_csv(&fp, recs, header).expect("csv error");
+            nasdaq_o2::write_csv(&fp, recs, &header).expect("csv error");
             println!(
                 "{}: {} {} seconds: {} records",
                 i,
@@ -140,7 +140,7 @@ async fn main() -> Result<(), String> {
             );
         }
     }
-    Ok(())
+    //Ok(())
 }
 //let args: Vec<String> = env::args().collect();
 //assert_eq!(

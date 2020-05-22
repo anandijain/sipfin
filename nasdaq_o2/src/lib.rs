@@ -142,7 +142,7 @@ pub fn write_csv(
     //wtr: &mut Writer,
     filepath: &Path,
     data: Vec<Vec<String>>,
-    header: Vec<String>,
+    header: &Vec<String>,
 ) -> Result<(), csv::Error> {
     let mut wtr =
         csv::Writer::from_path(filepath).expect(format!("whtf csv {:?}", filepath).as_ref());
