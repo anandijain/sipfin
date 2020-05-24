@@ -10,40 +10,36 @@ use std::{
     thread,
     time::Duration,
 };
-pub fn yf_symb_from_url(url: String) -> Option<String> {
-    //example
-    let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
-    if let Some(caps) = re.captures(&url) {
-        return Some(caps.name("symb").unwrap().as_str().to_string());
-    }
-    return None;
+
+pub const DELAY: std::time::Duration = Duration::from_millis(10);
+
+pub const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36";
+
+#[tokio::main]
+pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .user_agent(USER_AGENT.to_string())
+        .build()?;
+    let res = client.get(&url).send().await?;
+    thread::sleep(DELAY);
+    let body = res.text().await?;
+    // println!("{}: {:#?}", url, body);
+    println!("{}", url);
+    Ok(body)
 }
 
-pub fn symb_from_ndaq_url(url: String) -> Option<String> {
-    //example
-    let re = Regex::new(r"/quote/(?P<symb>.+).*/info").unwrap();
-    if let Some(caps) = re.captures(&url) {
-        return Some(caps.name("symb").unwrap().as_str().to_string());
-    }
-    return None;
-}
+#[tokio::main]
+pub async fn simple_json(url: String) -> Result<::serde_json::Value, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .user_agent(USER_AGENT.to_string())
+        .build()?;
 
-//pub fn yf_url(s: Security) -> String {
-//    let root = "https://query1.finance.yahoo.com/v8/finance/chart/";
-//    // let sfx = "&range=7d&interval=1m";
-//    let sfx = "&range=1d&period1={}&period2={}";
-//    match s {
-//        Security::F(s) => vec![root, &s, "=F?symbol=", &s, sfx].join(""),
-//        Security::X(s) => vec![root, &s, "=X?symbol=", &s, sfx].join(""),
-//        Security::US(s) => vec![root, &s, "?region=US", sfx].join(""),
-//    }
-//}
-
-pub fn xueqiu_url(s: String) -> String {
-    return format!(
-        "https://stock.xueqiu.com/v5/stock/realtime/quotec.json?symbol={}",
-        s.to_string()
-    );
+    client
+        .get(&url)
+        .send()
+        .await?
+        .json::<::serde_json::Value>() // CHANGE TYPE
+        .await
 }
 
 pub fn writerecs(
@@ -58,6 +54,7 @@ pub fn writerecs(
     }
     Ok(())
 }
+
 
 pub fn appendrecs(
     file_name: String,
@@ -331,33 +328,22 @@ fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub const DELAY: std::time::Duration = Duration::from_millis(10);
-
-pub const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36";
-
-#[tokio::main]
-pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .user_agent(USER_AGENT.to_string())
-        .build()?;
-    let res = client.get(&url).send().await?;
-    thread::sleep(DELAY);
-    let body = res.text().await?;
-    // println!("{}: {:#?}", url, body);
-    println!("{}", url);
-    Ok(body)
+pub fn yf_symb_from_url(url: String) -> Option<String> {
+    //example
+    let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
+    if let Some(caps) = re.captures(&url) {
+        return Some(caps.name("symb").unwrap().as_str().to_string());
+    }
+    return None;
 }
 
-#[tokio::main]
-pub async fn simple_json(url: String) -> Result<::serde_json::Value, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .user_agent(USER_AGENT.to_string())
-        .build()?;
-
-    client
-        .get(&url)
-        .send()
-        .await?
-        .json::<::serde_json::Value>() // CHANGE TYPE
-        .await
+pub fn symb_from_ndaq_url(url: String) -> Option<String> {
+    //example
+    let re = Regex::new(r"/quote/(?P<symb>.+).*/info").unwrap();
+    if let Some(caps) = re.captures(&url) {
+        return Some(caps.name("symb").unwrap().as_str().to_string());
+    }
+    return None;
 }
+
+

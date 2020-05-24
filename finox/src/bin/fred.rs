@@ -18,7 +18,7 @@ use url::Url;
 mod keys;
 
 pub const WRITE_PATH: &str = "../data/fred/";
-pub const ONE_SEC: time::Duration = time::Duration::from_secs(1);
+pub const DELAY: time::Duration = time::Duration::from_millis(500);
 
 fn extract_id(input: &str) -> Option<&str> {
     lazy_static! {
@@ -32,11 +32,13 @@ fn extract_id(input: &str) -> Option<&str> {
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     let path = "fred/category/series";
-    let path = "fred/series/observations";
-    let q = "series_id=";
+    //let path = "fred/series/observations";
+    //let q = "series_id=";
+    let q = "category_id=";
     //println!("{:?}", url.path());
-    let ids = read_tickers("../data/fred/fred_series_ids.txt");
-    let urls = gen_queries(ids, path, q);
+    //let ids = read_tickers("../data/fred/fred_series_ids.txt");
+    //let urls = gen_queries(ids, path, q);
+    let urls = gen_queries(path, q);
     println!("{:#?}", urls);
     let roots = lil_fetch(urls.iter().map(|x| x.to_string()).collect::<Vec<_>>()).await;
     println!("{:#?}", roots);
@@ -47,16 +49,17 @@ async fn main() -> Result<(), reqwest::Error> {
 pub async fn lil_fetch(urls: Vec<String>) -> Vec<String> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<SeriesObsRoot>().await {
+            if let Ok(root) = res.json::<CategoryRoot>().await {
                 println!("url: {}, {:#?}", url.clone(), root);
-                thread::sleep(ONE_SEC);
+                thread::sleep(DELAY);
                 let recs = root.to_recs();
                 let id = extract_id(&url).unwrap();
-                let fp = format!("{}series/{}_series.csv", WRITE_PATH, id);
+                let fp = format!("{}category/{}_category.csv", WRITE_PATH, id);
                 if let Ok(_) = write_csv(
                     &fp,
                     recs,
-                    OBS_HEADER
+                    //OBS_HEADER
+                    SERIES_HEADER
                         .iter()
                         .map(|x| x.to_string())
                         .collect::<Vec<_>>(),
@@ -92,13 +95,16 @@ pub fn write_csv(fp: &str, recs: Vec<Vec<String>>, header: Vec<String>) -> Resul
     Ok(())
 }
 
-fn gen_queries(ids: Vec<String>, path: &str, q: &str) -> Vec<Url> {
+fn gen_queries(
+    //ids: Vec<String>, 
+    path: &str, q: &str) -> Vec<Url> {
     let mut urls: Vec<Url> = vec![];
     let root = Url::parse("https://api.stlouisfed.org");
-    for i in ids.iter() {
+    //for i in ids.iter() {
+    for i in 30000..40000 {
         if let Ok(r) = root.clone() {
             let q = format!(
-                "{}?{}{}&api_key={}&file_type=json&limit=10000",
+                "{}?{}{}&api_key={}&file_type=json", //&limit=10000",
                 path,
                 q,
                 i,

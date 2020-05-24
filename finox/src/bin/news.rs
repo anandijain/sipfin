@@ -3,7 +3,22 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use crate::utils;
+mod utils;
+//use crate::utils;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // utils::nytarchive();
+
+    utils::nytfeed();
+    utils::gsnews();
+    //utils::jpxnews();
+    utils::reuters();
+    utils::wsj_videos();
+    utils::sa();
+    //bloomberg::news();
+    Ok(())
+}
+
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]

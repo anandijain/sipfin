@@ -13,7 +13,6 @@ https://query1.finance.yahoo.com/v8/finance/chart/USDEUR=X?symbol=USDEUR%3DX&ran
 https://query2.finance.yahoo.com/ws/insights/v2/finance/insights?region=US&symbol=MSFT
 
 https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;count=3;listIds=%5B%22commodities%22%2C%22currencies%22%2C%22bonds%22%5D
-https://www.marketwatch.com/DockingBar/Dock/Markets#
 */
 
 
@@ -63,29 +62,7 @@ pub struct YFResult {
     pub indicators: Indicators,
 }
 
-// #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct Meta {
-//     pub currency: String,
-//     pub symbol: String,
-//     pub exchange_name: String,
-//     pub instrument_type: String,
-//     pub first_trade_date: i64,
-//     pub regular_market_time: i64,
-//     pub gmtoffset: i64,
-//     pub timezone: String,
-//     pub exchange_timezone_name: String,
-//     pub regular_market_price: f64,
-//     pub chart_previous_close: f64,
-//     pub previous_close: f64,
-//     pub scale: Option<i64>,
-//     pub price_hint: Option<i64>,
-//     pub current_trading_period: Option<TradingPeriod>,
-//     // pub trading_periods: Option<Vec<Vec<TradingPeriod>>>,
-//     pub data_granularity: Option<String>,
-//     pub range: Option<String>,
-//     pub valid_ranges: Vec<String>,
-// }
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
@@ -123,22 +100,6 @@ impl Meta {
         return rec;
     }
 }
-
-
-
-pub const YF_META_HEADER: [&'static str; 9] = [
-"symbol",
-"exchange",
-"instrument",
-"currency",
-"first_trade_date",
-"reg_mkt_time",
-"gmtoffset",
-"tz",
-"exchange_tz",
-];
-
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -291,121 +252,6 @@ pub struct YFinListSecurity {
     pub ask: Option<Rawf64>,
     pub bid: Option<Rawf64>,
     pub triggerable: bool,
-}
-
-impl YFinListSecurity {
-    pub fn to_record(&self) -> Vec<String> {
-        // self..to_string(),
-        // lilmatcher_Rawf64(// lilmatcher(self).two_hundred_day_average.,
-        // if let Some(p) = self.regular_market_price
-        let rec: Vec<String> = vec![
-            self.symbol.to_string(),
-            self.exchange.to_string(),
-            self.market_state.to_string(),
-            lilmatcher_Rawf64(self.two_hundred_day_average_change_percent.clone()).to_string(),
-            lilmatcher_Rawf64(self.regular_market_day_high.clone()).to_string(),
-            lilmatcher_Rawf64(self.two_hundred_day_average_change.clone()).to_string(),
-            lilmatcher_Rawf64(self.fifty_two_week_high_change.clone()).to_string(),
-            lilmatcher_RawString(self.expire_iso_date.clone()).to_string(),
-            lilmatcher_RawString(self.fifty_two_week_range.clone()).to_string(),
-            lilmatcher_Rawf64(self.fifty_day_average_change.clone()).to_string(),
-            lilmatcher_Rawi64L(self.average_daily_volume3_month.clone()).to_string(),
-            self.exchange_data_delayed_by.to_string(),
-            lilmatcher_Rawf64(self.fifty_two_week_low.clone()).to_string(),
-            self.market.to_string(),
-            lilmatcher_Rawi64L(self.regular_market_volume.clone()).to_string(),
-            self.price_hint.to_string(),
-            self.source_interval.to_string(),
-            lilmatcher_Rawf64(self.regular_market_day_low.clone()).to_string(),
-            lilmatcher_Rawi64(self.expire_date.clone()).to_string(),
-            self.exchange.to_string(),
-            self.region.to_string(),
-            lilmatcher_Rawi64L(self.open_interest.clone()).to_string(),
-            self.gmt_off_set_milliseconds.to_string(),
-            lilmatcher_Rawf64(self.regular_market_open.clone()).to_string(),
-            lilmatcher_Rawf64(self.regular_market_change_percent.clone()).to_string(),
-            lilmatcher_Rawi64L(self.average_daily_volume10_day.clone()).to_string(),
-            lilmatcher_Rawf64(self.fifty_two_week_low_change.clone()).to_string(),
-            self.currency.to_string(),
-            lilmatcher_Rawf64(self.regular_market_previous_close.clone()).to_string(),
-            lilmatcher_Rawf64(self.fifty_two_week_high.clone()).to_string(),
-            self.exchange_timezone_name.to_string(),
-            lilmatcher_Rawf64(self.regular_market_change.clone()).to_string(),
-            lilmatcher_Rawf64(self.fifty_day_average.clone()).to_string(),
-            self.exchange_timezone_short_name.to_string(),
-            lilmatcher_Rawf64(self.regular_market_price.clone()).to_string(),
-            self.market_state.to_string(),
-            lilmatcher_Rawf64(self.ask.clone()).to_string(),
-            lilmatcher_Rawf64(self.bid.clone()).to_string(),
-        ];
-        // lilmatcher_Rawi64(self.regular_market_time).to_string(),
-        // self.contract_symbol.to_string(),
-        // lilmatcher_Rawf64(// self.bid_size).to_string(),
-        return rec;
-    }
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RawString {
-    pub raw: String,
-    pub fmt: String,
-}
-
-pub fn lilmatcher_RawString(s: Option<RawString>) -> String {
-    match s {
-        Some(s) => s.raw.to_string(),
-        None => "".to_string(),
-    }
-}
-
-pub fn lilmatcher_Rawf64(s: Option<Rawf64>) -> String {
-    match s {
-        Some(s) => s.raw.to_string(),
-        None => "".to_string(),
-    }
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Rawf64 {
-    pub raw: f64,
-    pub fmt: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Rawi64LongFmt {
-    pub raw: i64,
-    pub fmt: String,
-    pub long_fmt: String,
-}
-
-pub fn lilmatcher_Rawi64L(s: Option<Rawi64LongFmt>) -> String {
-    match s {
-        Some(s) => s.raw.to_string(),
-        None => "".to_string(),
-    }
-}
-
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Rawi64 {
-    pub raw: i64,
-    pub fmt: String,
-}
-
-impl Rawi64 {
-    pub fn to_record(&self) -> String {
-        return self.raw.to_string();
-    }
-}
-
-pub fn lilmatcher_Rawi64(s: Option<Rawi64>) -> String {
-    match s {
-        Some(s) => s.raw.to_string(),
-        None => "".to_string(),
-    }
 }
 
 pub const YF_LIST_HEADER: [&'static str; 38] = [
