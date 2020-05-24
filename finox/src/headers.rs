@@ -39,6 +39,18 @@ pub const BLOOMBERG_STOCK_HEADER: [&'static str; 15] = [
     "shares_outstanding",
 ];
 
+pub const YF_META_HEADER: [&'static str; 9] = [
+"symbol",
+"exchange",
+"instrument",
+"currency",
+"first_trade_date",
+"reg_mkt_time",
+"gmtoffset",
+"tz",
+"exchange_tz",
+];
+
 
 pub const CURRENCY_SYMBOLS_YF: [&'static str; 23] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "BTC", "ETH", "NZD", "SEK", "CHF", "HUF", "CNY", "HKD", "SGD", "INR", "MXN", "PHP", "IDR", "THB", "MYR", "ZAR", "RUB"];
 
