@@ -57,7 +57,7 @@ async fn main() -> Result<(), String> {
     //let db = Arc::new(Database {
     //    map: Mutex::new(init_db),
     //});
-    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect();
+    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect::<Vec<String>>();
     loop {
         let now = Instant::now();
         let dt = Utc::now();

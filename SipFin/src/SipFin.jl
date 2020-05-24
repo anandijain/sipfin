@@ -38,12 +38,13 @@ function garbo_plot_mas(v, ns)
 	plot(p)
 end
 
-for t in unique(amtbysec.symbol)
-       tmpdf = amtbysec[amtbysec.symbol .== t, :]
-       tmpj = join(spy, tmpdf, on=:t, makeunique=true)
-       println("spy/$(t) amt/sec cor $(cor(tmpj.amt, tmpj.amt_1))")
-       end
-jj = join(spy, amtbysec[amtbysec.symbol .== "goog", :], on=:t, makeunique=true)
+#for t in unique(amtbysec.symbol)
+#       tmpdf = amtbysec[amtbysec.symbol .== t, :]
+#       tmpj = join(spy, tmpdf, on=:t, makeunique=true)
+#       println("spy/$(t) amt/sec cor $(cor(tmpj.amt, tmpj.amt_1))")
+#       end
+#
+#jj = join(spy, amtbysec[amtbysec.symbol .== "goog", :], on=:t, makeunique=true)
 # diff(df) = df[2:end, :] .- df[1:end - 1, :]
 diff_arr(arr::Array) = sum(abs.(arr[2:end] .- arr[1:end - 1]))
 
@@ -192,6 +193,13 @@ function gen_anim(t, x, v)::Animation
     end
     anim
 end
+
+function load(fn)
+	df = CSV.read(fn)
+	gdf = [DataFrame(x) for x in groupby(df, :symbol)]
+	j = join(gdf[1:50]..., on=:t)
+	os = j[:, r"o_*"]
+	cs = j[:, r"c_*"]
 
 #function frames(dfs::Array{DataFrame,1}) 
 #	for df in dfs

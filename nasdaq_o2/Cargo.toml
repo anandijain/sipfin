@@ -9,12 +9,17 @@ name = "nasdaq_o2"
 path = "src/lib.rs"
 
 [[bin]]
-name = "nasdaq_o2_rt"
+name = "rt"
 path = "src/bin/rt.rs"
 
 [[bin]]
-name = "nasdaq_o2_se"
+name = "sec"
 path = "src/bin/se.rs"
+
+[[bin]]
+name = "cups"
+path = "src/bin/cups.rs"
+
 
 
 
