@@ -9,9 +9,8 @@ extern crate serde_json;
 extern crate tokio;
 
 use chrono::{Timelike, Utc};
-use futures::stream::StreamExt;
 use nasdaq_o2;
-use nasdaq_o2::nasdaq::realtime::{NDAQ_REALTIME_HEADER, RealtimeRoot};
+use nasdaq_o2::nasdaq::realtime::{NDAQ_REALTIME_HEADER};
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 use std::{
@@ -29,10 +28,6 @@ struct Record {
     symbol: String,
     weight: f64,
 }
-//#[derive(Debug, serde::Deserialize)]
-//struct Database {
-//    map: Mutex<HashMap<String, Vec<String>>>,
-//}
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -50,13 +45,6 @@ async fn main() -> Result<(), String> {
     let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
 
     let mut i = 0;
-
-    //let mut wtr: Mutex<csv::Writer<File>> = Mutex::new(csv::Writer::from_path(fp).expect("fuck"));
-    //let ay = Arc::new(wtr);
-    //let init_db: HashMap<String, Vec<String>>= HashMap::new();
-    //let db = Arc::new(Database {
-    //    map: Mutex::new(init_db),
-    //});
     let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect::<Vec<String>>();
     loop {
         let now = Instant::now();
@@ -95,41 +83,11 @@ async fn main() -> Result<(), String> {
                 );
             }
 
-            //let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-            //    if let Ok(res) = reqwest::get(&url).await {
-            //        if let Ok(root) = res
-            //            .json::<RealtimeRoot>()
-            //            .await
-            //        {
-            //            //let recs = root.to_recs();
-	    //    	//let db = db.clone();
-            //            //tokio::spawn(async move {
-            //            //    //while let Some(rec) = recs.iter().await {
-            //            //    for rec in recs.iter() {
-            //            //        &db.map.insert(format!("{}:{}", &rec[0], &rec[1]), rec.clone());
-            //            //    }
-            //            //});
-            //            return Some(root.to_recs());
-            //        } else {
-            //            println!("serialize err {}", url.clone());
-            //            return None;
-            //        }
-            //    }
-            //    println!("response err{}", url.clone());
-            //    return None;
-            //}))
-            //.buffer_unordered(16)
-            ////.collect::<Vec<_>>()
-            //.collect::<Vec<Option<Vec<Vec<String>>>>>()
-            //.await;
-            //let recs = nasdaq_o2::garbo_collectvv(fetches);
-            //return recs;
             let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
             let len: usize = recs.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
             
-            //println!("{:#?}", &db); 
             nasdaq_o2::write_csv(&fp, recs, &header).expect("csv error");
             println!(
                 "{}: {} {} seconds: {} records",
@@ -142,6 +100,7 @@ async fn main() -> Result<(), String> {
     }
     //Ok(())
 }
+//
 //let args: Vec<String> = env::args().collect();
 //assert_eq!(
 //    3,

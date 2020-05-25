@@ -1,7 +1,6 @@
 data/
-old_data/
 ref_data/
-finox/target/
+target/
 *.lock
 .vscode/
 __pycache__/

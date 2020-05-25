@@ -2,8 +2,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use crate::utils;
-
 // https://www.jpx.co.jp/english/news/news_ym_01.json
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]

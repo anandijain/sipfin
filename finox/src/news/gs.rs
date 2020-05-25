@@ -2,8 +2,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use crate::utils;
-
 // https://www.goldmansachs.com/insights/insights-articles.json
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -53,10 +51,10 @@ impl GSArticle {
     pub fn to_record(&self) -> Vec<String> {
         let mut rec: Vec<String> = vec![
             self.node_id.to_string(),
-            utils::lilmatcher(self.date.clone()),
+            self.date.clone().unwrap(),
             self.title.to_string(),
             self.description.to_string(),
-            utils::lilmatcher(self.image_url.clone()),
+            self.image_url.clone().unwrap(),
             self.has_video.to_string(),
             self.has_audio.to_string(),
         ];

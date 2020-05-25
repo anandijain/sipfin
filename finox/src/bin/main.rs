@@ -6,6 +6,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
+extern crate roses;
 
 use finox;
 use futures::stream::StreamExt;
@@ -13,16 +14,11 @@ use headers::*;
 use std;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-mod headers;
-mod yf;
-mod keys;
-mod sa;
-mod news;
-mod gs;
+use finox::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tickers = utils::read_tickers("../ref_data/tickers.txt");
+    let tickers = roses::read_tickers("../ref_data/tickers.txt");
     let symbs: Vec<&str> = CURRENCY_SYMBOLS_YF.to_vec(); //.into_iter().cloned().collect();
     let len = symbs.len();
     let mut urls: Vec<String> = vec![];
