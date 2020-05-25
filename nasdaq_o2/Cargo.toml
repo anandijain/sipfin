@@ -16,12 +16,6 @@ path = "src/bin/rt.rs"
 name = "sec"
 path = "src/bin/se.rs"
 
-[[bin]]
-name = "cups"
-path = "src/bin/cups.rs"
-
-
-
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -40,6 +34,7 @@ diesel_derives = "~1.4.1"
 rand = "0.7.3"
 percent-encoding = "2.1.0"
 scraper = "0.12.0"
+roses = { version = "0.1.0", path = "../roses" }
 
 [profile.release]
 debug = true

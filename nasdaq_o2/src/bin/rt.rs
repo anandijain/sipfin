@@ -7,6 +7,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
+extern crate roses;
 
 use chrono::{Timelike, Utc};
 use nasdaq_o2;
@@ -82,13 +83,14 @@ async fn main() -> Result<(), String> {
                         .unwrap(),
                 );
             }
+            println!("urls{:?}", urls);
 
             let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
             let len: usize = recs.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
             
-            nasdaq_o2::write_csv(&fp, recs, &header).expect("csv error");
+            roses::write_csv(&fp, recs, &header).expect("csv error");
             println!(
                 "{}: {} {} seconds: {} records",
                 i,

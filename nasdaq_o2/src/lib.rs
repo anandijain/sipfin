@@ -64,6 +64,7 @@ pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>>
         if let Ok(res) = reqwest::get(&url).await {
             //crate::nasdaq::realtime::RealtimeRoot>
             if let Ok(root) = res.json::<crate::nasdaq::realtime::RealtimeRoot>().await {
+                println!("got recs {}", url.clone());
                 return Some(root.to_recs());
             } else {
                 println!("serialize err {}", url.clone());
@@ -136,25 +137,6 @@ pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
     buf.lines()
         .map(|l| l.expect("Could not parse line"))
         .collect()
-}
-
-pub fn write_csv(
-    //wtr: &mut Writer,
-    filepath: &Path,
-    data: Vec<Vec<String>>,
-    header: &Vec<String>,
-) -> Result<(), csv::Error> {
-    let mut wtr =
-        csv::Writer::from_path(filepath).expect(format!("whtf csv {:?}", filepath).as_ref());
-    wtr.write_record(header.clone())?;
-    wtr.flush()?;
-    let len = header.len();
-    for row in data.iter() {
-        assert_eq!(len, row.len()); // perf hit?
-        wtr.write_record(row)?;
-    }
-    wtr.flush()?;
-    Ok(())
 }
 
 pub fn ndaq_url_to_ticker(url: String) -> String {

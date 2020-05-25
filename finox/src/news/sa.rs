@@ -40,17 +40,17 @@ pub struct Headline {
 }
 
 impl Root {
-    pub fn to_records(&self) -> Vec<Vec<String>> {
+    pub fn to_recs(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
         for hl in self.list.iter(){
-            recs.push(Headline::to_record(hl));
+            recs.push(Headline::to_rec(hl));
         }
         return recs;
     }
 }
 
 impl Headline {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_rec(&self) -> Vec<String> {
         let slug = match self.slug.clone() {
             Some(s) => s,
             None => "".to_string(),

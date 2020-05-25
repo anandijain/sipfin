@@ -1,5 +1,5 @@
 use crate::nasdaq::gen;
-use chrono::{DateTime, FixedOffset, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 //use crate::nasdaq::gen::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]

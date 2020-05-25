@@ -1,5 +1,5 @@
-extern crate regex;
 #[allow(dead_code)]
+extern crate regex;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_derive;
@@ -14,8 +14,6 @@ use std::{thread, time, fs::{File}, path::Path, io::{prelude::*, BufReader}};
 use url::Url;
 
 //use std::sync::{Arc, Mutex};
-
-mod keys;
 
 pub const WRITE_PATH: &str = "../data/fred/";
 pub const DELAY: time::Duration = time::Duration::from_millis(500);
@@ -108,7 +106,7 @@ fn gen_queries(
                 path,
                 q,
                 i,
-                keys::FRED_KEY
+                finox::keys::FRED_KEY
             );
             let url = r.join(&q).expect("url parsed wrong");
             println!("{:#?}", url);

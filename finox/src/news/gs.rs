@@ -88,17 +88,4 @@ pub fn lilmatcher_gstopic(topic: Option<GSTopic>) -> Vec<String> {
         None => vec!["".to_string(), "".to_string(), "".to_string()],
     }
 }
-pub const GS_HEADER: [&'static str; 10] = [
-"node_id",
-"date",
-"title",
-"description",
-"image_url",
-"has_video",
-"has_audio",
-"topic_title",
-"topic_node_id",
-"topic_url"
-];
-
 
