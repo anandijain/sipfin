@@ -49,17 +49,15 @@ pub struct GSArticle {
 
 impl GSArticle {
     pub fn to_record(&self) -> Vec<String> {
-        let mut rec: Vec<String> = vec![
+        return vec![
             self.node_id.to_string(),
-            self.date.clone().unwrap(),
+            self.date.clone().unwrap_or("".to_string()),
             self.title.to_string(),
             self.description.to_string(),
-            self.image_url.clone().unwrap(),
             self.has_video.to_string(),
             self.has_audio.to_string(),
         ];
-        rec.append(&mut lilmatcher_gstopic(self.series.clone()));
-        return rec;
+        //rec.append(&mut lilmatcher_gstopic(self.series.clone()));
     }
 }
 
@@ -80,12 +78,6 @@ impl GSTopic {
         ];
 
         return rec;
-    }
-}
-pub fn lilmatcher_gstopic(topic: Option<GSTopic>) -> Vec<String> {
-    match topic {
-        Some(t) => GSTopic::to_record(&t),
-        None => vec!["".to_string(), "".to_string(), "".to_string()],
     }
 }
 

@@ -2,7 +2,7 @@ pub mod headers;
 pub mod yf;
 pub mod keys;
 pub mod news;
-use std::{thread, time::Duration};
+//use std::{thread, time::Duration};
 
 pub fn sa() -> Result<(), reqwest::Error> {
     let url = "https://seekingalpha.com/get_trending_articles";
@@ -12,7 +12,7 @@ pub fn sa() -> Result<(), reqwest::Error> {
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        roses::writerecs("./sa.csv".to_string(), &headers::SA_HEADER, recs);
+        roses::writerecs("./sa.csv".to_string(), &headers::SA_HEADER, recs).expect("csv prob");
     }
     Ok(())
 }

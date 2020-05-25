@@ -146,17 +146,13 @@ pub const SEC13F_HEADER: [&'static str; 11] = [
 
 
 
-pub const GS_HEADER: [&'static str; 10] = [
+pub const GS_HEADER: [&'static str; 6] = [
 "node_id",
 "date",
 "title",
 "description",
-"image_url",
 "has_video",
 "has_audio",
-"topic_title",
-"topic_node_id",
-"topic_url"
 ];
 
 
