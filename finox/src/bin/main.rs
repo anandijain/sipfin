@@ -2,24 +2,32 @@ extern crate chrono;
 extern crate csv;
 extern crate regex;
 extern crate reqwest;
+extern crate roses;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
-extern crate roses;
 
-use finox;
-use futures::stream::StreamExt;
-use headers::*;
-use std;
-use std::time::{SystemTime, UNIX_EPOCH};
-
-use finox::*;
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tickers = roses::read_tickers("../ref_data/tickers.txt");
-    let symbs: Vec<&str> = CURRENCY_SYMBOLS_YF.to_vec(); //.into_iter().cloned().collect();
+    //let tickers = roses::read_tickers("../ref_data/tickers.txt");
+    let symbs: Vec<&str> = finox::headers::CURRENCY_SYMBOLS_YF.to_vec(); //.into_iter().cloned().collect();
+    let urls = gen_yf_urls(symbs);
+    if let Ok(recs) = finox::fetch::<finox::yf::YFRoot>(urls).await {
+        println!("{:#?}", recs);
+        let file_name = format!(
+            "../data/news/guardian_{}.csv",
+            chrono::Utc::now().to_rfc3339()
+        );
+        let file_path = Path::new(&file_name);
+        roses::write_csv(file_path, recs, &finox::headers::YF_HEADER).expect("csv prob");
+    }
+    Ok(())
+}
+// TODO look into the correct pattern for interlacing like this
+pub fn gen_yf_urls(symbs: Vec<&str>) -> Vec<String> {
     let len = symbs.len();
     let mut urls: Vec<String> = vec![];
     for (i, x) in symbs.iter().enumerate() {
@@ -37,42 +45,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         }
     }
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url.clone()).await {
-            if let Ok(root) = res.json::<yf::Root>().await {
-                let recs: Vec<Vec<String>> = yf::Root::to_records(&root);
-                println!("{}: {}", url, recs.len());
-                return Some(recs);
-            }
-            println!("no json {}", url);
-            return None;
-        }
-        println!("no2");
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<Vec<String>>>>>();
-    let vecs = fetches.await;
-    let recs = vecs
-        .into_iter()
-        .flatten()
-        .collect::<Vec<Vec<Vec<String>>>>()
-        .into_iter()
-        .flatten()
-        .collect::<Vec<Vec<String>>>();
-    //println!("{:#?}", recs);
-    let cur_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    let file_name = format!("../data/yf_currencies_{}.csv", cur_time.to_string());
-    let mut wtr = csv::Writer::from_path(file_name)?;
-    wtr.write_record(vec!["symbol", "t", "o", "h", "l", "c", "v"])?;
-
-    for rec in recs.iter() {
-        wtr.write_record(rec)?;
-    }
-    wtr.flush()?;
-
-    Ok(())
+    urls
 }

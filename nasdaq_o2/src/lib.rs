@@ -13,49 +13,6 @@ use std::{
     path::Path,
 };
 
-pub async fn lil_fetchvv_insiders(urls: Vec<String>) -> Vec<Vec<String>> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<crate::nasdaq::insiders::InsidersRoot>().await {
-                return Some(root.to_recs());
-            } else {
-                println!("serialize err {}", url.clone());
-                return None;
-            }
-        }
-        println!("response err{}", url.clone());
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<Vec<String>>>>>()
-    .await;
-    let recs = garbo_collectvv(fetches);
-    return recs;
-}
-
-pub async fn lil_fetchvv_oc(urls: Vec<String>) -> Vec<Vec<String>> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res
-                .json::<crate::nasdaq::option_chain::OptionChainRoot>()
-                .await
-            {
-                return Some(root.to_recs());
-            } else {
-                println!("serialize err {}", url.clone());
-                return None;
-            }
-        }
-        println!("response err{}", url.clone());
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<Vec<String>>>>>()
-    .await;
-    let recs = garbo_collectvv(fetches);
-    return recs;
-}
-
 pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>>
 //where
 //    T: HasRecs + Deserialize<'de>,
@@ -64,7 +21,7 @@ pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>>
         if let Ok(res) = reqwest::get(&url).await {
             //crate::nasdaq::realtime::RealtimeRoot>
             if let Ok(root) = res.json::<crate::nasdaq::realtime::RealtimeRoot>().await {
-                println!("got recs {}", url.clone());
+                //println!("got recs {}", url.clone());
                 return Some(root.to_recs());
             } else {
                 println!("serialize err {}", url.clone());
@@ -81,25 +38,6 @@ pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>>
     return recs;
 }
 
-pub async fn lil_fetchvv_chart(urls: Vec<String>) -> Vec<Vec<String>> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<crate::nasdaq::chart::ChartRoot>().await {
-                return Some(root.to_recs());
-            } else {
-                println!("serialize err {}", url.clone());
-                return None;
-            }
-        }
-        println!("response err{}", url.clone());
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<Vec<String>>>>>()
-    .await;
-    let recs = garbo_collectvv(fetches);
-    return recs;
-}
 
 pub fn garbo_collectvv(vs: Vec<Option<Vec<Vec<String>>>>) -> Vec<Vec<String>> {
     return vs
@@ -111,6 +49,7 @@ pub fn garbo_collectvv(vs: Vec<Option<Vec<Vec<String>>>>) -> Vec<Vec<String>> {
         .collect::<Vec<Vec<String>>>();
 }
 
+// when endpoints dont grab a vec
 pub async fn lil_fetchv(urls: Vec<String>) -> Vec<Vec<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url.clone()).await {

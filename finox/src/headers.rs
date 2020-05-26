@@ -65,7 +65,7 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
 ];
 
 
-pub const YF_HEADER: [&'static str; 7] = ["symb", "t", "o", "h", "l", "c", "v"];
+pub const YF_HEADER: [&'static str; 7] = ["symbol", "t", "o", "h", "l", "c", "v"];
 
 pub const SA_HEADER: [&'static str; 8] = [
     "id",
@@ -165,5 +165,15 @@ pub const GUARDIAN_HEADER: [&'static str; 9] = [
 "pillar_id",
 ];
 
-
-
+pub const JPXNEWS_HEADER: [&'static str; 10] = [
+    "kind",
+    "category",
+    "corporation",
+    "ir_category",
+    "product_category",
+    "title",
+    "url",
+    "year",
+    "month",
+    "day",
+];

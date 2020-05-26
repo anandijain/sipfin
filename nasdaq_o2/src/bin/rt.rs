@@ -82,7 +82,7 @@ async fn main() -> Result<(), String> {
                         .unwrap(),
                 );
             }
-            println!("urls{:?}", urls);
+            //println!("urls{:?}", urls);
 
             let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
             let len: usize = recs.len();

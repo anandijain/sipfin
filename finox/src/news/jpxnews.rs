@@ -45,15 +45,3 @@ impl Root {
     }
 }
 
-pub const JPXNewsHeader: [&'static str; 10] = [
-    "kind",
-    "category",
-    "corporation",
-    "ir_category",
-    "product_category",
-    "title",
-    "url",
-    "year",
-    "month",
-    "day",
-];

@@ -7,25 +7,22 @@ extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
-use futures::stream::StreamExt;
-use lazy_static::lazy_static;
-use regex::Regex;
-use std::{thread, time, fs::{File}, path::Path, io::{prelude::*, BufReader}};
+//use futures::stream::StreamExt;
+//use lazy_static::lazy_static;
+//use regex::Regex;
+use std::{time,  path::Path};
 use url::Url;
-
-//use std::sync::{Arc, Mutex};
-
 pub const WRITE_PATH: &str = "../data/fred/";
 pub const DELAY: time::Duration = time::Duration::from_millis(500);
 
-fn extract_id(input: &str) -> Option<&str> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"id=(?P<id>\w*)&").unwrap();
-    }
-    RE.captures(input)
-        .and_then(|cap| cap.name("id").map(|login| login.as_str()))
-
-}
+//fn extract_id(input: &str) -> Option<&str> {
+//    lazy_static! {
+//        static ref RE: Regex = Regex::new(r"id=(?P<id>\w*)&").unwrap();
+//    }
+//    RE.captures(input)
+//        .and_then(|cap| cap.name("id").map(|login| login.as_str()))
+//
+//}
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
@@ -36,60 +33,21 @@ async fn main() -> Result<(), reqwest::Error> {
     //println!("{:?}", url.path());
     //let ids = read_tickers("../data/fred/fred_series_ids.txt");
     //let urls = gen_queries(ids, path, q);
-    let urls = gen_queries(path, q);
+    let urls = gen_queries(path, q).iter().map(|x| x.to_string()).collect::<Vec<String>>();
     println!("{:#?}", urls);
-    let roots = lil_fetch(urls.iter().map(|x| x.to_string()).collect::<Vec<_>>()).await;
-    println!("{:#?}", roots);
-
-    Ok(())
-}
-
-pub async fn lil_fetch(urls: Vec<String>) -> Vec<String> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<CategoryRoot>().await {
-                println!("url: {}, {:#?}", url.clone(), root);
-                thread::sleep(DELAY);
-                let recs = root.to_recs();
-                let id = extract_id(&url).unwrap();
-                let fp = format!("{}category/{}_category.csv", WRITE_PATH, id);
-                if let Ok(_) = write_csv(
-                    &fp,
-                    recs,
-                    //OBS_HEADER
-                    SERIES_HEADER
-                        .iter()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<_>>(),
-                ){
-                    return Some(id.to_string());
-                }
-            return None;
-
-            } else {
-                println!("serialize err {}", url.clone());
-                return None;
-            }
-        }
-        println!("response err: {}", url.clone());
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<String>>>()
-    .await;
-    return fetches.into_iter().flatten().collect::<Vec<String>>();
-}
-
-pub fn write_csv(fp: &str, recs: Vec<Vec<String>>, header: Vec<String>) -> Result<(), csv::Error> {
-    let mut wtr = csv::Writer::from_path(fp)?;
-    let len = header.len();
-    wtr.write_record(header)?;
-    wtr.flush()?;
-    for row in recs.iter() {
-        assert_eq!(len, row.len()); // perf hit?
-        wtr.write_record(row)?;
+        if let Ok(recs) =
+        finox::fetch::<CategoryRoot>(urls).await
+    {
+        println!("{:#?}", recs);
+        let file_name = format!(
+            "../data/fred/fred_{}.csv",
+            chrono::Utc::now().to_rfc3339()
+        );
+        let file_path = Path::new(&file_name);
+        roses::write_csv(file_path, recs, &SERIES_HEADER).expect("csv prob");
     }
-    wtr.flush()?;
+
+
     Ok(())
 }
 
@@ -98,8 +56,8 @@ fn gen_queries(
     path: &str, q: &str) -> Vec<Url> {
     let mut urls: Vec<Url> = vec![];
     let root = Url::parse("https://api.stlouisfed.org");
-    //for i in ids.iter() {
-    for i in 30000..40000 {
+    //TODO FIX
+    for i in 0..250{
         if let Ok(r) = root.clone() {
             let q = format!(
                 "{}?{}{}&api_key={}&file_type=json", //&limit=10000",
@@ -129,7 +87,7 @@ pub struct CategoryRoot {
     pub seriess: Vec<Series>,
 }
 
-impl CategoryRoot {
+impl finox::HasRecs for CategoryRoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
         return self.seriess.iter().map(|x| x.to_rec()).collect::<Vec<_>>();
     }
@@ -192,7 +150,7 @@ pub struct SeriesObsRoot {
     pub observations: Vec<Observation>,
 }
 
-impl SeriesObsRoot{
+impl finox::HasRecs for SeriesObsRoot{
     fn to_recs(&self) -> Vec<Vec<String>> {
         return self.observations.iter().map(|x| x.to_rec()).collect::<Vec<_>>();
     }
@@ -216,18 +174,10 @@ impl Observation {
 }
 
 pub const OBS_HEADER: [&'static str; 2] = [
-    "date", 
-    "value"
+    "t", 
+    "x"
 ];
 
-
-pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
-    let f = File::open(filename).expect("no such file");
-    let buf = BufReader::new(f);
-    buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
-}
 
 pub const SERIES_HEADER: [&'static str; 13] = [
     "id",
