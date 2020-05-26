@@ -4,16 +4,22 @@ extern crate serde_derive;
 extern crate serde_json;
 use finox;
 //use finox::news;
+use finox::news::guardian::{ArticleRoot, urlfmt};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // utils::nytarchive();
 
-    finox::nytfeed()?;
-    finox::gsnews()?;
+    //finox::nytfeed()?;
+    //finox::gsnews()?;
+    //guardian_news().await?;
+    if let Ok(recs) = finox::fetch::<ArticleRoot>(vec![urlfmt("search")]).await {
+         println!("{:#?}", recs);
+    } 
     //utils::jpxnews();
     //finox::reuters();
     //finox::wsj_videos();
-    finox::sa()?;
+    //finox::sa()?;
     //bloomberg::news();
     Ok(())
 }

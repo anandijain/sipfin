@@ -2,11 +2,7 @@ extern crate csv;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
-
-use crate::getters;
 use crate::news;
-use crate::utils;
-use crate::headers;
 /*
 todo
 fn dash() -> Result<(), reqwest::Error> {
@@ -126,7 +122,7 @@ pub fn news() -> Result<(), csv::Error> {
     let write_fn = "./ref_data/news.csv";
     let mut wtr = csv::Writer::from_path(&write_fn)?;
     wtr.write_record(&NEWS_HEADER);
-    for s in NEWS_SYMBOLS.iter() {
+    for s in headers::NEWS_SYMBOLS.iter() {
         if let Some(news_vec) = get_news(s.to_string()) {
             if let Ok(recs) = news::NewsVec::to_records(&news_vec) {
                 for r in recs.iter() {
@@ -141,7 +137,7 @@ pub fn news() -> Result<(), csv::Error> {
 }
 
 pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
-    let symbs = utils::read_tickers("./ref_data/sp500tickers.txt");
+    let symbs = roses::read_tickers("./ref_data/sp500tickers.txt");
     let index = symbs
         .iter()
         .position(|r| r.to_string() == start.to_string())
@@ -149,11 +145,8 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
 
     let todo_symbs = &symbs[index..symbs.len()];
 
-    let headlines_fn = "./ref_data/sp500_headlines.csv".to_string();
-    let metadata_fn = "./ref_data/sp500.csv".to_string();
-    let mut meta_wtr = csv::Writer::from_path(&metadata_fn)?;
+    let headlines_fn = "../ref_data/sp500_headlines.csv".to_string();
     let mut lines_wtr = csv::Writer::from_path(&headlines_fn)?;
-    meta_wtr.write_record(&STOCK_HEADER);
     lines_wtr.write_record(&HEADLINES_HEADER);
     for s in todo_symbs.iter() {
         let symb = format!("{}%3AUS", s.to_string());
@@ -163,11 +156,8 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
                     lines_wtr.write_record(r);
                 }
             }
-            let metadata_record = Root::to_record(&c[0]);
-            meta_wtr.write_record(&metadata_record);
         }
     }
-    meta_wtr.flush();
     lines_wtr.flush();
     Ok(())
 }
@@ -224,8 +214,8 @@ pub fn sp500(start: String, write_header: bool) -> Result<(), csv::Error> {
 
 pub fn currency_urls() -> Vec<String> {
     let mut urls: Vec<String> = Vec::new();
-    for s1 in CURRENCY_SYMBOLS.iter() {
-        for s2 in CURRENCY_SYMBOLS.iter() {
+    for s1 in headers::BLOOMBERG_CURRENCY_SYMBOLS.iter() {
+        for s2 in headers::BLOOMBERG_CURRENCY_SYMBOLS.iter() {
             if s1 == s2 {
                 continue;
             }

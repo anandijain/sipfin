@@ -58,7 +58,7 @@ pub fn writerecs(
 pub fn write_csv(
     filepath: &Path,
     data: Vec<Vec<String>>,
-    header: &Vec<String>,
+    header: &[&str],
 ) -> Result<(), csv::Error> {
     let mut wtr =
         csv::Writer::from_path(filepath).expect(format!("whtf csv {:?}", filepath).as_ref());
@@ -172,5 +172,4 @@ pub fn symb_from_ndaq_url(url: String) -> Option<String> {
     }
     return None;
 }
-
 

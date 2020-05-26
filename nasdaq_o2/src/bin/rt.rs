@@ -45,8 +45,7 @@ async fn main() -> Result<(), String> {
     }
     let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
 
-    let mut i = 0;
-    let header = NDAQ_REALTIME_HEADER.iter().map(|x| x.to_string()).collect::<Vec<String>>();
+    let mut i: usize = 0;
     loop {
         let now = Instant::now();
         let dt = Utc::now();
@@ -90,7 +89,7 @@ async fn main() -> Result<(), String> {
 
             let elapsed = now.elapsed().as_secs().to_string();
             
-            roses::write_csv(&fp, recs, &header).expect("csv error");
+            roses::write_csv(&fp, recs, &NDAQ_REALTIME_HEADER).expect("csv error");
             println!(
                 "{}: {} {} seconds: {} records",
                 i,

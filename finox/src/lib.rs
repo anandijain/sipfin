@@ -1,18 +1,52 @@
 pub mod headers;
-pub mod yf;
 pub mod keys;
 pub mod news;
-//use std::{thread, time::Duration};
+pub mod yf;
+use std::path::Path;
+use futures::stream::StreamExt;
+pub trait HasRecs {
+    fn to_recs(&self) -> Vec<Vec<String>>;
+}
+
+pub async fn fetch<'a, T: ?Sized>(urls: Vec<String>) -> Result<Vec<Vec<String>>, String>
+where
+    for<'de> T: HasRecs + serde::Deserialize<'de> + 'a,
+{
+    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+        if let Ok(res) = reqwest::get(&url).await {
+            if let Ok(root) = res.json::<T>().await {
+                return Some(root.to_recs());
+            } else {
+                println!("serialize err {}", url.clone());
+                return None;
+            }
+        }
+        println!("response err: {}", url.clone());
+        return None;
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<Vec<Vec<String>>>>>()
+    .await;
+    let recs = fetches
+        .into_iter()
+        .flatten()
+        .collect::<Vec<Vec<Vec<String>>>>()
+        .into_iter()
+        .flatten()
+        .collect::<Vec<Vec<String>>>();
+    //Ok(Box::new(fetches.into_iter().flatten().collect::<Vec<T>>()))
+    Ok(recs)
+}
 
 pub fn sa() -> Result<(), reqwest::Error> {
+    //let header = headers::SA_HEADER.into_iter().cloned().collect::<Vec<String>>();
     let url = "https://seekingalpha.com/get_trending_articles";
     if let Ok(body) = roses::simple_get(url.to_string()) {
         let root: news::sa::Root = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = news::sa::Root::to_recs(&root)
-            .into_iter()
-            .map(|x| csv::StringRecord::from(x))
-            .collect();
-        roses::writerecs("./sa.csv".to_string(), &headers::SA_HEADER, recs).expect("csv prob");
+        let recs = news::sa::Root::to_recs(&root);
+        let file_name = format!("../data/news/sa_{}.csv", chrono::Utc::now().to_rfc3339());
+        let file_path = Path::new(&file_name);
+        roses::write_csv(file_path, recs, &headers::SA_HEADER).expect("csv prob");
     }
     Ok(())
 }
@@ -71,7 +105,8 @@ pub fn gsnews() -> Result<(), reqwest::Error> {
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        roses::writerecs("./gsnews.csv".to_string(), &headers::GS_HEADER, recs).expect("csv problem");
+        roses::writerecs("./gsnews.csv".to_string(), &headers::GS_HEADER, recs)
+            .expect("csv problem");
     }
     Ok(())
 }
@@ -87,7 +122,8 @@ pub fn nytfeed() -> Result<(), reqwest::Error> {
             .into_iter()
             .map(|x| csv::StringRecord::from(x))
             .collect();
-        roses::writerecs("./nytfeed.csv".to_string(), &headers::NYT_FEED_HEADER, recs).expect("csv prob");
+        roses::writerecs("./nytfeed.csv".to_string(), &headers::NYT_FEED_HEADER, recs)
+            .expect("csv prob");
     }
     Ok(())
 }
