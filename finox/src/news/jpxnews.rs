@@ -5,29 +5,22 @@ extern crate serde_json;
 // https://www.jpx.co.jp/english/news/news_ym_01.json
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub struct Root {
     pub kind: String,
     pub category: Vec<String>,
     pub corporation: Vec<String>,
-    #[serde(rename = "ir_category")]
     pub ir_category: Vec<String>,
-    #[serde(rename = "product_category")]
     pub product_category: Vec<String>,
     pub title: String,
     pub url: String,
-    #[serde(rename = "updated_date")]
     pub updated_date: JPXUpdatedDate,
-    #[serde(rename = "display_type")]
     pub display_type: String,
-    #[serde(rename = "external_flg")]
     pub external_flg: Vec<String>,
-    #[serde(rename = "extension_icon")]
     pub extension_icon: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct JPXUpdatedDate {
     pub year: String,
     pub month: String,
@@ -35,7 +28,7 @@ pub struct JPXUpdatedDate {
 }
 
 impl Root {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_rec(&self) -> Vec<String> {
         let ret: Vec<String> = vec![
             self.kind.to_string(),
             self.category[0].to_string(),

@@ -144,8 +144,6 @@ pub const SEC13F_HEADER: [&'static str; 11] = [
     "None",
 ];
 
-
-
 pub const GS_HEADER: [&'static str; 6] = [
 "node_id",
 "date",
@@ -154,5 +152,18 @@ pub const GS_HEADER: [&'static str; 6] = [
 "has_video",
 "has_audio",
 ];
+
+pub const GUARDIAN_HEADER: [&'static str; 9] = [
+"id",
+"type",
+"section_id",
+"section_name",
+"t",
+"title",
+"url",
+"is_hosted",
+"pillar_id",
+];
+
 
 

@@ -2,14 +2,6 @@ use serde_json::Value;
 use std::{collections::HashMap, time::Duration};
 pub const GUARDIAN_DELAY: Duration = Duration::from_millis(100);
 
-pub fn urlfmt(s: &str) -> String {
-    format!(
-        "https://content.guardianapis.com/{}?api-key={}",
-        s,
-        crate::keys::GUARDIAN_KEY
-    )
-}
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SectionsRoot {

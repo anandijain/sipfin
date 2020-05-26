@@ -10,8 +10,8 @@ pub struct NYTFeed {
     pub results: Vec<NYTFeedArticle>,
 }
 
-impl NYTFeed {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
+impl crate::HasRecs for NYTFeed {
+    fn to_recs(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
         for article in self.results.iter() {
             recs.push(NYTFeedArticle::to_rec(article));
