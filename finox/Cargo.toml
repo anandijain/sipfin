@@ -18,6 +18,10 @@ path = "src/bin/fred.rs"
 name = "news"
 path = "src/bin/news.rs"
 
+[[bin]]
+name = "yf"
+path = "src/bin/yf.rs"
+
 
 [dependencies]
 serde = { version = "1.0.106" }
