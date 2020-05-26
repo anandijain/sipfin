@@ -76,22 +76,21 @@ pub fn gsnews() -> Result<(), reqwest::Error> {
     Ok(())
 }
 
-//pub fn nytfeed() -> Result<(), reqwest::Error> {
-//    let url = format!(
-//        "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}&limit=200",
-//        crate::keys::NYT_KEY.to_string()
-//    );
-//    if let Ok(body) = roses::simple_get(url.to_string()) {
-//        let root: news::NYTFeed = serde_json::from_str(&body.to_string()).unwrap();
-//        let recs = news::NYTFeed::to_records(&root)
-//            .into_iter()
-//            .map(|x| csv::StringRecord::from(x))
-//            .collect();
-//        roses::writerecs("./nytfeed.csv".to_string(), &headers::NYT_FEED_HEADER, recs);
-////use headers;
-//    }
-//    Ok(())
-//}
+pub fn nytfeed() -> Result<(), reqwest::Error> {
+    let url = format!(
+        "https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key={}&limit=200",
+        crate::keys::NYT_KEY.to_string()
+    );
+    if let Ok(body) = roses::simple_get(url.to_string()) {
+        let root: news::nyt::NYTFeed = serde_json::from_str(&body.to_string()).unwrap();
+        let recs = news::nyt::NYTFeed::to_recs(&root)
+            .into_iter()
+            .map(|x| csv::StringRecord::from(x))
+            .collect();
+        roses::writerecs("./nytfeed.csv".to_string(), &headers::NYT_FEED_HEADER, recs).expect("csv prob");
+    }
+    Ok(())
+}
 //
 //pub fn nytarchive() -> Result<(), csv::Error> {
 //    let filename = "./nyt_archive.csv".to_string();

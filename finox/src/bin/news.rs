@@ -8,7 +8,7 @@ use finox;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // utils::nytarchive();
 
-    //finox::news::nytfeed();
+    finox::nytfeed()?;
     finox::gsnews()?;
     //utils::jpxnews();
     //finox::reuters();

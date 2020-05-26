@@ -100,7 +100,7 @@ pub const WSJ_HEADER: [&'static str; 9] = [
     "thumbnail",
 ];
 
-pub const NYT_FEED_HEADER: [&'static str; 21] = [
+pub const NYT_FEED_HEADER: [&'static str; 16] = [
     "slug",
     "first_pub",
     "section",
@@ -110,16 +110,16 @@ pub const NYT_FEED_HEADER: [&'static str; 21] = [
     "subheadline",
     "abs",
     "matrial_type",
-    "geo_tag",
-    "org_tag",
-    "des_tag",
-    "per_tag",
+    //"geo_tag",
+    //"org_tag",
+    //"des_tag",
+    //"per_tag",
     "source",
     "published",
     "created",
     "updated",
     "url",
-    "thumbnail",
+    //"thumbnail",
     "kicker",
     "item_type",
 ];
