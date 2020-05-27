@@ -3,17 +3,17 @@ extern crate csv;
 extern crate dotenv;
 extern crate rand;
 extern crate reqwest;
+extern crate roses;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
-extern crate roses;
 
-use chrono::{Timelike, Utc};
+use chrono::{prelude::*, DateTime, Timelike, Utc};
 use nasdaq_o2;
-use nasdaq_o2::nasdaq::realtime::{NDAQ_REALTIME_HEADER};
-use rand::distributions::WeightedIndex;
-use rand::prelude::*;
+//use nasdaq_o2::nasdaq::realtime::NDAQ_REALTIME_HEADER;
+//use rand::distributions::WeightedIndex;
+//use rand::prelude::*;
 use std::{
     env,
     //fs::File,
@@ -34,16 +34,26 @@ struct Record {
 async fn main() -> Result<(), String> {
     let args = env::args().collect::<Vec<String>>();
     let debug = if args.len() > 1 { true } else { false };
-    let filepath = "../ref_data/weighted_tickers.csv";
-    let mut rdr = csv::Reader::from_path(filepath).expect("tf csv");
-    let mut rng = thread_rng();
-    let mut recs: Vec<Record> = vec![];
-    for res in rdr.deserialize() {
-        let rec: Record = res.expect("dist weights are bad");
-        //println!("rec {:?}", rec);
-        recs.push(rec);
+    let filepath = "../ref_data/tickers_stocks.txt";
+    let tickers = nasdaq_o2::read_tickers(filepath);
+    let mut pairs: Vec<(String, DateTime<FixedOffset>)> = vec![];
+    for symb in tickers.iter() {
+        pairs.push((
+            nasdaq_o2::Security::Stock(symb.to_string())
+                .to_nasdaq_rt_url()
+                .unwrap(),
+            FixedOffset::east(5 * 3600).ymd(1970, 1, 1).and_hms(0, 1, 1),
+        ));
     }
-    let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
+    //let mut rdr = csv::Reader::from_path(filepath).expect("tf csv");
+    //let mut rng = thread_rng();
+    //let mut recs: Vec<Record> = vec![];
+    //for res in rdr.deserialize() {
+    //    let rec: Record = res.expect("dist weights are bad");
+    //    //println!("rec {:?}", rec);
+    //    recs.push(rec);
+    //}
+    //let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
 
     let mut i: usize = 0;
     loop {
@@ -74,22 +84,17 @@ async fn main() -> Result<(), String> {
             thread::sleep(Duration::from_secs(100));
         } else {
             println!("market is open{:?}", dt.timestamp());
-            let mut urls = vec![];
-            for _ in 0..2500 {
-                urls.push(
-                    nasdaq_o2::Security::Stock(recs[dist.sample(&mut rng)].symbol.clone())
-                        .to_nasdaq_rt_url()
-                        .unwrap(),
-                );
-            }
+
             //println!("urls{:?}", urls);
 
-            let recs: Vec<Vec<String>> = nasdaq_o2::lil_fetchvv_rt(urls).await;
-            let len: usize = recs.len();
+            //let recs: Vec<Vec<String>> =
+            let fetches = nasdaq_o2::fetch_rt(pairs.clone()).await;
+            println!("fetches{:#?}", fetches);
+            let len: usize = fetches.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
-            
-            roses::write_csv(&fp, recs, &NDAQ_REALTIME_HEADER).expect("csv error");
+
+            //roses::write_csv(&fp, recs, &NDAQ_REALTIME_HEADER).expect("csv error");
             println!(
                 "{}: {} {} seconds: {} records",
                 i,

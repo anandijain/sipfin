@@ -1,11 +1,12 @@
 extern crate percent_encoding;
 extern crate serde;
+use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-//use serde::Deserialize;
 
 pub mod nasdaq;
 //use nasdaq::gen::HasRecs;
+use crate::nasdaq::realtime::RealtimeRoot;
 use std::{
     error::Error,
     fs::File,
@@ -13,40 +14,33 @@ use std::{
     path::Path,
 };
 
-pub async fn lil_fetchvv_rt(urls: Vec<String>) -> Vec<Vec<String>>
-//where
-//    T: HasRecs + Deserialize<'de>,
+// special for rt
+/*
+ *
+ * maybe want to iter over a Arc<Mutex<hashmap<Security, DT<FO>>>>.
+ * i think i am going to revert from weighted indices to full loop, but implement much better
+ * logging on activity.
+ * prob need to change fixedoffset to utc*/
+
+pub async fn fetch_rt(pairs: Vec<(String, DateTime<FixedOffset>)>) -> Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>
 {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            //crate::nasdaq::realtime::RealtimeRoot>
-            if let Ok(root) = res.json::<crate::nasdaq::realtime::RealtimeRoot>().await {
-                //println!("got recs {}", url.clone());
-                return Some(root.to_recs());
+    let fetches = futures::stream::iter(pairs.into_iter().map(|pair| async move {
+        if let Ok(res) = reqwest::get(&pair.0).await {
+            if let Ok(root) = res.json::<RealtimeRoot>().await {
+                return root.to_recs(pair.1);
             } else {
-                println!("serialize err {}", url.clone());
-                return None;
+                println!("serialize err {:#?}", pair.clone());
+                return (None, pair.1);
             }
         }
-        println!("response err: {}", url.clone());
-        return None;
+        println!("response err: {:#?}", pair.clone());
+        return (None, pair.1);
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<Vec<String>>>>>()
+    .collect::<Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>>()
     .await;
-    let recs = garbo_collectvv(fetches);
-    return recs;
-}
-
-
-pub fn garbo_collectvv(vs: Vec<Option<Vec<Vec<String>>>>) -> Vec<Vec<String>> {
-    return vs
-        .into_iter()
-        .flatten()
-        .collect::<Vec<Vec<Vec<String>>>>()
-        .into_iter()
-        .flatten()
-        .collect::<Vec<Vec<String>>>();
+    println!("fetches: {:#?}", fetches);
+    return fetches;
 }
 
 // when endpoints dont grab a vec
@@ -163,24 +157,8 @@ struct Record {
     weight: f64,
 }
 
-pub async fn lil_fetch(urls: Vec<String>) -> Vec<::serde_json::Value> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url).await {
-            if let Ok(root) = res.json::<::serde_json::Value>().await {
-                return Some(root);
-            } else {
-                println!("serialize err {}", url.clone());
-                return None;
-            }
-        }
-        println!("response err: {}", url.clone());
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<::serde_json::Value>>>()
-    .await;
-    return fetches
-        .into_iter()
-        .flatten()
-        .collect::<Vec<::serde_json::Value>>();
+pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {
+    let t = format!("{} {} +05:00", Utc::now().format("%Y-%m-%d"), s);
+    return DateTime::parse_from_str(&t, "%Y-%m-%d %H:%M:%S %z");
 }
+
