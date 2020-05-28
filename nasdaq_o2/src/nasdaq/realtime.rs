@@ -1,5 +1,5 @@
 use crate::nasdaq::gen;
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset};
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,6 +46,7 @@ impl Data {
         if newest == t {
             return (None, t);
         }
+        //println!("new t: {:?}, old t: {:?}", newest, t);
         return (Some(recs), newest);
     }
 }

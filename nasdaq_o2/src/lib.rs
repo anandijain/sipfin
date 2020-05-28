@@ -1,16 +1,18 @@
 extern crate percent_encoding;
 extern crate serde;
+extern crate roses;
+
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 pub mod nasdaq;
-//use nasdaq::gen::HasRecs;
+
 use crate::nasdaq::realtime::RealtimeRoot;
 use std::{
+    fmt, 
     error::Error,
-    fs::File,
-    io::{prelude::*, BufReader},
+    collections::HashMap,
     path::Path,
 };
 
@@ -22,54 +24,35 @@ use std::{
  * logging on activity.
  * prob need to change fixedoffset to utc*/
 
-pub async fn fetch_rt(pairs: Vec<(String, DateTime<FixedOffset>)>) -> Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>
+//pairs: Vec<(String, DateTime<FixedOffset>)>
+//Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>
+pub async fn fetch_rt(hm: HashMap<Security, DateTime<FixedOffset>>) -> HashMap<Security, DateTime<FixedOffset>>
 {
-    let fetches = futures::stream::iter(pairs.into_iter().map(|pair| async move {
-        if let Ok(res) = reqwest::get(&pair.0).await {
+    let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
+        if let Ok(res) = reqwest::get(&pair.0.to_nasdaq_rt_url().unwrap()).await {
+
             if let Ok(root) = res.json::<RealtimeRoot>().await {
-                return root.to_recs(pair.1);
+                let (recs, newt) = root.to_recs(pair.1);
+                let file_name = format!("../data/realtime-trades/{}_{}.csv", pair.0, Utc::now().to_rfc3339());
+                let fp = Path::new(&file_name);
+                roses::write_csv(&fp, recs.unwrap(), &crate::nasdaq::realtime::NDAQ_REALTIME_HEADER).expect("csv error");
+                //return recs.into_iter().flatten().collect::<HashMap<Security, DateTime<FixedOffset>>>();
+                return (pair.0, newt);
             } else {
                 println!("serialize err {:#?}", pair.clone());
-                return (None, pair.1);
+                //return (pair.0, pair.1);
+                return pair;
             }
         }
         println!("response err: {:#?}", pair.clone());
-        return (None, pair.1);
+        return pair;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>>()
+    // .collect::<Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>>()
+    .collect::<HashMap<Security, DateTime<FixedOffset>>>()
     .await;
-    println!("fetches: {:#?}", fetches);
+    //println!("fetches: {:#?}", fetches);
     return fetches;
-}
-
-// when endpoints dont grab a vec
-pub async fn lil_fetchv(urls: Vec<String>) -> Vec<Vec<String>> {
-    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-        if let Ok(res) = reqwest::get(&url.clone()).await {
-            if let Ok(root) = res.json::<crate::nasdaq::info::InfoRoot>().await {
-                return Some(root.to_rec());
-            }
-            println!("serialized json wrong {}", url.clone());
-            return None;
-        }
-        println!("no good1");
-        return None;
-    }))
-    .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<String>>>>()
-    .await;
-    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    return recs;
-}
-
-// should probably be generic and return a Vec<Security>
-pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
-    let f = File::open(filename).expect("no such file");
-    let buf = BufReader::new(f);
-    buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
 }
 
 pub fn ndaq_url_to_ticker(url: String) -> String {
@@ -77,13 +60,14 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
     return format!("{}", v[5]);
 }
 
-#[derive(Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde_derive::Serialize, serde_derive::Deserialize)]
 pub enum Security {
     Commodity(String),
     Stock(String), // ? might need special treatment, far more endpoints for these
     Currency(String),
     Etf(String),
 }
+
 
 impl Security {
     pub fn to_nasdaq_url(&self, sfx: &str) -> String {
@@ -118,6 +102,17 @@ impl Security {
     }
 }
 
+impl fmt::Display for Security {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mystr = match self {
+            Security::Commodity(s) => s,
+            Security::Stock(s) => s,
+            Security::Currency(s) => s,
+            Security::Etf(s) => s,
+        };
+        write!(f, "{}", mystr)
+    }
+}
 pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
     format!(
         "https://api.nasdaq.com/api/{}/{}/{}?assetclass={}{}",
@@ -128,19 +123,19 @@ pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
 // fix and percent encoding
 pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
     let securities: Vec<Security> = match args[1].as_str() {
-        "stocks" => Ok(read_tickers("../ref_data/tickers_stocks.txt")
+        "stocks" => Ok(roses::read_tickers("../ref_data/tickers_stocks.txt")
             .iter()
             .map(|x| Security::Stock(x.to_string()))
             .collect::<Vec<Security>>()),
-        "commodities" => Ok(read_tickers("../ref_data/tickers_commodities.txt")
+        "commodities" => Ok(roses::read_tickers("../ref_data/tickers_commodities.txt")
             .iter()
             .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
             .collect::<Vec<Security>>()),
-        "currencies" => Ok(read_tickers("../ref_data/tickers_currencies.txt")
+        "currencies" => Ok(roses::read_tickers("../ref_data/tickers_currencies.txt")
             .iter()
             .map(|x| Security::Currency(x.to_string()))
             .collect::<Vec<Security>>()),
-        "etf" => Ok(read_tickers("../ref_data/tickers_stocks.txt")
+        "etf" => Ok(roses::read_tickers("../ref_data/tickers_stocks.txt")
             .iter()
             .map(|x| Security::Etf(x.to_string()))
             .collect::<Vec<Security>>()),
@@ -149,12 +144,6 @@ pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
     }
     .unwrap();
     return securities;
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct Record {
-    symbol: String,
-    weight: f64,
 }
 
 pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {

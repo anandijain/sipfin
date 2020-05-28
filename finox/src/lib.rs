@@ -2,6 +2,8 @@ pub mod headers;
 pub mod keys;
 pub mod news;
 pub mod yf;
+pub mod cme;
+
 use std::{time::Duration};
 use futures::stream::StreamExt;
 
@@ -40,6 +42,27 @@ where
     //Ok(Box::new(fetches.into_iter().flatten().collect::<Vec<T>>()))
     Ok(recs)
 }
+
+// when endpoints dont grab a vec
+//pub async fn fetch_rec(urls: Vec<String>) -> Vec<Vec<String>> {
+//    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+//        if let Ok(res) = reqwest::get(&url.clone()).await {
+//            if let Ok(root) = res.json::<crate::nasdaq::info::InfoRoot>().await {
+//                return Some(root.to_rec());
+//            }
+//            println!("serialized json wrong {}", url.clone());
+//            return None;
+//        }
+//        println!("no good1");
+//        return None;
+//    }))
+//    .buffer_unordered(16)
+//    .collect::<Vec<Option<Vec<String>>>>()
+//    .await;
+//    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+//    return recs;
+//}
+
 
 pub fn gsnews() -> Result<(), reqwest::Error> {
     let url = "https://www.goldmansachs.com/insights/insights-articles.json";

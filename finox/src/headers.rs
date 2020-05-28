@@ -177,3 +177,29 @@ pub const JPXNEWS_HEADER: [&'static str; 10] = [
     "month",
     "day",
 ];
+
+
+pub const CME_QUOTE_HEADER: [&'static str; 22] = [
+            "t",
+            "last",
+            "change",
+            "prior_settle",
+            "open",
+            "close",
+            "high",
+            "low",
+            "high_limit",
+            "low_limit",
+            "volume",
+            "md_key",
+            "quote_code",
+            "expiration_month",
+            "expiration_date",
+            "product_name",
+            "product_code",
+            "uri",
+            "product_id",
+            "exchange_code",
+            "option_uri",
+            "has_option",
+            ]; 

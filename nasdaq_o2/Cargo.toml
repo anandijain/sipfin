@@ -12,11 +12,6 @@ path = "src/lib.rs"
 name = "rt"
 path = "src/bin/rt.rs"
 
-[[bin]]
-name = "sec"
-path = "src/bin/se.rs"
-
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

@@ -23,6 +23,10 @@ name = "yf"
 path = "src/bin/yf.rs"
 
 [[bin]]
+name = "cme"
+path = "src/bin/cme.rs"
+
+[[bin]]
 name = "sec"
 path = "src/bin/sec.rs"
 

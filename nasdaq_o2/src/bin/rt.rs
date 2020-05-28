@@ -12,48 +12,36 @@ extern crate tokio;
 use chrono::{prelude::*, DateTime, Timelike, Utc};
 use nasdaq_o2;
 //use nasdaq_o2::nasdaq::realtime::NDAQ_REALTIME_HEADER;
-//use rand::distributions::WeightedIndex;
-//use rand::prelude::*;
+
 use std::{
+    // TODO
+    collections::HashMap,
     env,
-    //fs::File,
     path::Path,
-    //sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
-    //collections::HashMap,
 };
 
-#[derive(Debug, serde::Deserialize)]
-struct Record {
-    symbol: String,
-    weight: f64,
-}
+//#[derive(Debug, serde::Deserialize)]
+//struct Record {
+//    symbol: String,
+//    weight: f64,
+//}
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let args = env::args().collect::<Vec<String>>();
     let debug = if args.len() > 1 { true } else { false };
     let filepath = "../ref_data/tickers_stocks.txt";
-    let tickers = nasdaq_o2::read_tickers(filepath);
-    let mut pairs: Vec<(String, DateTime<FixedOffset>)> = vec![];
+    let tickers = roses::read_tickers(filepath);
+    // <(String, DateTime<FixedOffset>)> = vec![];
+    let mut hm = HashMap::new();
     for symb in tickers.iter() {
-        pairs.push((
-            nasdaq_o2::Security::Stock(symb.to_string())
-                .to_nasdaq_rt_url()
-                .unwrap(),
+        hm.insert(
+            nasdaq_o2::Security::Stock(symb.to_string()),
             FixedOffset::east(5 * 3600).ymd(1970, 1, 1).and_hms(0, 1, 1),
-        ));
+        );
     }
-    //let mut rdr = csv::Reader::from_path(filepath).expect("tf csv");
-    //let mut rng = thread_rng();
-    //let mut recs: Vec<Record> = vec![];
-    //for res in rdr.deserialize() {
-    //    let rec: Record = res.expect("dist weights are bad");
-    //    //println!("rec {:?}", rec);
-    //    recs.push(rec);
-    //}
-    //let dist = WeightedIndex::new(recs.iter().map(|x| x.weight)).unwrap();
 
     let mut i: usize = 0;
     loop {
@@ -85,28 +73,55 @@ async fn main() -> Result<(), String> {
         } else {
             println!("market is open{:?}", dt.timestamp());
 
-            //println!("urls{:?}", urls);
+            //println!("pairs{:?}", pairs);
 
             //let recs: Vec<Vec<String>> =
-            let fetches = nasdaq_o2::fetch_rt(pairs.clone()).await;
-            println!("fetches{:#?}", fetches);
+
+            let fetches = nasdaq_o2::fetch_rt(hm).await;
+
+            let mut nnew = 0;
+
+            for f in fetches.iter() {
+
+                let recs = f
+                    .to_owned()
+                    .0
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<Vec<String>>>();
+
+                let len = recs.len();
+
+                if len > 0 {
+                    nnew += len;
+                    let symb = recs[0][0].clone();
+                    pairs.push((
+                        nasdaq_o2::Security::Stock(symb.to_string())
+                            .to_nasdaq_rt_url()
+                            .unwrap(),
+                        f.1,
+                    ));
+
+                    //println!("{:#?}: {} {:#?}", yo[0][0], yo.len(), f.1);
+                }
+            }
             let len: usize = fetches.len();
 
             let elapsed = now.elapsed().as_secs().to_string();
 
-            //roses::write_csv(&fp, recs, &NDAQ_REALTIME_HEADER).expect("csv error");
             println!(
-                "{}: {} {} seconds: {} records",
+                "{}: {} {} seconds: {} records from {} endpoints",
                 i,
                 filename,
                 elapsed,
+                nnew.to_string(),
                 len.to_string(),
             );
         }
     }
     //Ok(())
 }
-//
+
 //let args: Vec<String> = env::args().collect();
 //assert_eq!(
 //    3,
