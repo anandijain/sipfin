@@ -1,6 +1,6 @@
 extern crate percent_encoding;
-extern crate serde;
 extern crate roses;
+extern crate serde;
 
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
@@ -9,12 +9,7 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 pub mod nasdaq;
 
 use crate::nasdaq::realtime::RealtimeRoot;
-use std::{
-    fmt, 
-    error::Error,
-    collections::HashMap,
-    path::Path,
-};
+use std::{collections::HashMap, error::Error, fmt, path::Path};
 
 // special for rt
 /*
@@ -26,29 +21,40 @@ use std::{
 
 //pairs: Vec<(String, DateTime<FixedOffset>)>
 //Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>
-pub async fn fetch_rt(hm: HashMap<Security, DateTime<FixedOffset>>) -> HashMap<Security, DateTime<FixedOffset>>
-{
+pub async fn fetch_rt(
+    hm: HashMap<Security, DateTime<FixedOffset>>,
+) -> HashMap<Security, DateTime<FixedOffset>> {
     let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
         if let Ok(res) = reqwest::get(&pair.0.to_nasdaq_rt_url().unwrap()).await {
-
             if let Ok(root) = res.json::<RealtimeRoot>().await {
-                let (recs, newt) = root.to_recs(pair.1);
-                let file_name = format!("../data/realtime-trades/{}_{}.csv", pair.0, Utc::now().to_rfc3339());
-                let fp = Path::new(&file_name);
-                roses::write_csv(&fp, recs.unwrap(), &crate::nasdaq::realtime::NDAQ_REALTIME_HEADER).expect("csv error");
-                //return recs.into_iter().flatten().collect::<HashMap<Security, DateTime<FixedOffset>>>();
-                return (pair.0, newt);
+                if let (Some(recs), newt) = root.to_recs(pair.1) {
+                    let file_name = format!(
+                        "./data/realtime-trades/{}_{}.csv",
+                        pair.0,
+                        Utc::now().to_rfc3339()
+                    );
+                    let fp = Path::new(&file_name);
+                    //TODO append to file for specific ticker
+                    roses::write_csv(&fp, recs, &crate::nasdaq::realtime::NDAQ_REALTIME_HEADER)
+                        .expect("csv error");
+                println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
+                    return (pair.0, newt);
+                } else {
+                    return pair;
+                }
+
             } else {
                 println!("serialize err {:#?}", pair.clone());
+                println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
                 //return (pair.0, pair.1);
                 return pair;
             }
         }
         println!("response err: {:#?}", pair.clone());
+                println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
         return pair;
     }))
     .buffer_unordered(16)
-    // .collect::<Vec<(Option<Vec<Vec<String>>>, DateTime<FixedOffset>)>>()
     .collect::<HashMap<Security, DateTime<FixedOffset>>>()
     .await;
     //println!("fetches: {:#?}", fetches);
@@ -67,7 +73,6 @@ pub enum Security {
     Currency(String),
     Etf(String),
 }
-
 
 impl Security {
     pub fn to_nasdaq_url(&self, sfx: &str) -> String {
@@ -150,4 +155,3 @@ pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {
     let t = format!("{} {} +05:00", Utc::now().format("%Y-%m-%d"), s);
     return DateTime::parse_from_str(&t, "%Y-%m-%d %H:%M:%S %z");
 }
-

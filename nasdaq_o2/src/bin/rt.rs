@@ -22,12 +22,6 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-//#[derive(Debug, serde::Deserialize)]
-//struct Record {
-//    symbol: String,
-//    weight: f64,
-//}
-
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let args = env::args().collect::<Vec<String>>();
@@ -48,19 +42,20 @@ async fn main() -> Result<(), String> {
         let now = Instant::now();
         let dt = Utc::now();
         i = i + 1;
-        let unixtime = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_micros()
-            .to_string();
-        let filename = format!("./data/realtime-trades/{}.csv", unixtime);
-        let fp = Path::new(&filename);
-        println!(
-            "{:?} exists: {:?} and is_absolute: {:?}",
-            fp,
-            fp.exists(),
-            fp.is_absolute()
-        );
+        //let unixtime = SystemTime::now()
+        //    .duration_since(UNIX_EPOCH)
+        //    .expect("Time went backwards")
+        //    .as_micros()
+        //    .to_string();
+
+        //let filename = format!("./data/realtime-trades/{}.csv", unixtime);
+        //let fp = Path::new(&filename);
+        //println!(
+        //    "{:?} exists: {:?} and is_absolute: {:?}",
+        //    fp,
+        //    fp.exists(),
+        //    fp.is_absolute()
+        //);
 
         let s = dt.num_seconds_from_midnight();
         // fix this spagetti
@@ -77,46 +72,54 @@ async fn main() -> Result<(), String> {
 
             //let recs: Vec<Vec<String>> =
 
-            let fetches = nasdaq_o2::fetch_rt(hm).await;
+            //let fetches = nasdaq_o2::fetch_rt(hm.clone()).await;
+            hm = nasdaq_o2::fetch_rt(hm).await;
+            //for (k, v) in &fetches {
+            //    hm[k] = v.to_owned();
+            //}
 
-            let mut nnew = 0;
+            println!("hashmap {:#?}", hm);
+            
+            //let mut nnew = 0;
 
-            for f in fetches.iter() {
 
-                let recs = f
-                    .to_owned()
-                    .0
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<Vec<String>>>();
+            
+            //for f in fetches.iter() {
 
-                let len = recs.len();
+            //    let recs = f
+            //        .to_owned()
+            //        .0
+            //        .into_iter()
+            //        .flatten()
+            //        .collect::<Vec<Vec<String>>>();
 
-                if len > 0 {
-                    nnew += len;
-                    let symb = recs[0][0].clone();
-                    pairs.push((
-                        nasdaq_o2::Security::Stock(symb.to_string())
-                            .to_nasdaq_rt_url()
-                            .unwrap(),
-                        f.1,
-                    ));
+            //    let len = recs.len();
 
-                    //println!("{:#?}: {} {:#?}", yo[0][0], yo.len(), f.1);
-                }
-            }
-            let len: usize = fetches.len();
+            //    if len > 0 {
+            //        nnew += len;
+            //        let symb = recs[0][0].clone();
+            //        pairs.push((
+            //            nasdaq_o2::Security::Stock(symb.to_string())
+            //                .to_nasdaq_rt_url()
+            //                .unwrap(),
+            //            f.1,
+            //        ));
 
-            let elapsed = now.elapsed().as_secs().to_string();
+            //        //println!("{:#?}: {} {:#?}", yo[0][0], yo.len(), f.1);
+            //    }
+            //}
+            //let len: usize = fetches.len();
 
-            println!(
-                "{}: {} {} seconds: {} records from {} endpoints",
-                i,
-                filename,
-                elapsed,
-                nnew.to_string(),
-                len.to_string(),
-            );
+            //let elapsed = now.elapsed().as_secs().to_string();
+
+            //println!(
+            //    "{}: {} {} seconds: {} records from {} endpoints",
+            //    i,
+            //    filename,
+            //    elapsed,
+            //    nnew.to_string(),
+            //    len.to_string(),
+            //);
         }
     }
     //Ok(())
