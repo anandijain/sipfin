@@ -16,9 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //let symbs: Vec<&str> = finox::headers::CURRENCY_SYMBOLS_YF.to_vec(); //.into_iter().cloned().collect();
     //let t = epoch_str(); 
     //let urls = gen_yfx_urls(symbs);
-    let urls = tickers.iter().map(|x| format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?interval=1d&period1=0&period2=999999999", x)).collect::<Vec<_>>();
+    //https://query1.finance.yahoo.com/v8/finance/chart/GOOG?lang=en-US&region=US&interval=1d&period1=0&period2=1590451200
+    let urls = tickers.iter().map(|x| format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?region=US&interval=1d&period1=345479400&period2=1590498425", x)).collect::<Vec<_>>();
     if let Ok(recs) = finox::fetch::<finox::yf::YFRoot>(urls).await {
-        println!("{:#?}", recs);
+        //println!("{:#?}", recs);
         let file_name = format!(
             "../data/yf/yf_{}.csv",
             chrono::Utc::now().to_rfc3339()

@@ -22,6 +22,11 @@ path = "src/bin/news.rs"
 name = "yf"
 path = "src/bin/yf.rs"
 
+[[bin]]
+name = "sec"
+path = "src/bin/sec.rs"
+
+
 
 [dependencies]
 serde = { version = "1.0.106" }
@@ -37,3 +42,4 @@ lazy_static = "1.4.0"
 regex = "1"
 roses = { version = "0.1.0", path = "../roses" }
 
+scraper = "*"

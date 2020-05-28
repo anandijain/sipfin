@@ -62,6 +62,7 @@ pub fn write_csv(
 ) -> Result<(), csv::Error> {
     let mut wtr =
         csv::Writer::from_path(filepath).expect(format!("whtf csv {:?}", filepath).as_ref());
+    println!("writing {} rows to {:?}", data.len(), filepath);
     wtr.write_record(header.clone())?;
     wtr.flush()?;
     let len = header.len();
