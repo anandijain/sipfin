@@ -5,7 +5,7 @@ use finox;
 use std::path::Path;
 
 #[tokio::main]
-pub async fn main() -> Result<(), csv::Error> {
+pub async fn main() {
     // utils::nytarchive();
 
     //finox::nytfeed()?;
@@ -62,7 +62,6 @@ pub async fn main() -> Result<(), csv::Error> {
     //}
     //finox::wsj_videos();
     //bloomberg::news();
-    Ok(())
 }
 
 //pub async fn fetch_write_blocking<T: finox::HasRecs>(urls: Vec<String>) -> Result<(), csv::Error> {

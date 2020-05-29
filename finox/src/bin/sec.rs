@@ -1,5 +1,4 @@
 //#![deny(warnings)]
-extern crate csv;
 extern crate reqwest;
 extern crate roses;
 extern crate serde;
@@ -93,7 +92,7 @@ pub fn cik_docs(textrsp: &str) -> Option<Vec<String>> {
     for (i, div) in doc.select(&sel).enumerate() {
         if let Some("documents") = div.value().attr("id") {
             println!("{}: {:#?}", i, div.value());
-            for (j, divbody) in div.select(&sel).enumerate() {
+            for (_j, divbody) in div.select(&sel).enumerate() {
                 if let Some("panel-body") = divbody.value().attr("class") {
                     for (j, tr) in div.select(&trows).enumerate() {
                         for a_tag in tr.select(&a_tags) {

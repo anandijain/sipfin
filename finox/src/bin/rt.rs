@@ -1,5 +1,4 @@
 extern crate chrono;
-extern crate csv;
 extern crate reqwest;
 extern crate roses;
 extern crate serde;
