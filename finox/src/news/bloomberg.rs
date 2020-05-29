@@ -241,6 +241,7 @@ pub fn bloomberg_url(s: utils::Security) -> String {
 
     let intra_prefix = "markets2/api/intraday/";
     let intra_sfx = "?days=10&interval=0&volumeInterval=0";
+
     // https://www.bloomberg.com/markets2/api/intraday/USDJPY%3ACUR?days=10&interval=0&volumeInterval=0
     // let hist_prefix = "markets2/api/history/";
     // "&limit=1000"
@@ -252,36 +253,6 @@ pub fn bloomberg_url(s: utils::Security) -> String {
         utils::Security::X(s) => vec![root, intra_prefix, &s, intra_sfx].join(""),
         utils::Security::US(s) => vec![root, intra_prefix, &s, intra_sfx].join(""),
     }
-}
-
-pub fn get_datastrip(url: String) -> Option<Vec<Root>> {
-    if let Ok(body) = getters::simple_get(url) {
-        let company: Vec<Root> = serde_json::from_str(&body.to_string()).unwrap();
-        if company != vec![] {
-            return Some(company);
-        }
-    }
-    None
-}
-
-pub fn get_intraday_or_history(url: String) -> Option<Vec<Intraday>> {
-    if let Ok(body) = getters::simple_get(url) {
-        let cur: Vec<Intraday> = serde_json::from_str(&body.to_string()).unwrap();
-        if cur != vec![] {
-            return Some(cur);
-        }
-    }
-    None
-}
-
-pub fn get_news(url: String) -> Option<news::NewsVec> {
-    if let Ok(body) = getters::simple_get(url) {
-        let cur: news::NewsVec = serde_json::from_str(&body.to_string()).unwrap();
-        if cur.news != vec![] {
-            return Some(cur);
-        }
-    }
-    None
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -381,8 +352,8 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn to_record(&self) -> csv::StringRecord {
-        let rec = vec![
+    pub fn to_rec(&self) -> Vec<String> {
+        vec![
             self.id.to_string(),
             self.short_name.to_string(),
             self.market_cap.to_string(),
@@ -398,15 +369,14 @@ impl Root {
             self.number_of_employees.to_string(),
             self.price_earnings_ratio.to_string(),
             self.shares_outstanding.to_string(),
-        ];
-        return csv::StringRecord::from(rec);
+        ]
     }
 
     pub fn to_headlines(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
         let mut ret: Vec<csv::StringRecord> = Vec::new();
         if let Some(prs) = &self.press_releases {
             for pr in prs.iter() {
-                ret.push(PressRelease::to_record(pr));
+                ret.push(pr.to_rec());
             }
             Ok(ret)
         } else {
@@ -425,15 +395,13 @@ pub struct PressRelease {
 }
 
 impl PressRelease {
-    pub fn to_record(&self) -> csv::StringRecord {
-        let hl_text = self.headline.text.replace(",", ";");
-        let rec = &[
+    pub fn to_rec(&self) -> Vec<String> {
+        vec![
             self.id.to_string(),
             self.url.to_string(),
-            hl_text.to_string(),
+            self.headline.to_string(),
             self.updated_at.to_string(),
-        ];
-        return csv::StringRecord::from(rec.to_vec());
+        ]
     }
 }
 
@@ -455,38 +423,22 @@ pub struct Intraday {
     pub volume: Vec<Volume>,
 }
 
-impl Intraday {
-    pub fn price_records(&self) -> Vec<Vec<String>> {
-        let mut ret: Vec<Vec<String>> = Vec::new();
-        // for i in 0..self.price.len() {
-        //     let rec = vec!(
-        //         self.price[i].date_time.to_string(),
-        //         self.price[i].value.to_string(),
-        //     );
-        for p in self.price.iter() {
-            ret.push(Price::to_record(p));
-        }
-        return ret;
+impl crate::HasRecs for  Intraday {
+    fn price_records(&self) -> Vec<Vec<String>> {
+        self.price.iter().map(|x| x.to_rec()).collect()
     }
 
-    pub fn volume_records(&self) -> Result<Vec<csv::StringRecord>, &'static str> {
-        let mut ret: Vec<csv::StringRecord> = Vec::new();
+impl Intraday {
+    pub fn volume_records(&self) -> Vec<Vec<String>> {
+        let mut ret = vec![];
         for i in 0..self.volume.len() {
-            let rec = [
+            ret.push(vec![
                 self.volume[i].date_time.to_string(),
                 self.volume[i].value.to_string(),
-            ];
-            ret.push(csv::StringRecord::from(rec.to_vec()));
+            ]);
         }
-        Ok(ret)
+        ret
     }
-
-    // pub fn write_records(&self, fn:String) -> Result<(), &'static str> {
-    //     let recs = self.to_records();
-    //     let header: [&'static str; 2] = ["date_time", &self.ticker.to_string()];
-    //     utils::utils::writerecs(fn, header, recs);
-    //     Ok(())
-    // }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -504,8 +456,7 @@ pub struct Price {
 }
 
 impl Price {
-    pub fn to_record(&self) -> Vec<String> {
-        //csv::StringRecord::from
+    pub fn to_rec(&self) -> Vec<String> {
         return vec![self.date_time.to_string(), self.value.to_string()];
     }
 }

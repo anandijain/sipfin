@@ -7,11 +7,7 @@ pub struct WSJRoot {
 
 impl crate::HasRecs for WSJRoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
-        let mut recs: Vec<Vec<String>> = Vec::new();
-        for hl in self.items.iter() {
-            recs.push(WSJVideos::to_rec(hl));
-        }
-        return recs;
+        self.items.iter().map(|x| x.to_rec()).collect()
     }
 }
 

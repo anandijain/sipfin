@@ -12,7 +12,7 @@ impl crate::HasRecs for TRRoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new();
         for list in [&self.rightrail, &self.ribbon, &self.bottom].iter() {
-            recs.append(&mut TRRibbon::to_recs(list));
+            recs.append(&mut list.to_recs());
         }
         return recs;
     }
@@ -28,13 +28,9 @@ pub struct TRRibbon {
     pub tags: Vec<String>,
 }
 
-impl TRRibbon{
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
-        let mut recs: Vec<Vec<String>> = Vec::new();
-        for s in self.stories.iter() {
-            recs.push(TRStory::to_rec(&s));
-        }
-        return recs;
+impl crate::HasRecs for TRRibbon {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        self.stories.iter().map(|x| x.to_rec()).collect()
     }
 }
 
@@ -52,10 +48,10 @@ pub struct TRStory {
 
 impl TRStory {
     pub fn to_rec(&self) -> Vec<String> {
-       return vec![ 
+        return vec![
             self.id.to_string(),
             self.updated.to_string(),
-            self.headline.replace(",", ";").to_string(),
+            self.headline.to_string(),
             self.reason.to_string(),
             self.path.to_string(),
         ];

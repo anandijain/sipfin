@@ -8,26 +8,14 @@ pub struct DividendsRoot {
     pub status: gen::Status,
 }
 
-impl DividendsRoot {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
+impl crate::HasRecs for DividendsRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
         return self
             .data
             .dividends
             .rows
             .iter()
             .map(|c| c.to_rec())
-            .collect();
-    }
-
-    // pub fn get_id(&self) -> String {
-    //     let mut id: String = format!("{}div", self.data.symbol.to_string());
-    //     return id;
-    // }
-
-    pub fn gen_header(&self) -> Vec<String> {
-        return NDAQ_DIVIDEND_HEADER
-            .iter()
-            .map(|x| x.clone().to_string())
             .collect();
     }
 }

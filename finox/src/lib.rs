@@ -17,6 +17,10 @@ pub trait HasRecs {
     fn to_recs(&self) -> Vec<Vec<String>>;
 }
 
+pub trait HasRec {
+    fn to_rec(&self) -> Vec<String>;
+}
+
 pub const NYT_DELAY: Duration = Duration::from_millis(6000);
 
 pub async fn fetch<'a, T: ?Sized>(urls: Vec<String>) -> Result<Vec<Vec<String>>, String>
@@ -50,24 +54,27 @@ where
 }
 
 // when endpoints dont grab a vec
-//pub async fn fetch_rec(urls: Vec<String>) -> Vec<Vec<String>> {
-//    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
-//        if let Ok(res) = reqwest::get(&url.clone()).await {
-//            if let Ok(root) = res.json::<crate::nasdaq::info::InfoRoot>().await {
-//                return Some(root.to_rec());
-//            }
-//            println!("serialized json wrong {}", url.clone());
-//            return None;
-//        }
-//        println!("no good1");
-//        return None;
-//    }))
-//    .buffer_unordered(16)
-//    .collect::<Vec<Option<Vec<String>>>>()
-//    .await;
-//    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-//    return recs;
-//}
+pub async fn fetch_one<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Vec<String>>
+where 
+    for<'de> T: HasRec + serde::Deserialize<'de> + 'a,
+{
+    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+        if let Ok(res) = reqwest::get(&url.clone()).await {
+            if let Ok(root) = res.json::<T>().await {
+                return Some(root.to_rec());
+            }
+            println!("serialized json wrong {}", url.clone());
+            return None;
+        }
+        println!("no good1");
+        return None;
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<Vec<String>>>>()
+    .await;
+    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    return recs;
+}
 
 pub fn nyt_archive_urls() -> Vec<String> {
     let mut urls = vec![];
@@ -101,20 +108,20 @@ pub async fn fetch_rt(
                     //TODO append to file for specific ticker
                     roses::write_csv(&fp, recs, &crate::nasdaq::realtime::NDAQ_REALTIME_HEADER)
                         .expect("csv error");
-                    println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
+                    // println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
                     return (pair.0, newt);
                 } else {
                     return pair;
                 }
             } else {
                 println!("serialize err {:#?}", pair.clone());
-                println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
+                //println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
                 //return (pair.0, pair.1);
                 return pair;
             }
         }
         println!("response err: {:#?}", pair.clone());
-        println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
+        //println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
         return pair;
     }))
     .buffer_unordered(16)

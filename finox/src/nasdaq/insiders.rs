@@ -8,23 +8,12 @@ pub struct InsidersRoot {
     pub status: gen::Status,
 }
 
-impl InsidersRoot {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
+impl crate::HasRecs for InsidersRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
         return self.data
             .transaction_table.rows
             .iter()
             .map(|x| x.to_rec())
-            .collect();
-    }
-
-    // pub fn get_id(&self) -> String {
-    //     return format!("{}_insiders_", self.data.symbol.to_string());
-    // }
-
-    pub fn gen_header(&self) -> Vec<String> {
-        return NDAQ_INSIDER_HEADER
-            .iter()
-            .map(|x| x.clone().to_string())
             .collect();
     }
 }

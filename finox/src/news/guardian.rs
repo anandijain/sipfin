@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::{collections::HashMap, time::Duration};
+
 pub const GUARDIAN_DELAY: Duration = Duration::from_millis(100);
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -36,12 +37,7 @@ pub struct ArticleRoot {
 
 impl crate::HasRecs for ArticleRoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
-        return self
-            .response
-            .results
-            .iter()
-            .map(|x| x.to_rec())
-            .collect::<Vec<_>>();
+        self.response.results.iter().map(|x| x.to_rec()).collect()
     }
 }
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]

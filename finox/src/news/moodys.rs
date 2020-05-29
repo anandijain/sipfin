@@ -11,6 +11,13 @@ pub struct Root {
     pub headlines: Vec<Headline>,
 }
 
+impl crate::HasRecs for Root {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        self.headlines.iter().map(|x| x.to_rec()).collect()
+    }
+}
+
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Headline {
@@ -26,4 +33,16 @@ pub struct Headline {
     pub url: String,
     pub symbols: Vec<String>,
     pub codes: Vec<String>,
+    
+}
+
+impl Headline {
+    pub fn to_rec(&self) -> Vec<String> {
+        vec![
+            self.title.to_string(),
+            self.source.to_string(),
+            self.receive_date.to_string(),
+            self.synopsis.to_string(),
+        ]
+    }
 }

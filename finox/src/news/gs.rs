@@ -13,9 +13,8 @@ pub struct Root {
 
 impl crate::HasRecs for Root {
     fn to_recs(&self) -> Vec<Vec<String>> {
-
         self.articles.iter().map(|x| x.to_rec()).collect()
-        }
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -67,11 +66,10 @@ pub struct GSTopic {
 
 impl GSTopic {
     pub fn to_rec(&self) -> Vec<String> {
-      vec![ 
+        vec![
             self.title.to_string(),
             self.node_id.to_string(),
             self.url.to_string(),
         ]
     }
 }
-

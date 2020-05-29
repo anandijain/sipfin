@@ -132,6 +132,7 @@ impl crate::HasRecs for Quote {
     }
 }
 
+// TODO refac
 impl Quote {
         pub fn to_rec(&self, i: usize) -> Option<Vec<String>> {
         let mut rec: Vec<String> = Vec::new();

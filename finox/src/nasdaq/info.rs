@@ -9,22 +9,9 @@ pub struct InfoRoot {
     pub status: gen::Status,
 }
 
-impl InfoRoot {
-    pub fn to_rec(&self) -> Vec<String> {
-        return InfoData::to_rec(&self.data);
-    }
-
-    pub fn get_id(&self) -> String {
-        let mut id: String = self.data.symbol.to_string();
-        id.push('i');
-        return id;
-    }
-
-    pub fn gen_header(&self) -> Vec<String> {
-        return NDAQ_QUOTE_HEADER
-            .iter()
-            .map(|x| x.clone().to_string())
-            .collect();
+impl crate::HasRec for InfoRoot {
+    fn to_rec(&self) -> Vec<String> {
+        self.data.to_rec()
     }
 }
 

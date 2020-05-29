@@ -9,9 +9,9 @@ pub struct OptionChainRoot {
     pub status: gen::Status,
 }
 
-impl OptionChainRoot {
-    pub fn to_recs(&self) -> Vec<Vec<String>> {
-        let mut recs: Vec<Vec<String>> = vec![];
+impl crate::HasRecs for OptionChainRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        let mut recs = vec![];
         for row in self.data.option_chain_list.rows.iter() {
             recs.append(&mut row.to_recs())
         }
@@ -27,10 +27,6 @@ impl OptionChainRoot {
     //        .expect("wtf option ticker")
     //        .to_string();
     //}
-
-    pub fn gen_header(&self) -> Vec<String> {
-        return NDAQ_OPTION_HEADER.iter().map(|x| x.clone().to_string()).collect();
-    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]

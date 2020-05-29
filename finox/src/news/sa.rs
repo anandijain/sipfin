@@ -33,26 +33,21 @@ pub struct List {
 
 impl crate::HasRecs for SARoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
-        return self.list.iter().map(|x| x.to_rec()).collect::<Vec<_>>(); 
+        self.list.iter().map(|x| x.to_rec()).collect()
     }
 }
 
 impl List{
     pub fn to_rec(&self) -> Vec<String> {
-        let slug = match self.slug.clone() {
-            Some(s) => s,
-            None => "".to_string(),
-        };
-        let rec: Vec<String> = vec![
+              vec![ 
             self.id.to_string(),
             self.author_user_id.to_string(),
             self.publish_on.to_string(),
             self.title.replace(",", ";").to_string(),
-            slug.to_string(),
+            self.slug.clone().unwrap_or("".to_string()).to_string(),
             self.comments_counts.to_string(),
             self.author_name.to_string().replace(",", ";"),
             self.path.to_string(),
-        ];
-        return rec;
+        ]
     }
 }
