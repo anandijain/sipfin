@@ -1,7 +1,5 @@
 extern crate chrono;
 extern crate csv;
-extern crate dotenv;
-extern crate rand;
 extern crate reqwest;
 extern crate roses;
 extern crate serde;
@@ -10,8 +8,6 @@ extern crate serde_json;
 extern crate tokio;
 
 use chrono::{prelude::*, DateTime, Timelike, Utc};
-use nasdaq_o2;
-//use nasdaq_o2::nasdaq::realtime::NDAQ_REALTIME_HEADER;
 
 use std::{
     // TODO
@@ -32,7 +28,7 @@ async fn main() -> Result<(), String> {
     let mut hm = HashMap::new();
     for symb in tickers.iter() {
         hm.insert(
-            nasdaq_o2::Security::Stock(symb.to_string()),
+            finox::Security::Stock(symb.to_string()),
             FixedOffset::east(5 * 3600).ymd(1970, 1, 1).and_hms(0, 1, 1),
         );
     }
@@ -73,7 +69,7 @@ async fn main() -> Result<(), String> {
             //let recs: Vec<Vec<String>> =
 
             //let fetches = nasdaq_o2::fetch_rt(hm.clone()).await;
-            hm = nasdaq_o2::fetch_rt(hm).await;
+            hm = finox::fetch_rt(hm).await;
             //for (k, v) in &fetches {
             //    hm[k] = v.to_owned();
             //}

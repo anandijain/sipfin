@@ -30,6 +30,9 @@ path = "src/bin/cme.rs"
 name = "sec"
 path = "src/bin/sec.rs"
 
+[[bin]]
+name = "rt"
+path = "src/bin/rt.rs"
 
 
 [dependencies]
@@ -45,5 +48,6 @@ url = "2.1.1"
 lazy_static = "1.4.0"
 regex = "1"
 roses = { version = "0.1.0", path = "../roses" }
-
+percent-encoding = "2.1.0"
 scraper = "*"
+dotenv = "*"
