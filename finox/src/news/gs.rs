@@ -11,15 +11,11 @@ pub struct Root {
     pub articles: Vec<GSArticle>,
 }
 
-impl Root {
-    pub fn to_records(&self) -> Vec<Vec<String>> {
-        let mut recs: Vec<Vec<String>> = Vec::new();
-        for t in self.articles.iter() {
-            println!("{:#?}", t);
-            recs.push(GSArticle::to_record(t));
+impl crate::HasRecs for Root {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+
+        self.articles.iter().map(|x| x.to_rec()).collect()
         }
-        return recs;
-    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -48,7 +44,7 @@ pub struct GSArticle {
 }
 
 impl GSArticle {
-    pub fn to_record(&self) -> Vec<String> {
+    pub fn to_rec(&self) -> Vec<String> {
         return vec![
             self.node_id.to_string(),
             self.date.clone().unwrap_or("".to_string()),
@@ -70,14 +66,12 @@ pub struct GSTopic {
 }
 
 impl GSTopic {
-    pub fn to_record(&self) -> Vec<String> {
-        let rec: Vec<String> = vec![
+    pub fn to_rec(&self) -> Vec<String> {
+      vec![ 
             self.title.to_string(),
             self.node_id.to_string(),
             self.url.to_string(),
-        ];
-
-        return rec;
+        ]
     }
 }
 

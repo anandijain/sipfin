@@ -69,17 +69,6 @@ where
 //    return recs;
 //}
 
-pub fn gsnews() -> Result<(), reqwest::Error> {
-    let url = "https://www.goldmansachs.com/insights/insights-articles.json";
-    if let Ok(body) = roses::simple_get(url.to_string()) {
-        let root: news::gs::Root = serde_json::from_str(&body.to_string()).unwrap();
-        let recs = news::gs::Root::to_records(&root);
-        roses::write_csv(Path::new("../data/news/gsnews.csv"), recs, &headers::GS_HEADER)
-            .expect("csv problem");
-    }
-    Ok(())
-}
-
 pub fn nyt_archive_urls() -> Vec<String> {
     let mut urls = vec![];
     for i in 1853..2019 {

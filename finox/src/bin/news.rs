@@ -43,14 +43,22 @@ pub async fn main() {
     //     println!("{:#?}", recs);
     //}
     let wsj_url = "https://video-api.wsj.com/api-video/find_all_videos.asp".to_string();
-
     if let Ok(recs) = finox::fetch::<finox::news::wsj::WSJRoot>(vec![wsj_url]).await {
-        println!("{:#?}", recs);
+        //println!("{:#?}", recs);
         let file_name = format!("../data/news/wsj_{}.csv", chrono::Utc::now().to_rfc3339());
         let file_path = Path::new(&file_name);
         roses::write_csv(file_path, recs, &finox::headers::WSJ_HEADER).expect("csv prob");
     }
 
+    let gs_url = "https://www.goldmansachs.com/insights/insights-articles.json";
+    if let Ok(recs) = finox::fetch::<finox::news::gs::Root>(vec![gs_url.to_string()]).await {
+        println!("goldman {:#?}", recs);
+        let file_name = format!("../data/news/gs_{}.csv", chrono::Utc::now().to_rfc3339());
+        let file_path = Path::new(&file_name);
+
+        roses::write_csv(file_path, recs, &finox::headers::GS_HEADER).expect("csv problem");
+    }
+    //
     // TODO fix, serializing err
     //let sa_url = "https://seekingalpha.com/get_trending_articles".to_string();
 
@@ -80,4 +88,3 @@ pub fn urlfmt(s: &str) -> String {
         finox::keys::GUARDIAN_KEY
     )
 }
-
