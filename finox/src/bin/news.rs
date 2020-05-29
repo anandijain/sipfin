@@ -58,7 +58,17 @@ pub async fn main() {
 
         roses::write_csv(file_path, recs, &finox::headers::GS_HEADER).expect("csv problem");
     }
-    //
+
+    let moodys_url = "https://www.moodys.com/_layouts/mdc/am/Request/request.php?profile=homepage"; // "https://www.goldmansachs.com/insights/insights-articles.json";
+    if let Ok(recs) = finox::fetch::<finox::news::moodys::Root>(vec![moodys_url.to_string()]).await {
+        println!("goldman {:#?}", recs);
+        let file_name = format!("../data/news/moodys_{}.csv", chrono::Utc::now().to_rfc3339());
+        let file_path = Path::new(&file_name);
+
+        roses::write_csv(file_path, recs, &finox::headers::MOODYS_HEADER).expect("csv problem");
+    }
+
+
     // TODO fix, serializing err
     //let sa_url = "https://seekingalpha.com/get_trending_articles".to_string();
 
@@ -68,7 +78,6 @@ pub async fn main() {
     //    let file_path = Path::new(&file_name);
     //    roses::write_csv(file_path, recs, &finox::headers::SA_HEADER).expect("csv prob");
     //}
-    //finox::wsj_videos();
     //bloomberg::news();
 }
 

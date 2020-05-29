@@ -1,4 +1,3 @@
-
 pub const BLOOMBERG_CURRENCY_SYMBOLS: [&'static str; 40] = [
     "USD", "EUR", "XAU", "XAG", "XPT", "XPD", "JPY", "GBP", "AUD", "CAD", "CHF", "KRW", "MXN",
     "BRL", "CLP", "COP", "PEN", "CRC", "ARS", "SEK", "DKK", "NOK", "CZK", "SKK", "PLN", "HUF",
@@ -40,19 +39,21 @@ pub const BLOOMBERG_STOCK_HEADER: [&'static str; 15] = [
 ];
 
 pub const YF_META_HEADER: [&'static str; 9] = [
-"symbol",
-"exchange",
-"instrument",
-"currency",
-"first_trade_date",
-"reg_mkt_time",
-"gmtoffset",
-"tz",
-"exchange_tz",
+    "symbol",
+    "exchange",
+    "instrument",
+    "currency",
+    "first_trade_date",
+    "reg_mkt_time",
+    "gmtoffset",
+    "tz",
+    "exchange_tz",
 ];
 
-
-pub const CURRENCY_SYMBOLS_YF: [&'static str; 23] = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "BTC", "ETH", "NZD", "SEK", "CHF", "HUF", "CNY", "HKD", "SGD", "INR", "MXN", "PHP", "IDR", "THB", "MYR", "ZAR", "RUB"];
+pub const CURRENCY_SYMBOLS_YF: [&'static str; 23] = [
+    "USD", "EUR", "JPY", "GBP", "AUD", "CAD", "BTC", "ETH", "NZD", "SEK", "CHF", "HUF", "CNY",
+    "HKD", "SGD", "INR", "MXN", "PHP", "IDR", "THB", "MYR", "ZAR", "RUB",
+];
 
 pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
     "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",
@@ -63,7 +64,6 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
     "cn", "de", "in", "jp", "uk", "us", "af", "ar", "ara", "br", "ca", "es", "fr", "it", "lta",
     "mx", "ru",
 ];
-
 
 pub const YF_HEADER: [&'static str; 7] = ["symbol", "t", "o", "h", "l", "c", "v"];
 
@@ -129,7 +129,6 @@ pub const NYT_ARCHIVE_HEADER: [&'static str; 12] = [
     "source",
 ];
 
-
 pub const SEC13F_HEADER: [&'static str; 11] = [
     "nameOfIssuer",
     "titleOfClass",
@@ -145,24 +144,24 @@ pub const SEC13F_HEADER: [&'static str; 11] = [
 ];
 
 pub const GS_HEADER: [&'static str; 6] = [
-"node_id",
-"date",
-"title",
-"description",
-"has_video",
-"has_audio",
+    "node_id",
+    "date",
+    "title",
+    "description",
+    "has_video",
+    "has_audio",
 ];
 
 pub const GUARDIAN_HEADER: [&'static str; 9] = [
-"id",
-"type",
-"section_id",
-"section_name",
-"t",
-"title",
-"url",
-"is_hosted",
-"pillar_id",
+    "id",
+    "type",
+    "section_id",
+    "section_name",
+    "t",
+    "title",
+    "url",
+    "is_hosted",
+    "pillar_id",
 ];
 
 pub const JPXNEWS_HEADER: [&'static str; 10] = [
@@ -178,28 +177,29 @@ pub const JPXNEWS_HEADER: [&'static str; 10] = [
     "day",
 ];
 
-
 pub const CME_QUOTE_HEADER: [&'static str; 22] = [
-            "t",
-            "last",
-            "change",
-            "prior_settle",
-            "open",
-            "close",
-            "high",
-            "low",
-            "high_limit",
-            "low_limit",
-            "volume",
-            "md_key",
-            "quote_code",
-            "expiration_month",
-            "expiration_date",
-            "product_name",
-            "product_code",
-            "uri",
-            "product_id",
-            "exchange_code",
-            "option_uri",
-            "has_option",
-            ]; 
+    "t",
+    "last",
+    "change",
+    "prior_settle",
+    "open",
+    "close",
+    "high",
+    "low",
+    "high_limit",
+    "low_limit",
+    "volume",
+    "md_key",
+    "quote_code",
+    "expiration_month",
+    "expiration_date",
+    "product_name",
+    "product_code",
+    "uri",
+    "product_id",
+    "exchange_code",
+    "option_uri",
+    "has_option",
+];
+
+pub const MOODYS_HEADER: [&'static str; 4] = ["title", "source", "t", "synopsis"];

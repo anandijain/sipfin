@@ -5,7 +5,7 @@ target/
 .vscode/
 __pycache__/
 *.png
-sipfin/config.py
+config.py
 *.csv
 *.xml
 *.json
