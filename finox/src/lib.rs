@@ -11,7 +11,7 @@ use crate::nasdaq::realtime::RealtimeRoot;
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use std::{collections::HashMap, error::Error, fmt, path::Path, time::Duration};
+use std::{collections::HashMap, error::Error, fmt, fs, path::Path, time::Duration};
 
 pub trait HasRecs {
     fn to_recs(&self) -> Vec<Vec<String>>;
@@ -55,7 +55,7 @@ where
 
 // when endpoints dont grab a vec
 pub async fn fetch_one<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Vec<String>>
-where 
+where
     for<'de> T: HasRec + serde::Deserialize<'de> + 'a,
 {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
@@ -100,14 +100,30 @@ pub async fn fetch_rt(
             if let Ok(root) = res.json::<RealtimeRoot>().await {
                 if let (Some(recs), newt) = root.to_recs(pair.1) {
                     let file_name = format!(
-                        "../data/nasdaq/realtime-trades/{}_{}.csv",
+                        "../data/nasdaq/realtime-trades/{}.csv",
                         pair.0,
-                        Utc::now().to_rfc3339()
+                        //Utc::now().to_rfc3339()
                     );
                     let fp = Path::new(&file_name);
-                    //TODO append to file for specific ticker
-                    roses::write_csv(&fp, recs, &crate::nasdaq::realtime::NDAQ_REALTIME_HEADER)
+                    if fp.exists() == true {
+                        let f = fs::OpenOptions::new()
+                            .append(true)
+                            .open(fp)
+                            .expect("opening file prob");
+                        roses::to_csv(f, recs, None).expect("csv error");
+                    } else {
+                        let f = fs::OpenOptions::new()
+                            .write(true)
+                            .create_new(true)
+                            .open(fp)
+                            .expect("opening file prob");
+                        roses::to_csv(
+                            f,
+                            recs,
+                            Some(&crate::nasdaq::realtime::NDAQ_REALTIME_HEADER),
+                        )
                         .expect("csv error");
+                    }
                     // println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
                     return (pair.0, newt);
                 } else {

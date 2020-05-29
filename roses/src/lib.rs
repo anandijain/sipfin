@@ -3,7 +3,7 @@ extern crate csv;
 use chrono::Utc;
 use regex::Regex;
 use std::{
-    error::Error,
+    //error::Error,
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
@@ -42,19 +42,7 @@ pub async fn simple_json(url: String) -> Result<::serde_json::Value, reqwest::Er
         .await
 }
 
-pub fn writerecs(
-    file_name: String,
-    header: &[&str],
-    records: Vec<csv::StringRecord>,
-) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path(file_name).expect("csv messed up");
-    wtr.write_record(header)?;
-    for r in records.iter() {
-        wtr.write_record(r)?;
-    }
-    Ok(())
-}
-
+// change to take in File?
 pub fn write_csv(
     filepath: &Path,
     data: Vec<Vec<String>>,
@@ -74,17 +62,24 @@ pub fn write_csv(
     Ok(())
 }
 
+pub fn to_csv(
+    file: File,
+    data: Vec<Vec<String>>,
+    header: Option<&[&str]>
+) -> Result<(), csv::Error> {
+    // decide beforehand whether to append or not
 
-pub fn appendrecs(
-    file_name: String,
-    records: Vec<csv::StringRecord>,
-) -> Result<(), Box<dyn Error>> {
-    let file = std::fs::OpenOptions::new().append(true).open(file_name)?;
     let mut wtr = csv::Writer::from_writer(file);
-    for r in records.iter() {
-        wtr.write_record(r)?;
+    if let Some(h) = header {
+        wtr.write_record(h)?;
     }
+
+    for row in data.iter() {
+        wtr.write_record(row)?;
+    }
+
     wtr.flush()?;
+    println!("wrote {} rows to somewhere (TODO File->Path)", data.len());
     Ok(())
 }
 
