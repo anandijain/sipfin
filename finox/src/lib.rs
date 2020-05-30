@@ -30,7 +30,6 @@ where
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
             //REMOVE SLEEP
-            //thread::sleep(Duration::from_millis(500));
             if let Ok(root) = res.json::<T>().await {
                 return Some(root.to_recs());
             } else {
@@ -88,6 +87,7 @@ where
 {
     let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
         if let Ok(res) = reqwest::get(&pair.1.clone()).await {
+            thread::sleep(Duration::from_millis(100));
             if let Ok(root) = res.json::<T>().await {
                 let recs = root.to_recs();
                 let file_name = format!("{}{}.csv", relpath.clone(), pair.0);
@@ -106,7 +106,7 @@ where
                         .expect("opening file prob");
                     roses::to_csv(f, recs.clone(), Some(header)).expect("csv error");
                 }
-                println!("{:#?}", recs.clone());
+                println!("{}: {}", pair.0, recs.len());
                 return Some(pair.0);
             }
             println!("serialized json wrong {:#?}", pair.clone());

@@ -105,7 +105,7 @@ async fn main() -> Result<(), reqwest::Error> {
                 &OBS_HEADER,
             )
             .await;
-            println!("{:#?}", res);
+            //println!("{:#?}", res);
         }
         _ => panic!("'s' or 'o' for series or observation as 2nd command line arg"),
     };
