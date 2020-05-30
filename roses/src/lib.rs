@@ -12,7 +12,6 @@ use std::{
 };
 
 pub const DELAY: std::time::Duration = Duration::from_millis(10);
-
 pub const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36";
 
 #[tokio::main]
@@ -28,6 +27,7 @@ pub async fn simple_get(url: String) -> Result<String, reqwest::Error> {
     Ok(body)
 }
 
+// simple fns arent useful, get 'cant start runtime from within runtime'
 #[tokio::main]
 pub async fn simple_json(url: String) -> Result<::serde_json::Value, reqwest::Error> {
     let client = reqwest::Client::builder()
@@ -65,7 +65,7 @@ pub fn write_csv(
 pub fn to_csv(
     file: File,
     data: Vec<Vec<String>>,
-    header: Option<&[&str]>
+    header: Option<&[&str]>,
 ) -> Result<(), csv::Error> {
     // decide beforehand whether to append or not
 
@@ -79,7 +79,7 @@ pub fn to_csv(
     }
 
     wtr.flush()?;
-    println!("wrote {} rows to somewhere (TODO File->Path)", data.len());
+    //println!("wrote {} rows to somewhere (TODO File->Path)", data.len());
     Ok(())
 }
 
@@ -168,4 +168,3 @@ pub fn symb_from_ndaq_url(url: String) -> Option<String> {
     }
     return None;
 }
-

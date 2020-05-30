@@ -1,3 +1,18 @@
+pub fn nyt_archive_urls() -> Vec<String> {
+    let mut urls = vec![];
+    for i in 1853..2019 {
+        for j in 1..=12 {
+            let url = format!(
+                "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key={}",
+                i,
+                j,
+                crate::keys::NYT_KEY.to_string()
+            );
+            urls.push(url);
+        }
+    }
+    urls
+}
 
 // https://api.nytimes.com/svc/news/v3/content/all/all.json
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -256,7 +271,6 @@ pub struct Person {
 //    }
 //    return "".to_string();
 //}
-
 
 /*
 admin

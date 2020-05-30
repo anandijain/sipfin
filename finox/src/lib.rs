@@ -11,7 +11,7 @@ use crate::nasdaq::realtime::RealtimeRoot;
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use std::{collections::HashMap, error::Error, fmt, fs, path::Path, time::Duration};
+use std::{collections::HashMap, error::Error, fmt, fs, path::Path, thread, time::Duration};
 
 pub trait HasRecs {
     fn to_recs(&self) -> Vec<Vec<String>>;
@@ -29,6 +29,8 @@ where
 {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
+            //REMOVE SLEEP
+            //thread::sleep(Duration::from_millis(500));
             if let Ok(root) = res.json::<T>().await {
                 return Some(root.to_recs());
             } else {
@@ -75,21 +77,49 @@ where
     let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
     return recs;
 }
-
-pub fn nyt_archive_urls() -> Vec<String> {
-    let mut urls = vec![];
-    for i in 1853..2019 {
-        for j in 1..=12 {
-            let url = format!(
-                "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key={}",
-                i,
-                j,
-                crate::keys::NYT_KEY.to_string()
-            );
-            urls.push(url);
+//"../data/fred/observations/{
+pub async fn fetch_write<'a, T: ?Sized>(
+    hm: HashMap<String, String>,
+    relpath: &str,
+    header: &[&str],
+) -> Result<Vec<String>, reqwest::Error>
+where
+    for<'de> T: HasRecs + serde::Deserialize<'de> + 'a,
+{
+    let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
+        if let Ok(res) = reqwest::get(&pair.1.clone()).await {
+            if let Ok(root) = res.json::<T>().await {
+                let recs = root.to_recs();
+                let file_name = format!("{}{}.csv", relpath.clone(), pair.0);
+                let fp = Path::new(&file_name);
+                if fp.exists() == true {
+                    let f = fs::OpenOptions::new()
+                        .append(true)
+                        .open(fp)
+                        .expect("opening file prob");
+                    roses::to_csv(f, recs.clone(), None).expect("csv error");
+                } else {
+                    let f = fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(fp)
+                        .expect("opening file prob");
+                    roses::to_csv(f, recs.clone(), Some(header)).expect("csv error");
+                }
+                println!("{:#?}", recs.clone());
+                return Some(pair.0);
+            }
+            println!("serialized json wrong {:#?}", pair.clone());
+            return None;
         }
-    }
-    urls
+        println!("res err");
+        return None;
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<String>>>()
+    .await;
+    //println("{:#?}", fetches
+    Ok(fetches.into_iter().flatten().collect::<Vec<String>>())
 }
 
 pub async fn fetch_rt(
@@ -124,32 +154,22 @@ pub async fn fetch_rt(
                         )
                         .expect("csv error");
                     }
-                    // println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
                     return (pair.0, newt);
                 } else {
                     return pair;
                 }
             } else {
                 println!("serialize err {:#?}", pair.clone());
-                //println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
-                //return (pair.0, pair.1);
                 return pair;
             }
         }
         println!("response err: {:#?}", pair.clone());
-        //println!("{:#?}", &pair.0.to_nasdaq_rt_url().unwrap());
         return pair;
     }))
     .buffer_unordered(16)
     .collect::<HashMap<Security, DateTime<FixedOffset>>>()
     .await;
-    //println!("fetches: {:#?}", fetches);
     return fetches;
-}
-
-pub fn ndaq_url_to_ticker(url: String) -> String {
-    let v: Vec<&str> = url.split("/").collect(); // divs
-    return format!("{}", v[5]);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -240,4 +260,9 @@ pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
 pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {
     let t = format!("{} {} +05:00", Utc::now().format("%Y-%m-%d"), s);
     return DateTime::parse_from_str(&t, "%Y-%m-%d %H:%M:%S %z");
+}
+
+pub fn ndaq_url_to_ticker(url: String) -> String {
+    let v: Vec<&str> = url.split("/").collect(); // divs
+    return format!("{}", v[5]);
 }

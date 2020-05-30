@@ -1,19 +1,27 @@
-#[allow(dead_code)]
-extern crate regex;
+//extern crate regex;
 extern crate reqwest;
+extern crate roses;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 extern crate url;
-
-//use futures::stream::StreamExt;
 //use lazy_static::lazy_static;
 //use regex::Regex;
-use std::{env, path::Path, time};
+
+use finox::keys::FRED_KEYS;
+use std::{
+    collections::HashMap,
+    env,
+    path::Path,
+    //thread,
+    //rc::{Rc, Weak},
+    time,
+};
 use url::Url;
+
 pub const WRITE_PATH: &str = "../data/fred/";
-pub const DELAY: time::Duration = time::Duration::from_millis(500);
+pub const FRED_DELAY: time::Duration = time::Duration::from_secs(10);
 
 //fn extract_id(input: &str) -> Option<&str> {
 //    lazy_static! {
@@ -32,64 +40,102 @@ async fn main() -> Result<(), reqwest::Error> {
             "provide 's' or 'o' as second arg, for 'o' you need a fred_series_id.txt in ref_data/"
         );
     }
-    // how do you 
+    // how do you
     match args[1].as_ref() {
+        "c" => {
+            /*
+             * 1. for bfs we want
+             */
+            //let mut cat_ids = vec![];
+            let path = "category/children";
+            let query = "category_id=";
+            let mut all_recs: Vec<Vec<String>> = vec![];
+
+            let depth: usize = 4;
+
+            let mut to_visit: Vec<String> = vec![
+                "32991", "10", "32992", "1", "32455", "32263", "3008", "33060",
+            ]
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
+            //for _ in 0..depth {
+            //    //let id = to_visit.pop().unwrap();
+            //    if let Ok(recs) = finox::fetch::<CategoryChildrenRoot>(
+            //        gen_queries(path, query, to_visit.clone())
+            //            .values()
+            //            .collect::<Vec<String>>(),
+            //    )
+            //    .await
+            //    {
+            //        all_recs.append(&mut recs.clone());
+            //        to_visit = recs
+            //            .iter()
+            //            .map(|x| x.clone()[0].to_string())
+            //            .collect::<Vec<String>>();
+
+            //        println!("recs: {:#?}", recs);
+            //        println!("to_visit: {:#?}", to_visit);
+            //    }
+            //}
+
+            //println!("all recs: {:#?}\nlen: {}", all_recs, all_recs.len());
+            //roses::write_csv(
+            //    Path::new("../data/fred/categories.csv"),
+            //    all_recs,
+            //    &CATEGORY_HEADER,
+            //)
+            //.expect("csv prob");
+        }
+
         "s" => {
-            let urls = gen_queries("category/series", "category_id=", (0..1000).into_iter().map(|x| x.to_string()).collect())
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>();
-            if let Ok(recs) = finox::fetch::<CategoryRoot>(urls).await {
-                let file_name = format!(
-                    "../data/fred/fred_series_{}.csv",
-                    chrono::Utc::now().to_rfc3339()
-                );
-                let file_path = Path::new(&file_name);
-                roses::write_csv(file_path, recs, &SERIES_HEADER).expect("csv prob");
-            }
-        },
+            let ids = roses::read_tickers("../ref_data/fred_category_ids.txt");
+            let urls = gen_queries("category/series", "category_id=", ids);
+            let res =
+                finox::fetch_write::<CategoryRoot>(urls, "../data/fred/series/", &SERIES_HEADER)
+                    .await;
+            println!("{:#?}", res);
+        }
         "o" => {
             let ids = roses::read_tickers("../ref_data/fred_series_ids.txt");
-            let urls = gen_queries("series/observations", "series_id=", ids)
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>();
-            if let Ok(recs) = finox::fetch::<SeriesObsRoot>(urls.to_vec()).await {
-                let file_name = format!(
-                    "../data/fred/fred_obs_{}.csv",
-                    chrono::Utc::now().to_rfc3339()
-                );
-                let file_path = Path::new(&file_name);
-                roses::write_csv(file_path, recs, &OBS_HEADER).expect("csv prob");
-            }
-        },
+            let urls = gen_queries("series/observations", "series_id=", ids);
+            let res = finox::fetch_write::<SeriesObsRoot>(
+                urls,
+                "../data/fred/observations/",
+                &OBS_HEADER,
+            )
+            .await;
+            println!("{:#?}", res);
+        }
         _ => panic!("'s' or 'o' for series or observation as 2nd command line arg"),
     };
     Ok(())
 }
 
-fn gen_queries(
-    //ids: Vec<String>,
-    path: &str,
-    q: &str,
-    ids: Vec<String> )
- -> Vec<url::Url> {
-    //TODO FIX
-    ids.iter().map(|x| fred_fmt(path, q, x)).collect::<Vec<url::Url>>()
+fn gen_queries(path: &str, q: &str, ids: Vec<String>) -> HashMap<String, String>
+//-> Vec<url::Url>
+{
+    let mut queries = HashMap::new();
+    for (i, id) in ids.iter().enumerate() {
+        queries.insert(
+            id.to_string(),
+            fred_fmt(path, q, id, FRED_KEYS[i % FRED_KEYS.len()]).to_string(),
+        );
+        //.collect::<Vec<url::Url>>()
+    }
+    queries
 }
 
-fn fred_fmt(path: &str, query: &str, id: &str) -> Url {
-        let root = Url::parse("https://api.stlouisfed.org").expect("url prob");
-        let q = format!(
-                "fred/{}?{}{}&api_key={}&file_type=json", //&limit=10000",
-                path,
-                query,
-                id,
-                finox::keys::FRED_KEY
-            );
-            let url = root.join(&q).expect("url parsed wrong");
-            println!("{:#?}", url);
-            return url;
+fn fred_fmt(path: &str, query: &str, id: &str, key: &str) -> Url {
+    let root = Url::parse("https://api.stlouisfed.org").expect("url prob");
+
+    let q = format!(
+        "fred/{}?{}{}&api_key={}&file_type=json", //&limit=10000",
+        path, query, id, key,
+    );
+    let url = root.join(&q).expect("url parsed wrong");
+    println!("{:#?}", url);
+    return url;
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -134,8 +180,6 @@ impl Series {
     fn to_rec(&self) -> Vec<String> {
         return vec![
             self.id.to_string(),
-            self.realtime_start.to_string(),
-            self.realtime_end.to_string(),
             self.title.to_string(),
             self.observation_start.to_string(),
             self.observation_end.to_string(),
@@ -191,12 +235,12 @@ impl Observation {
     }
 }
 
+pub const CATEGORY_HEADER: [&'static str; 2] = ["id", "name"];
+
 pub const OBS_HEADER: [&'static str; 2] = ["t", "x"];
 
-pub const SERIES_HEADER: [&'static str; 13] = [
+pub const SERIES_HEADER: [&'static str; 11] = [
     "id",
-    "realtime_start",
-    "realtime_end",
     "title",
     "observation_start",
     "observation_end",
@@ -208,3 +252,27 @@ pub const SERIES_HEADER: [&'static str; 13] = [
     "group_popularity",
     "notes",
 ];
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+pub struct CategoryChildrenRoot {
+    pub categories: Vec<CategoryChild>,
+}
+
+impl finox::HasRecs for CategoryChildrenRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        self.categories.iter().map(|x| x.to_rec()).collect()
+    }
+}
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+pub struct CategoryChild {
+    pub id: i64,
+    pub name: String,
+    pub parent_id: i64,
+    pub notes: Option<String>,
+}
+
+impl CategoryChild {
+    pub fn to_rec(&self) -> Vec<String> {
+        vec![self.id.to_string(), self.name.to_string()]
+    }
+}

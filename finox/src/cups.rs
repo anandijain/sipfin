@@ -1,26 +1,32 @@
 extern crate clap;
-use clap::{Arg, App, SubCommand};
+use clap::{App, Arg, SubCommand};
 
 fn main() {
     let matches = App::new("cups")
-                          .version("0.1.0")
-                          .author("anand j. <anandj@uchicago.edu>")
-                          .about("run sipfin from the command line")
-                          .arg(Arg::with_name("config")
-                               .short("c")
-                               .long("config")
-                               .value_name("FILE")
-                               .help("Sets a custom config file")
-                               .takes_value(true))
-                          .arg(Arg::with_name("INPUT")
-                               .help("Sets the input file to use")
-                               .required(true)
-                               .index(1))
-                          .arg(Arg::with_name("v")
-                               .short("v")
-                               .multiple(true)
-                               .help("Sets the level of verbosity"));
-                          
+        .version("0.1.0")
+        .author("anand j. <anandj@uchicago.edu>")
+        .about("run sipfin from the command line")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("FILE")
+                .help("Sets a custom config file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("INPUT")
+                .help("Sets the input file to use")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("v")
+                .short("v")
+                .multiple(true)
+                .help("Sets the level of verbosity"),
+        );
+
     // Gets a value for config if supplied by user, or defaults to "default.conf"
     let config = matches.value_of("config").unwrap_or("default.conf");
     println!("Value for config: {}", config);
@@ -45,5 +51,4 @@ fn main() {
             println!("Printing normally...");
         }
     }
-
 }
