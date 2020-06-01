@@ -15,3 +15,4 @@ config.py
 *.gif
 *.mp4
 *.svg
+*.service
