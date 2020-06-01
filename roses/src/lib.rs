@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate csv;
-use chrono::Utc;
+use chrono::{Date, Duration, Utc};
+use plotters::prelude::*;
 use regex::Regex;
 use std::{
     //error::Error,
@@ -167,4 +168,36 @@ pub fn symb_from_ndaq_url(url: String) -> Option<String> {
         return Some(caps.name("symb").unwrap().as_str().to_string());
     }
     return None;
+}
+
+fn parse_time(t: &str) -> Date<Local> {
+    Local
+        .datetime_from_str(&format!("{} 0:0", t), "%Y-%m-%d %H:%M")
+        .unwrap()
+        .date()
+}
+fn candle(file_name: Path) -> Result<(), Box<dyn std::error::Error>> {
+    let data = get_data();
+    let root = BitMapBackend::new("plotters-doc-data/stock.png", (1024, 768)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let (to_date, from_date) = (
+        parse_time(&data[0].0) + Duration::days(1),
+        parse_time(&data[29].0) - Duration::days(1),
+    );
+
+    let mut chart = ChartBuilder::on(&root)
+        .x_label_area_size(40)
+        .y_label_area_size(40)
+        .caption("MSFT Stock Price", ("sans-serif", 50.0).into_font())
+        .build_ranged(from_date..to_date, 110f32..135f32)?;
+
+    chart.configure_mesh().line_style_2(&WHITE).draw()?;
+
+    chart.draw_series(
+        data.iter()
+            .map(|x| CandleStick::new(parse_time(x.0), x.1, x.2, x.3, x.4, &GREEN, &RED, 15)),
+    )?;
+
+    Ok(())
 }
