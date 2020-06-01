@@ -30,6 +30,7 @@ where
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url).await {
             //REMOVE SLEEP
+            thread::sleep(Duration::from_millis(100));
             if let Ok(root) = res.json::<T>().await {
                 return Some(root.to_recs());
             } else {
@@ -55,14 +56,14 @@ where
 }
 
 // when endpoints dont grab a vec
-pub async fn fetch_one<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Vec<String>>
+pub async fn fetch_one<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Option<T>>
 where
     for<'de> T: HasRec + serde::Deserialize<'de> + 'a,
 {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url.clone()).await {
             if let Ok(root) = res.json::<T>().await {
-                return Some(root.to_rec());
+                return Some(root);
             }
             println!("serialized json wrong {}", url.clone());
             return None;
@@ -71,11 +72,12 @@ where
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<Vec<String>>>>()
+    .collect::<Vec<Option<T>>>()
     .await;
-    let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
-    return recs;
+    //let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    return fetches;
 }
+
 //"../data/fred/observations/{
 pub async fn fetch_write<'a, T: ?Sized>(
     hm: HashMap<String, String>,

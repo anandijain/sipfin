@@ -16,7 +16,6 @@ async fn main() -> Result<(), String> {
     let debug = if args.len() > 1 { true } else { false };
     let filepath = "../ref_data/tickers_stocks.txt";
     let tickers = roses::read_tickers(filepath);
-    // <(String, DateTime<FixedOffset>)> = vec![];
     let mut hm = HashMap::new();
     for symb in tickers.iter() {
         hm.insert(

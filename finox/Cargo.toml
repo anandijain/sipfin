@@ -34,6 +34,10 @@ path = "src/bin/sec.rs"
 name = "rt"
 path = "src/bin/rt.rs"
 
+[[bin]]
+name = "web"
+path = "src/bin/web.rs"
+
 
 [dependencies]
 serde = { version = "1.0.106" }
@@ -51,3 +55,5 @@ percent-encoding = "2.1.0"
 scraper = "*"
 dotenv = "*"
 clap = "*"
+tide = "*"
+async-std = {version = "1", features = ["attributes"]}

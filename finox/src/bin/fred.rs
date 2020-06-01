@@ -59,53 +59,51 @@ async fn main() -> Result<(), reqwest::Error> {
             .iter()
             .map(|x| x.to_string())
             .collect();
-            //for _ in 0..depth {
-            //    //let id = to_visit.pop().unwrap();
-            //    if let Ok(recs) = finox::fetch::<CategoryChildrenRoot>(
-            //        gen_queries(path, query, to_visit.clone())
-            //            .values()
-            //            .collect::<Vec<String>>(),
-            //    )
-            //    .await
-            //    {
-            //        all_recs.append(&mut recs.clone());
-            //        to_visit = recs
-            //            .iter()
-            //            .map(|x| x.clone()[0].to_string())
-            //            .collect::<Vec<String>>();
+            for _ in 0..depth {
+                //let id = to_visit.pop().unwrap();
+                let hm = gen_queries(path, query, to_visit.clone());
+                let vals = hm.values().map(|x| x.to_string()).collect::<Vec<String>>();
+                if let Ok(recs) = finox::fetch::<CategoryChildrenRoot>(vals.clone()).await {
+                    all_recs.append(&mut recs.clone());
+                    to_visit = recs
+                        .iter()
+                        .map(|x| x.clone()[0].to_string())
+                        .collect::<Vec<String>>();
 
-            //        println!("recs: {:#?}", recs);
-            //        println!("to_visit: {:#?}", to_visit);
-            //    }
-            //}
+                    println!("recs for category #: {:#?}", recs.len());
+                    println!("to_visit #: {:#?}", to_visit.len());
+                } else {
+                    println!("{:?}", vals);
+                }
+            }
 
-            //println!("all recs: {:#?}\nlen: {}", all_recs, all_recs.len());
-            //roses::write_csv(
-            //    Path::new("../data/fred/categories.csv"),
-            //    all_recs,
-            //    &CATEGORY_HEADER,
-            //)
-            //.expect("csv prob");
+            println!("all recs: #{}", all_recs.len());
+            roses::write_csv(
+                Path::new("../data/fred/categories.csv"),
+                all_recs,
+                &CATEGORY_HEADER,
+            )
+            .expect("csv prob");
         }
 
         "s" => {
             let ids = roses::read_tickers("../ref_data/fred_category_ids.txt");
-            let urls = gen_queries("category/series", "category_id=", ids);
-            let res =
-                finox::fetch_write::<CategoryRoot>(urls, "../data/fred/series/", &SERIES_HEADER)
-                    .await;
-            println!("{:#?}", res);
+            let hm = gen_queries("category/series", "category_id=", ids);
+            if let Ok(res) =
+                finox::fetch_write::<CategoryRoot>(hm, "../data/fred/series/", &SERIES_HEADER).await
+            {
+                println!("series Ok #{:#?}", res.len());
+            }
         }
         "o" => {
             let ids = roses::read_tickers("../ref_data/fred_series_ids.txt");
-            let urls = gen_queries("series/observations", "series_id=", ids);
-            let res = finox::fetch_write::<SeriesObsRoot>(
-                urls,
-                "../data/fred/observations/",
-                &OBS_HEADER,
-            )
-            .await;
-            //println!("{:#?}", res);
+            let hm = gen_queries("series/observations", "series_id=", ids);
+            if let Ok(res) =
+                finox::fetch_write::<SeriesObsRoot>(hm, "../data/fred/observations/", &OBS_HEADER)
+                    .await
+            {
+                println!("obs res Ok #{:#?}", res.len());
+            }
         }
         _ => panic!("'s' or 'o' for series or observation as 2nd command line arg"),
     };
