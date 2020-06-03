@@ -50,12 +50,12 @@ pub const YF_META_HEADER: [&'static str; 9] = [
     "exchange_tz",
 ];
 
-pub const CURRENCY_SYMBOLS_YF: [&'static str; 23] = [
+pub const YF_CURRENCIES: [&'static str; 23] = [
     "USD", "EUR", "JPY", "GBP", "AUD", "CAD", "BTC", "ETH", "NZD", "SEK", "CHF", "HUF", "CNY",
     "HKD", "SGD", "INR", "MXN", "PHP", "IDR", "THB", "MYR", "ZAR", "RUB",
 ];
 
-pub const COMMODITIES_SYMBOLS_YF: [&'static str; 23] = [
+pub const YF_COMMODITIES: [&'static str; 23] = [
     "ES", "YM", "NQ", "RTY", "ZB", "ZN", "ZF", "ZT", "GC", "SI", "HG", "PA", "CL", "HO", "NG",
     "RB", "BZ", "C", "KW", "SM", "BO", "S", "CT",
 ];
@@ -65,7 +65,7 @@ pub const REUTERS_COUNTRIES: [&'static str; 17] = [
     "mx", "ru",
 ];
 
-pub const YF_HEADER: [&'static str; 7] = ["symbol", "t", "o", "h", "l", "c", "v"];
+pub const YF_STOCKS: [&'static str; 7] = ["symbol", "t", "o", "h", "l", "c", "v"];
 
 pub const SA_HEADER: [&'static str; 8] = [
     "id",

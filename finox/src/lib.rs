@@ -78,7 +78,7 @@ where
     return fetches;
 }
 
-//"../data/fred/observations/{
+//
 pub async fn fetch_write<'a, T: ?Sized>(
     hm: HashMap<String, String>,
     relpath: &str,
@@ -89,7 +89,7 @@ where
 {
     let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
         if let Ok(res) = reqwest::get(&pair.1.clone()).await {
-            thread::sleep(Duration::from_millis(100));
+            //thread::sleep(Duration::from_millis(100));
             if let Ok(root) = res.json::<T>().await {
                 let recs = root.to_recs();
                 let file_name = format!("{}{}.csv", relpath.clone(), pair.0);
@@ -213,6 +213,15 @@ impl Security {
             _ => panic!("Nasdaq only has realtime stock quotes".to_string()),
         }
     }
+
+    pub fn to_yf(&self) -> String {
+        match self {
+            Security::Stock(s) | Security::Etf(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?interval=1d&period1=0&period2=1590498425", s),
+            Security::Currency(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}=X?interval=1d&period1=0&period2=1590498425", s),
+            Security::Commodity(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}=F?interval=1d&period1=0&period2=1590498425", s),
+            //_ => panic!("others not supported")
+        }
+    }
 }
 
 impl fmt::Display for Security {
@@ -234,29 +243,41 @@ pub fn garbo(pre: &str, s: &str, sfx: &str, sfx2: &str, sfx3: &str) -> String {
 }
 
 // fix and percent encoding
-pub fn gen_secs(args: &Vec<String>) -> Vec<Security> {
-    let securities: Vec<Security> = match args[1].as_str() {
-        "stocks" => Ok(roses::read_tickers("../ref_data/tickers_stocks.txt")
-            .iter()
-            .map(|x| Security::Stock(x.to_string()))
-            .collect::<Vec<Security>>()),
-        "commodities" => Ok(roses::read_tickers("../ref_data/tickers_commodities.txt")
-            .iter()
-            .map(|x| Security::Commodity(utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
-            .collect::<Vec<Security>>()),
-        "currencies" => Ok(roses::read_tickers("../ref_data/tickers_currencies.txt")
-            .iter()
-            .map(|x| Security::Currency(x.to_string()))
-            .collect::<Vec<Security>>()),
-        "etf" => Ok(roses::read_tickers("../ref_data/tickers_stocks.txt")
-            .iter()
-            .map(|x| Security::Etf(x.to_string()))
-            .collect::<Vec<Security>>()),
+pub fn gen_secs(asset_class: &str) -> (Vec<Security>, &[&str]) {
+    match asset_class {
+        "stocks" => (
+            roses::read_tickers("../ref_data/tickers_stocks.txt")
+                .iter()
+                .map(|x| Security::Stock(x.to_string()))
+                .collect::<Vec<Security>>(),
+            &headers::YF_STOCKS,
+        ),
+        "commodities" => (
+            roses::read_tickers("../ref_data/tickers_commodities.txt")
+                .iter()
+                .map(|x| Security::Commodity(x.to_string()))
+                //utf8_percent_encode(x, NON_ALPHANUMERIC).to_string()))
+                .collect::<Vec<Security>>(),
+            &headers::YF_COMMODITIES,
+        ),
+        "currencies" => (
+            // prob broken, need to interlace the symbols
+            roses::read_tickers("../ref_data/tickers_currencies.txt")
+                .iter()
+                .map(|x| Security::Currency(x.to_string()))
+                .collect::<Vec<Security>>(),
+            &headers::YF_CURRENCIES,
+        ),
+        "etf" => (
+            roses::read_tickers("../ref_data/tickers_stocks.txt")
+                .iter()
+                .map(|x| Security::Etf(x.to_string()))
+                .collect::<Vec<Security>>(),
+            &headers::YF_STOCKS,
+        ),
 
-        _ => Err("invalid asset class provided"),
+        _ => panic!("invalid asset class provided"),
     }
-    .unwrap();
-    return securities;
 }
 
 pub fn nls_to_dt(s: &str) -> Result<DateTime<FixedOffset>, chrono::ParseError> {

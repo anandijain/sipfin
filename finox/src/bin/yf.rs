@@ -3,7 +3,7 @@ extern crate reqwest;
 extern crate roses;
 extern crate tokio;
 
-use std::path::Path;
+use std::{collections::HashMap, env};
 
 //let symbs: Vec<&str> = finox::headers::CURRENCY_SYMBOLS_YF.to_vec(); //.into_iter().cloned().collect();
 //let t = epoch_str();
@@ -12,13 +12,18 @@ use std::path::Path;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tickers = roses::read_tickers("../ref_data/tickers_stocks.txt");
-    let urls = tickers.iter().map(|x| format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?region=US&interval=1d&period1=345479400&period2=1590498425", x)).collect::<Vec<_>>();
-    if let Ok(recs) = finox::fetch::<finox::yf::YFRoot>(urls).await {
-        //println!("{:#?}", recs);
-        let file_name = format!("../data/yf/yf_{}.csv", chrono::Utc::now().to_rfc3339());
-        let file_path = Path::new(&file_name);
-        roses::write_csv(file_path, recs, &finox::headers::YF_HEADER).expect("csv prob");
+    /* args:
+     * 1: one in ['stocks', 'commodities', 'currencies']
+     */
+
+    let args = env::args().collect::<Vec<String>>();
+    let (tickers, headers) = finox::gen_secs(&args[1]);
+    let mut hm: HashMap<String, String> = HashMap::new();
+    for symb in tickers.iter() {
+        hm.insert(symb.to_string(), symb.to_yf());
+    }
+    if let Ok(recs) = finox::fetch_write::<finox::yf::YFRoot>(hm, "../data/yf/", headers).await {
+        println!("{:#?}", recs);
     }
     Ok(())
 }
