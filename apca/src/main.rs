@@ -7,9 +7,11 @@ use std::collections::HashMap;
 async fn main() -> Result<(), reqwest::Error> {
     let req_ep = "account";
     let post_ep = "orders";
+    let pos_ep = "positions";
     //let ep = "assets";
     let request_url = format!("https://paper-api.alpaca.markets/v2/{}", req_ep);
     let post_url = format!("https://paper-api.alpaca.markets/v2/{}", post_ep);
+    let positions_url = format!("https://paper-api.alpaca.markets/v2/{}", pos_ep);
     //println!("{}", request_url);
     let client = reqwest::Client::new();
     let res = client
@@ -46,18 +48,26 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let order_res = client
         .post(&post_url)
-        //.json(&order_map)
         .json(&order)
         .header("APCA-API-KEY-ID", keys::APCA_API_KEY_ID)
         .header("APCA-API-SECRET-KEY", keys::APCA_API_SECRET_KEY)
         .send()
         .await?
-        //.json::<serde_json::Value>()
         .json::<ApcaOrderTmp>()
-        //.text()
         .await?;
 
     println!("{:#?}", order_res);
+    let positions = client
+        .get(&positions_url)
+        .header("APCA-API-KEY-ID", keys::APCA_API_KEY_ID)
+        .header("APCA-API-SECRET-KEY", keys::APCA_API_SECRET_KEY)
+        .send()
+        .await?
+        .json::<Vec<ApcaPosition>>()
+        .await?;
+
+    println!("{:#?}", positions);
+
     Ok(())
 }
 
