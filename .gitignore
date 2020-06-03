@@ -16,3 +16,4 @@ config.py
 *.mp4
 *.svg
 *.service
+keys.rs
