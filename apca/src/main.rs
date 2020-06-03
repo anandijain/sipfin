@@ -1,23 +1,41 @@
 extern crate reqwest;
 mod keys;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
-use std::collections::HashMap;
+//use std::collections::HashMap;
+
+pub fn get_headermap() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    let key_id = HeaderName::from_lowercase(b"apca-api-key-id").unwrap();
+    let sec_key = HeaderName::from_lowercase(b"apca-api-secret-key").unwrap();
+    headers.insert(
+        key_id,
+        HeaderValue::from_str(keys::APCA_API_KEY_ID).unwrap(),
+    );
+    headers.insert(
+        sec_key,
+        HeaderValue::from_str(keys::APCA_API_SECRET_KEY).unwrap(),
+    );
+
+    headers
+}
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     let req_ep = "account";
     let post_ep = "orders";
     let pos_ep = "positions";
-    //let ep = "assets";
     let request_url = format!("https://paper-api.alpaca.markets/v2/{}", req_ep);
     let post_url = format!("https://paper-api.alpaca.markets/v2/{}", post_ep);
     let positions_url = format!("https://paper-api.alpaca.markets/v2/{}", pos_ep);
-    //println!("{}", request_url);
-    let client = reqwest::Client::new();
+
+    let headers = get_headermap();
+    let client = reqwest::Client::builder()
+        .default_headers(headers)
+        .build()?;
+
     let res = client
         .get(&request_url)
-        .header("APCA-API-KEY-ID", keys::APCA_API_KEY_ID)
-        .header("APCA-API-SECRET-KEY", keys::APCA_API_SECRET_KEY)
         .send()
         .await?
         //.json::<Vec<ApcaAsset>>()
@@ -25,12 +43,6 @@ async fn main() -> Result<(), reqwest::Error> {
         .await?;
 
     println!("{:#?}", res);
-    let mut order_map = HashMap::new();
-    order_map.insert("symbol", "AAPL");
-    order_map.insert("qty", "1");
-    order_map.insert("side", "buy");
-    order_map.insert("type", "market");
-    order_map.insert("time_in_force", "day");
 
     let order = ApcaPostOrder {
         symbol: "AAPL".to_string(),
@@ -44,13 +56,10 @@ async fn main() -> Result<(), reqwest::Error> {
     };
 
     println!("order struct{:#?}", order);
-    println!("order map{:#?}", order_map);
 
     let order_res = client
         .post(&post_url)
         .json(&order)
-        .header("APCA-API-KEY-ID", keys::APCA_API_KEY_ID)
-        .header("APCA-API-SECRET-KEY", keys::APCA_API_SECRET_KEY)
         .send()
         .await?
         .json::<ApcaOrderTmp>()
@@ -59,8 +68,6 @@ async fn main() -> Result<(), reqwest::Error> {
     println!("{:#?}", order_res);
     let positions = client
         .get(&positions_url)
-        .header("APCA-API-KEY-ID", keys::APCA_API_KEY_ID)
-        .header("APCA-API-SECRET-KEY", keys::APCA_API_SECRET_KEY)
         .send()
         .await?
         .json::<Vec<ApcaPosition>>()
