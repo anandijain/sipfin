@@ -1,16 +1,16 @@
-use noria::ControllerHandle;
-
 use finox::nasdaq::realtime::RealtimeRoot;
+use noria::ControllerHandle;
+use roses;
 use std::{error::Error, time::Duration};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let mut db = ControllerHandle::from_zk("127.0.0.1:2181/isit6")
+    let mut db = ControllerHandle::from_zk("127.0.0.1:2181/isit8")
         .await
         .unwrap();
 
     db.install_recipe(
         "
-    CREATE TABLE Rt(sid varchar(16), t varchar(32), x varchar(16), v varchar(16), PRIMARY KEY(sid));
+    CREATE TABLE Rt(sid varchar(16), t varchar(32), x float, v int, PRIMARY KEY(sid));
     CREATE TABLE Quote(sid varchar(16), qid varchar(32));",
     )
     .await
@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut count = db.table("Quote").await.unwrap();
 
     let (tickers, _) = finox::gen_secs("stocks");
-    let urls = tickers[1..5]
+    let urls = tickers // [1..5]
         .iter()
         .map(|x| x.to_nasdaq_rt_url())
         .collect::<Vec<_>>()
@@ -28,9 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .flatten()
         .collect();
 
-    //println!("{:#?}", urls);
     let recs = finox::fetch::<RealtimeRoot>(urls).await;
-    //println!("recs: {:#?}", recs);
 
     for (i, rs) in recs.iter().enumerate() {
         for (j, r) in rs.iter().enumerate() {
@@ -66,7 +64,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .await
     .unwrap();
     let mut awvc = db.view("Quotes").await.unwrap();
-    let article = awvc.lookup(&["aal".into()], true).await.unwrap();
+    //imdumb
+    let ticks2 = roses::read_tickers("../ref_data/tickers_stocks.txt");
+    //for tic in ticks2.iter() {
+    let article = awvc.lookup(&["aa".into()], true).await.unwrap();
     println!("{:#?} ", article);
+    //}
     Ok(())
 }

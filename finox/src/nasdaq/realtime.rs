@@ -10,8 +10,21 @@ pub struct RealtimeRoot {
 }
 
 impl RealtimeRoot {
-    pub fn to_recs(&self, t: DateTime<FixedOffset>) -> (Option<Vec<Vec<String>>>, DateTime<FixedOffset>) {
-        return self.data.to_recs(t);
+    pub fn to_new_recs(
+        &self,
+        t: DateTime<FixedOffset>,
+    ) -> (Option<Vec<Vec<String>>>, DateTime<FixedOffset>) {
+        return self.data.to_new_recs(t);
+    }
+}
+
+impl crate::HasRecs for RealtimeRoot {
+    fn to_recs(&self) -> Vec<Vec<String>> {
+        self.data
+            .to_recs()
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
     }
 }
 
@@ -27,12 +40,14 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn to_recs(&self, t: DateTime<FixedOffset>) -> (Option<Vec<Vec<String>>>, DateTime<FixedOffset>)
-    {
+    pub fn to_new_recs(
+        &self,
+        t: DateTime<FixedOffset>,
+    ) -> (Option<Vec<Vec<String>>>, DateTime<FixedOffset>) {
         let mut recs = vec![];
         let mut newest = t;
         for r in self.rows.iter() {
-            let tup = r.to_rec(&self.symbol, t);
+            let tup = r.to_new_rec(&self.symbol, t);
             match tup {
                 Some((v, new_t)) => {
                     if new_t > newest {
@@ -49,6 +64,13 @@ impl Data {
         //println!("new t: {:?}, old t: {:?}", newest, t);
         return (Some(recs), newest);
     }
+
+    pub fn to_recs(&self) -> Vec<Option<Vec<String>>> {
+        self.rows
+            .iter()
+            .map(|x| x.to_rec(&self.symbol))
+            .collect::<Vec<Option<Vec<String>>>>()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -60,7 +82,7 @@ pub struct Row {
 }
 
 impl Row {
-    pub fn to_rec(
+    pub fn to_new_rec(
         &self,
         symbol: &str,
         last_new: DateTime<FixedOffset>,
@@ -86,5 +108,17 @@ impl Row {
         }
         return None;
     }
+    pub fn to_rec(&self, symbol: &str) -> Option<Vec<String>> {
+        if let Ok(t) = crate::nls_to_dt(&self.nls_time) {
+            return Some(vec![
+                symbol.to_string(),
+                t.to_rfc3339(),
+                self.nls_price.to_string().replace("$ ", ""),
+                self.nls_share_volume.to_string().replace(",", ""),
+            ]);
+        }
+        return None;
+    }
 }
+
 pub const NDAQ_REALTIME_HEADER: [&'static str; 4] = ["symbol", "t", "x", "v"];

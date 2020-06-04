@@ -10,7 +10,7 @@ extern crate roses;
 use crate::nasdaq::realtime::RealtimeRoot;
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+//use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::{collections::HashMap, error::Error, fmt, fs, path::Path, thread, time::Duration};
 
 pub trait HasRecs {
@@ -130,7 +130,7 @@ pub async fn fetch_rt(
     let fetches = futures::stream::iter(hm.into_iter().map(|pair| async move {
         if let Ok(res) = reqwest::get(&pair.0.to_nasdaq_rt_url().unwrap()).await {
             if let Ok(root) = res.json::<RealtimeRoot>().await {
-                if let (Some(recs), newt) = root.to_recs(pair.1) {
+                if let (Some(recs), newt) = root.to_new_recs(pair.1) {
                     let file_name = format!(
                         "../data/nasdaq/realtime-trades/{}.csv",
                         pair.0,
