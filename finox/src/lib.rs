@@ -84,13 +84,23 @@ pub async fn fetch_strings(urls: Vec<String>) -> Vec<Option<sec::SecFormHeader>>
             if let Ok(root) = res.text().await {
                 if let Some(header) = sec::sec_header(&root) {
                     if let Some(recs) = sec::sec_13f(&root) {
-                        let file_name =
-                            format!("../data/sec/13f/{}_{}.csv", header.cik, header.date);
+                        let realfn = url
+                            .clone()
+                            .split("/")
+                            .map(|x| x.to_string())
+                            .collect::<Vec<String>>();
+
+                        let file_name = format!(
+                            "../data/sec/13f/{}.csv",
+                            realfn.last()?.split(".").collect::<Vec<_>>().first()?
+                        );
+
                         let mut wtr = csv::Writer::from_path(file_name.clone()).unwrap();
 
                         for rec in recs.iter() {
                             wtr.serialize(rec).unwrap();
                         }
+
                         println!("{}: {:#?}", file_name, recs.len());
                         wtr.flush().unwrap();
                         return Some(header);
