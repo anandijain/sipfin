@@ -100,57 +100,6 @@ pub fn simppath(s: String, sfx: String) -> String {
         Utc::now().to_rfc3339(),
     );
 }
-
-pub fn regexmain() -> Result<(), Box<dyn std::error::Error>> {
-    // let file = File::open("rentec_13f.xml")?;
-    // let mut buf_reader = BufReader::new(file);
-    // let mut contents = String::new();
-    let res = vec![
-        Regex::new(r"<nameOfIssuer>(?P<val>.+)</nameOfIssuer>.*()").unwrap(),
-        Regex::new(r"<titleOfClass>(?P<val>.+)</titleOfClass>.*()").unwrap(),
-        Regex::new(r"<cusip>(?P<val>.+)</cusip>.*()").unwrap(),
-        Regex::new(r"<value>(?P<val>.+)</value>.*()").unwrap(),
-        Regex::new(r"<sshPrnamt>(?P<val>.+)</sshPrnamt>.*()").unwrap(),
-        Regex::new(r"<sshPrnamtType>(?P<val>.+)</sshPrnamtType>.*()").unwrap(),
-        Regex::new(r"<investmentDiscretion>(?P<val>.+)</investmentDiscretion>.*()").unwrap(),
-        Regex::new(r"<otherManager>(?P<val>.+)</otherManager>.*()").unwrap(),
-        Regex::new(r"<Sole>(?P<val>.+)</Sole>.*()").unwrap(),
-        Regex::new(r"<Shared>(?P<val>.+)</Shared>.*()").unwrap(),
-        Regex::new(r"<None>(?P<val>.+)</None>.*()").unwrap(),
-    ];
-    // buf_reader.read_to_string(&mut contents)?;
-    let filenames = read_tickers("../ref_data/rentec13urls.txt");
-    for (i, url) in filenames.iter().enumerate() {
-        let mut allcaps: Vec<Vec<String>> = Vec::new();
-        let contents = simple_get(url.to_string()).unwrap();
-        for re in res.iter() {
-            let mut rec: Vec<String> = Vec::new();
-            for cap in re.captures_iter(&contents.to_string()) {
-                if let Some(val) = cap.name("val") {
-                    rec.push(val.as_str().to_string());
-                } else {
-                    println!("OH FUCK");
-                    rec.push("".to_string());
-                }
-            }
-            allcaps.push(rec);
-        }
-        let path = format!(
-            "./ref_data/rentec/regex_rentec_holdings_{}.csv",
-            i.to_string()
-        );
-        let mut wtr = csv::Writer::from_path(path)?;
-        let len = allcaps[0].len();
-        for vec in allcaps.iter() {
-            assert_eq!(len, vec.len());
-            let rec = csv::StringRecord::from(vec.clone());
-            wtr.write_record(&rec)?;
-        }
-        wtr.flush()?;
-    }
-    Ok(())
-}
-
 pub fn yf_symb_from_url(url: String) -> Option<String> {
     //example
     let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();

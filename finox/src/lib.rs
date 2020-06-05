@@ -3,6 +3,7 @@ pub mod headers;
 pub mod keys;
 pub mod nasdaq;
 pub mod news;
+pub mod sec;
 pub mod yf;
 
 extern crate roses;
@@ -74,7 +75,37 @@ where
     .buffer_unordered(16)
     .collect::<Vec<Option<T>>>()
     .await;
-    //let recs: Vec<Vec<String>> = fetches.into_iter().flatten().collect();
+    return fetches;
+}
+
+pub async fn fetch_strings(urls: Vec<String>) -> Vec<Option<sec::SecFormHeader>> {
+    let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
+        if let Ok(res) = reqwest::get(&url.clone()).await {
+            if let Ok(root) = res.text().await {
+                if let Some(header) = sec::sec_header(&root) {
+                    if let Some(recs) = sec::sec_13f(&root) {
+                        let file_name =
+                            format!("../data/sec/13f/{}_{}.csv", header.cik, header.date);
+                        let mut wtr = csv::Writer::from_path(file_name.clone()).unwrap();
+
+                        for rec in recs.iter() {
+                            wtr.serialize(rec).unwrap();
+                        }
+                        println!("{}: {:#?}", file_name, recs.len());
+                        wtr.flush().unwrap();
+                        return Some(header);
+                    }
+                }
+            }
+            println!("serialized text wrong {}", url.clone());
+            return None;
+        }
+        println!("no good1");
+        return None;
+    }))
+    .buffer_unordered(16)
+    .collect::<Vec<Option<sec::SecFormHeader>>>()
+    .await;
     return fetches;
 }
 
