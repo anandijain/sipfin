@@ -3,10 +3,9 @@ pub mod headers;
 pub mod keys;
 pub mod nasdaq;
 pub mod news;
+pub mod roses;
 pub mod sec;
 pub mod yf;
-
-extern crate roses;
 
 use crate::nasdaq::realtime::RealtimeRoot;
 use chrono::{DateTime, FixedOffset, Utc};

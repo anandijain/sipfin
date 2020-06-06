@@ -1,5 +1,5 @@
 use finox::nasdaq::realtime::RealtimeRoot;
-use noria::ControllerHandle;
+use noria::prelude::*;
 use roses;
 use std::{error::Error, time::Duration};
 #[tokio::main]
@@ -18,9 +18,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut quotes = db.table("Rt").await.unwrap();
     let mut count = db.table("Quote").await.unwrap();
+    println!("{:#?} ", quotes.schema());
+    println!("{:#?} ", count.schema());
 
     let (tickers, _) = finox::gen_secs("stocks");
-    let urls = tickers // [1..5]
+    let urls = tickers[1..5]
         .iter()
         .map(|x| x.to_nasdaq_rt_url())
         .collect::<Vec<_>>()
@@ -28,25 +30,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .flatten()
         .collect();
 
-    let recs = finox::fetch::<RealtimeRoot>(urls).await;
+    let recs = finox::fetch::<RealtimeRoot>(urls)
+        .await
+        .into_iter()
+        .flatten()
+        .collect::<Vec<Vec<String>>>();
+    let mut noria_recs = vec![];
 
-    for (i, rs) in recs.iter().enumerate() {
-        for (j, r) in rs.iter().enumerate() {
-            quotes
-                .insert(vec![
-                    r[0].clone().into(),
-                    r[1].clone().into(),
-                    r[2].clone().into(),
-                    r[3].clone().into(),
-                ])
-                .await
-                .unwrap();
-            count
-                .insert(vec![r[0].clone().into(), format!("{}{}", i, j).into()])
-                .await
-                .unwrap();
-        }
+    for rec in recs.iter() {
+        let noria_rec: Vec<noria::DataType> = rec.iter().map(|x| x.to_string().into()).collect();
+        println!("{:#?} ", noria_rec);
+        noria_recs.push(noria_rec);
     }
+    quotes.insert_all(noria_recs).await.unwrap();
+    //count
+    //    .insert(vec![r[0].clone().into(), format!("{}{}", i, j).into()])
+    //    .await
+    //    .unwrap();
+
     println!("Finished writing! Let's wait for things to propagate...");
     tokio::time::delay_for(Duration::from_millis(2000)).await;
 

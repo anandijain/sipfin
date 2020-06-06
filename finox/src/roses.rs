@@ -1,7 +1,4 @@
-extern crate chrono;
-extern crate csv;
 use chrono::Utc;
-use regex::Regex;
 use std::{
     //error::Error,
     fs::File,
@@ -62,6 +59,7 @@ pub fn write_csv(
     Ok(())
 }
 
+// takes File and optional header
 pub fn to_csv(
     file: File,
     data: Vec<Vec<String>>,
@@ -83,12 +81,26 @@ pub fn to_csv(
     Ok(())
 }
 
-pub fn read_tickers(filename: impl AsRef<Path>) -> Vec<String> {
-    let f = File::open(filename).expect("no such file");
+pub fn read_tickers(file_name: impl AsRef<Path>) -> Vec<String> {
+    let f = File::open(file_name).expect("no such file");
     let buf = BufReader::new(f);
     buf.lines()
         .map(|l| l.expect("Could not parse line"))
         .collect()
+}
+
+pub fn read_into<T>(file_name: &str) -> Result<Vec<T>, csv::Error> {
+where:
+T: serde_derive::Deserialize
+{
+    let mut rdr = csv::Reader::from_path(file_name)?;
+    let mut iter = rdr.deserialize();
+    let mut recs = vec![];
+    while let Some(res) = iter.next() {
+        let rec: T = res?;
+        recs.push(rec);
+    }
+    Ok(recs)
 }
 
 pub fn simppath(s: String, sfx: String) -> String {
@@ -99,21 +111,4 @@ pub fn simppath(s: String, sfx: String) -> String {
         sfx.to_string(),
         Utc::now().to_rfc3339(),
     );
-}
-pub fn yf_symb_from_url(url: String) -> Option<String> {
-    //example
-    let re = Regex::new(r"/chart/(?P<symb>.+).*\?").unwrap();
-    if let Some(caps) = re.captures(&url) {
-        return Some(caps.name("symb").unwrap().as_str().to_string());
-    }
-    return None;
-}
-
-pub fn symb_from_ndaq_url(url: String) -> Option<String> {
-    //example
-    let re = Regex::new(r"/quote/(?P<symb>.+).*/info").unwrap();
-    if let Some(caps) = re.captures(&url) {
-        return Some(caps.name("symb").unwrap().as_str().to_string());
-    }
-    return None;
 }

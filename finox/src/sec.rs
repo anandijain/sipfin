@@ -47,17 +47,6 @@ pub struct SecFormHeader {
     pub is_confidential_omitted: String,
 }
 
-pub fn read_13f() -> Result<Vec<SecIndex>, Box<dyn std::error::Error>> {
-    let mut rdr = csv::Reader::from_path("../ref_data/sec13f.csv")?;
-    let mut iter = rdr.deserialize();
-    let mut recs = vec![];
-    while let Some(res) = iter.next() {
-        let rec: SecIndex = res?;
-        recs.push(rec);
-    }
-    Ok(recs)
-}
-
 pub fn sec_header(input: &str) -> Option<SecFormHeader> {
     //regex::re_unicode::Captures{
     lazy_static! {
