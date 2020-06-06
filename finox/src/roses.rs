@@ -89,9 +89,9 @@ pub fn read_tickers(file_name: impl AsRef<Path>) -> Vec<String> {
         .collect()
 }
 
-pub fn read_into<T>(file_name: &str) -> Result<Vec<T>, csv::Error> {
-where:
-T: serde_derive::Deserialize
+pub fn read_into<'a, T: ?Sized>(file_name: &str) -> Result<Vec<T>, csv::Error>
+where
+    for<'de> T: serde::Deserialize<'de> + 'a,
 {
     let mut rdr = csv::Reader::from_path(file_name)?;
     let mut iter = rdr.deserialize();

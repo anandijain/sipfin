@@ -1,7 +1,7 @@
 use finox::nasdaq::realtime::RealtimeRoot;
 use noria::prelude::*;
-use roses;
 use std::{error::Error, time::Duration};
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut db = ControllerHandle::from_zk("127.0.0.1:2181/isit8")
@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("{:#?} ", noria_rec);
         noria_recs.push(noria_rec);
     }
-    quotes.insert_all(noria_recs).await.unwrap();
+    quotes.perform_all(noria_recs).await.unwrap();
     //count
     //    .insert(vec![r[0].clone().into(), format!("{}{}", i, j).into()])
     //    .await
@@ -66,7 +66,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .unwrap();
     let mut awvc = db.view("Quotes").await.unwrap();
     //imdumb
-    let ticks2 = roses::read_tickers("../ref_data/tickers_stocks.txt");
+    let ticks2 = finox::roses::read_tickers("../ref_data/tickers_stocks.txt");
     //for tic in ticks2.iter() {
     let article = awvc.lookup(&["aa".into()], true).await.unwrap();
     println!("{:#?} ", article);
