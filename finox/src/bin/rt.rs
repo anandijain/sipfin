@@ -1,6 +1,5 @@
 extern crate chrono;
 extern crate reqwest;
-extern crate roses;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
@@ -15,7 +14,7 @@ async fn main() -> Result<(), String> {
     let args = env::args().collect::<Vec<String>>();
     let debug = if args.len() > 1 { true } else { false };
     let filepath = "../ref_data/tickers_stocks.txt";
-    let tickers = roses::read_tickers(filepath);
+    let tickers = finox::roses::read_tickers(filepath);
     let mut hm = HashMap::new();
     for symb in tickers.iter() {
         hm.insert(

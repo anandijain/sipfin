@@ -1,6 +1,5 @@
 extern crate chrono;
 extern crate reqwest;
-extern crate roses;
 extern crate tokio;
 
 use std::{collections::HashMap, env};

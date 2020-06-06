@@ -1,6 +1,5 @@
 //extern crate regex;
 extern crate reqwest;
-extern crate roses;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
@@ -78,7 +77,7 @@ async fn main() -> Result<(), reqwest::Error> {
             }
 
             println!("all recs: #{}", all_recs.len());
-            roses::write_csv(
+            finox::roses::write_csv(
                 Path::new("../data/fred/categories.csv"),
                 all_recs,
                 &CATEGORY_HEADER,
@@ -87,7 +86,7 @@ async fn main() -> Result<(), reqwest::Error> {
         }
 
         "s" => {
-            let ids = roses::read_tickers("../ref_data/fred_category_ids.txt");
+            let ids = finox::roses::read_tickers("../ref_data/fred_category_ids.txt");
             let hm = gen_queries("category/series", "category_id=", ids);
             if let Ok(res) =
                 finox::fetch_write::<CategoryRoot>(hm, "../data/fred/series/", &SERIES_HEADER).await
@@ -96,7 +95,7 @@ async fn main() -> Result<(), reqwest::Error> {
             }
         }
         "o" => {
-            let ids = roses::read_tickers("../ref_data/fred_series_ids.txt");
+            let ids = finox::roses::read_tickers("../ref_data/fred_series_ids.txt");
             let hm = gen_queries("series/observations", "series_id=", ids);
             if let Ok(res) =
                 finox::fetch_write::<SeriesObsRoot>(hm, "../data/fred/observations/", &OBS_HEADER)

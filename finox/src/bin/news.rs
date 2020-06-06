@@ -1,7 +1,7 @@
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
-use finox;
+use finox::roses;
 use std::path::Path;
 
 #[tokio::main]
@@ -60,14 +60,17 @@ pub async fn main() {
     }
 
     let moodys_url = "https://www.moodys.com/_layouts/mdc/am/Request/request.php?profile=homepage"; // "https://www.goldmansachs.com/insights/insights-articles.json";
-    if let Ok(recs) = finox::fetch::<finox::news::moodys::Root>(vec![moodys_url.to_string()]).await {
+    if let Ok(recs) = finox::fetch::<finox::news::moodys::Root>(vec![moodys_url.to_string()]).await
+    {
         println!("goldman {:#?}", recs);
-        let file_name = format!("../data/news/moodys_{}.csv", chrono::Utc::now().to_rfc3339());
+        let file_name = format!(
+            "../data/news/moodys_{}.csv",
+            chrono::Utc::now().to_rfc3339()
+        );
         let file_path = Path::new(&file_name);
 
         roses::write_csv(file_path, recs, &finox::headers::MOODYS_HEADER).expect("csv problem");
     }
-
 
     // TODO fix, serializing err
     //let sa_url = "https://seekingalpha.com/get_trending_articles".to_string();

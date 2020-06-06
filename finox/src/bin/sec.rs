@@ -1,13 +1,13 @@
 //#![deny(warnings)]
 extern crate regex;
 extern crate reqwest;
-extern crate roses;
 extern crate serde;
 extern crate tokio;
+use finox::{roses, sec};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let index = finox::sec::read_13f().unwrap();
+    let index = roses::read_into::<sec::SecIndex>("../ref_data/sec13f.csv").unwrap();
     let urls: Vec<String> = index
         .iter()
         .map(|x| format!("https://sec.gov/Archives/{}", x.filename))
