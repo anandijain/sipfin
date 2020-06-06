@@ -1,17 +1,16 @@
 # Completed projects:
-Scrapers: FRED, YF, 13fs, Nasdaq
-
+* Scrapers: FRED, YF, 13fs, Nasdaq
 
 
 
 # Current Projects:
-Set up google cloud: get scrapers running continuously
+* Set up google cloud: get scrapers running continuously
 
-Build extemely simple equity model.
-Build basic Alpaca papertrader, portfolio return analysis.
-Refine equity model gradually.
+* Build extemely simple equity model.
+* Build basic Alpaca papertrader, portfolio return analysis.
+* Refine equity model (gradually).
 
-Build Risk Parity Package (as generalizable as possible - adam)
+* Build Risk Parity Package (as generalizable as possible - adam)
 
 
 
@@ -38,4 +37,8 @@ Shorthand:
 git add . && git commit -m " " && git push
 ```
 
+
+# Videos
+## Neural nets
+[3blue1brown intro](https://www.youtube.com/watch?v=aircAruvnKk)
 
