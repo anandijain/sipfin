@@ -1,9 +1,12 @@
 #!/bin/bash
-
+init() {
+	mkdir -p data/yf data/sec data/nasdaq/realtime-trades ref_data/sec
+}
 options() {
     curl "ftp://ftp.nasdaqtrader.com/symboldirectory/options.txt" -o "./ref_data/options.txt"
 }
 
+sec_idxs() {
 for YEAR in {1993..2020}
 do 
 	for QTR in {1..4}
@@ -21,4 +24,5 @@ do
 	sed -i -e 1,9d $f
 	sed -i -e 2d $f
 done
+}
 
