@@ -10,7 +10,7 @@ use finox::{
 use std::{collections::HashMap, env, fs};
 #[tokio::main]
 pub async fn main() -> Result<(), csv::Error> {
-    let ns: Vec<String> = (1..1000).map(|x| (x * 100).to_string()).collect();
+    let ns: Vec<String> = (1..10).map(|x| (x * 100).to_string()).collect();
 
     let mut hm: HashMap<String, String> = HashMap::new();
     for elt in ns.iter() {
@@ -23,15 +23,28 @@ pub async fn main() -> Result<(), csv::Error> {
         );
     }
 
+    //    finox::fetch_write::<uspto::UsptoApplications>(
+    //        hm,
+    //        "../data/uspto/applications/",
+    //        &uspto::PATENT_HEADER,
+    //    )
+    //    .await
+    //    .expect("idk how long thisll take");
+
     println!("{:#?}", hm);
-    finox::fetch_write::<uspto::UsptoApplications>(
-        hm,
-        "../data/uspto/applications/",
-        &uspto::PATENT_HEADER,
+    let fetches = finox::fetch_into::<uspto::UsptoApplications>(
+        //serde_json::Value>(
+        //uspto::UsptoApplications>(
+        hm.values().cloned().collect(),
+        //"../data/uspto/applications/",
+        //&uspto::PATENT_HEADER,
     )
     .await
-    .expect("idk how long thisll take");
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
 
+    println!("{:#?}", fetches);
     Ok(())
 }
 

@@ -57,9 +57,9 @@ where
 }
 
 // when endpoints dont grab a vec
-pub async fn fetch_one<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Option<T>>
+pub async fn fetch_into<'a, T: ?Sized>(urls: Vec<String>) -> Vec<Option<T>>
 where
-    for<'de> T: HasRec + serde::Deserialize<'de> + 'a,
+    for<'de> T: serde::Deserialize<'de> + 'a,
 {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url.clone()).await {
