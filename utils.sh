@@ -18,7 +18,7 @@ init_conf() {
 	cd ~
 	git clone "https://github.com/anandijain/lilconfig.git" 
 	mkdir -p ~/.config/nvim/autoload	
-	wget -o ~/.config/nvim/autoload/plug.vim "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim" 
+	wget -O ~/.config/nvim/autoload/plug.vim "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim" 
 	mv lilconfig/init.vim ~/.config/nvim/
 	mv config.fish ~/.config/fish
 	source ~/.config/fish/config.fish
