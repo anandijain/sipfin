@@ -1,7 +1,17 @@
 #!/bin/bash
-init() {
-	mkdir -p data/yf data/sec data/nasdaq/realtime-trades ref_data/sec
+init_dirs() {
+	mkdir -p data/yf data/sec/10q data/sec/13f data/nasdaq/realtime-trades ref_data/sec
 }
+
+# run as root in home
+init_main() {
+	apt-get install build-essential git neovim fish curl wget libssl-dev pkg-config 
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	wget "https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux-x86_64.tar.gz" 
+	tar -xvf "julia-1.4.2-linux-x86_64.tar.gz"
+	git clone "https://github.com/anandijain/sipfin.git"
+}
+
 options() {
     curl "ftp://ftp.nasdaqtrader.com/symboldirectory/options.txt" -o "./ref_data/options.txt"
 }
