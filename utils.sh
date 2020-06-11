@@ -6,10 +6,22 @@ init_dirs() {
 # run as root in home
 init_main() {
 	apt-get install build-essential git neovim fish curl wget libssl-dev pkg-config 
+	chsh -s /usr/bin/fish
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	source $HOME/.cargo/env
 	wget "https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux-x86_64.tar.gz" 
 	tar -xvf "julia-1.4.2-linux-x86_64.tar.gz"
 	git clone "https://github.com/anandijain/sipfin.git"
+}
+
+init_conf() {
+	cd ~
+	git clone "https://github.com/anandijain/lilconfig.git" 
+	mkdir -p ~/.config/nvim/autoload	
+	wget -o ~/.config/nvim/autoload/plug.vim "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim" 
+	mv lilconfig/init.vim ~/.config/nvim/
+	mv config.fish ~/.config/fish
+	source ~/.config/fish/config.fish
 }
 
 options() {
