@@ -12,7 +12,9 @@ use crate::nasdaq::realtime::RealtimeRoot;
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::stream::StreamExt;
 //use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use std::{collections::HashMap, error::Error, fmt, fs, path::Path, thread, time::Duration};
+use std::{
+    collections::HashMap, error::Error, fmt, fs, io::prelude::*, path::Path, thread, time::Duration,
+};
 
 pub trait HasRecs {
     fn to_recs(&self) -> Vec<Vec<String>>;
@@ -78,35 +80,38 @@ where
     return fetches;
 }
 
-pub async fn fetch_strings(urls: Vec<String>) -> Vec<Option<sec::SecFormHeader>> {
+pub async fn fetch_strings(urls: Vec<String>, relpath: &str) -> Vec<Option<String>> {
     let fetches = futures::stream::iter(urls.into_iter().map(|url| async move {
         if let Ok(res) = reqwest::get(&url.clone()).await {
             if let Ok(root) = res.text().await {
-                if let Some(header) = sec::sec_header(&root) {
-                    if let Some(recs) = sec::sec_13f(&root) {
-                        let realfn = url
-                            .clone()
-                            .split("/")
-                            .map(|x| x.to_string())
-                            .collect::<Vec<String>>();
+                //                if let Some(header) = sec::sec_header(&root) {
+                //                    if let Some(recs) = sec::sec_13f(&root) {
+                let realfn = url
+                    .clone()
+                    .split("/")
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>();
 
-                        let file_name = format!(
-                            "../data/sec/13f/{}.csv",
-                            realfn.last()?.split(".").collect::<Vec<_>>().first()?
-                        );
+                let file_name = format!(
+                    "{}{}.txt",
+                    relpath,
+                    realfn.last()?.split(".").collect::<Vec<_>>().first()?
+                );
 
-                        let mut wtr = csv::Writer::from_path(file_name.clone()).unwrap();
+                println!("{}: ", file_name);
+                //let mut wtr = csv::Writer::from_path(file_name.clone()).unwrap();
 
-                        for rec in recs.iter() {
-                            wtr.serialize(rec).unwrap();
-                        }
+                let mut file = fs::File::create(file_name.clone()).unwrap();
+                file.write_all(root.as_bytes()).unwrap();
+                //for rec in recs.iter() {
+                //    wtr.serialize(rec).unwrap();
+                //}
 
-                        println!("{}: {:#?}", file_name, recs.len());
-                        wtr.flush().unwrap();
-                        return Some(header);
-                    }
-                }
+                //wtr.flush().unwrap();
+                return Some(file_name);
             }
+            //                }
+            //            }
             println!("serialized text wrong {}", url.clone());
             return None;
         }
@@ -114,7 +119,7 @@ pub async fn fetch_strings(urls: Vec<String>) -> Vec<Option<sec::SecFormHeader>>
         return None;
     }))
     .buffer_unordered(16)
-    .collect::<Vec<Option<sec::SecFormHeader>>>()
+    .collect::<Vec<Option<String>>>()
     .await;
     return fetches;
 }

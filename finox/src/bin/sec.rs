@@ -7,13 +7,13 @@ use finox::{roses, sec};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let index = roses::read_into::<sec::SecIndex>("../ref_data/sec13f.csv").unwrap();
+    let index = roses::read_into::<sec::SecIndex>("../ref_data/sec10q.csv").unwrap();
     let urls: Vec<String> = index
         .iter()
         .map(|x| format!("https://sec.gov/Archives/{}", x.filename))
         .collect();
-    let headers = finox::fetch_strings(urls.to_vec()).await;
-    println!("{:#?}", headers);
+    let file_names = finox::fetch_strings(urls.to_vec(), "../data/sec/10q/").await;
+    println!("{:#?}", file_names);
     Ok(())
 }
 
