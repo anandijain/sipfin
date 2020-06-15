@@ -29,7 +29,7 @@ options() {
     curl "ftp://ftp.nasdaqtrader.com/symboldirectory/options.txt" -o "./ref_data/options.txt"
 }
 
-listings() {
+get_nasdaq_listings() {
 
     curl "ftp://ftp.nasdaqtrader.com/symboldirectory/nasdaqlisted.txt" -o "./ref_data/nasdaqlisted.txt"
 	julia run.jl
