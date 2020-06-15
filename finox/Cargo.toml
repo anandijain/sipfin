@@ -38,6 +38,10 @@ path = "src/bin/rt.rs"
 name = "uspto"
 path = "src/bin/uspto.rs"
 
+[[bin]]
+name = "ndaq"
+path = "src/bin/ndaq.rs"
+
 [dependencies]
 serde = { version = "1.0.106" }
 serde_json = "1.0"

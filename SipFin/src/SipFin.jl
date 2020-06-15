@@ -9,18 +9,21 @@ using Statistics, StatsBase, Dates, LinearAlgebra
 
 df_dict(fns) = Dict(zip(fns, dropmissing.(CSV.read.(fns))))
 
-vals_dict(d) = Dict(zip(keys(d), map(x -> begin
-    F = svd(x)
-    return F.S ./ maximum(F.S)
-end, values(d))))
+function normed_svals(a)
+    Fs = svd.(a)
+    map(x -> x.S ./ x.S[1], Fs)
+end
 
-svdf(vs::Dict) = DataFrame(hcat(collect(keys(vs)), hcat(collect(values(vs))...)'))
+function sv_df(p)
+    fns = readdir(p, join = true)
+    d = df_dict(fns)
+    nums = map(x -> Matrix{Float64}(x[:, 4:(end - 1)]), values(d))
+    vs = hcat(normed_svals(nums)...)'
+    DataFrame(hcat(collect(keys(d)), vs))
+end
 
-nums_dict(d) = Dict(zip(keys(d), map(x -> Matrix(x[:, 3:(end - 1)]), values(d))))
-
-quik(p) = svdf(vals_dict(nums_dict(df_dict(readdir(p, join = true)))))
-
-fix_colnames(df) = rename(df, map(x->replace(lowercase(string(x)), " "=>"_"), names(df)))
+fix_colnames(df) =
+    rename(df, map(x -> replace(lowercase(string(x)), " " => "_"), names(df)))
 
 function str_arr_to_txt(fn, arr)
     open(fn, "w") do io
@@ -29,13 +32,14 @@ function str_arr_to_txt(fn, arr)
 end
 
 function nasdaq_fix(fn)
-    df = CSV.read("$fn.txt", delim = "|")
-	df = dropmissing(fix_colnames(df))
-	df = filter(x-> x.etf .== "N", df)
-	str_arr_to_txt("./ref_data/tickers_stocks.txt", df.symbol)
+    df = filter(
+        x -> x.etf .== "N",
+        dropmissing(fix_colnames(CSV.read("$fn.txt", delim = "|"))),
+    )
+    str_arr_to_txt("./ref_data/tickers_stocks.txt", df.symbol)
 end
 
 
-export fix_colnames, df_dict, svdf, vals_dict, quik 
+export fix_colnames, df_dict, sv_df
 
 end

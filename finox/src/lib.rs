@@ -336,3 +336,24 @@ pub fn ndaq_url_to_ticker(url: String) -> String {
     let v: Vec<&str> = url.split("/").collect(); // divs
     return format!("{}", v[5]);
 }
+
+pub fn json_to_csv<'a, T: ?Sized>(file_name: &str, header: &[&str]) -> Result<(), csv::Error>
+where
+    for<'de> T: HasRecs + serde::Deserialize<'de> + 'a,
+{
+    let base = file_name.clone().split(".").collect::<Vec<_>>()[0];
+    let f = fs::read_to_string(file_name).expect("couldnt read file to string");
+    let data = serde_json::from_str::<T>(&f)
+        .expect("couldn't into json")
+        .to_recs();
+
+    //println!("{:#?}", data);
+    let mut wtr = csv::Writer::from_path(format!("{}.csv", base))?;
+    wtr.write_record(header.to_vec())?;
+
+    for d in data.iter() {
+        wtr.write_record(d)?;
+    }
+    wtr.flush()?;
+    Ok(())
+}

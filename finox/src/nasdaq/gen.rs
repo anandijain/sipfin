@@ -6,7 +6,6 @@ pub struct Status {
     pub developer_message: ::serde_json::Value,
 }
 
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LabelValue {
