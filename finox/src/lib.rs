@@ -16,6 +16,7 @@ use std::{
     collections::HashMap, error::Error, fmt, fs, io::prelude::*, path::Path, thread, time::Duration,
 };
 
+// TODO change to V<V<T>>
 pub trait HasRecs {
     fn to_recs(&self) -> Vec<Vec<String>>;
 }
