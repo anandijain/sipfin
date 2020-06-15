@@ -95,26 +95,6 @@ gen_anims(rt_df::AbstractDataFrame; size = (1200, 1200))::AbstractDataFrame = by
     p = (:t, :x, :v) => x -> gen_anim(Array(x.t), Array(x, x), Array(x.v)),
 )
 
-function df_col_to_txt(df::AbstractDataFrame, s::Symbol, fn::String)
-    open(fn, "w") do io
-        writedlm(io, df[:, s], "\n")
-    end
-end
-
-function str_arr_to_txt(fn::String, arr::Array{String,1})
-    open(fn, "w") do io
-        writedlm(io, arr, "\n")
-    end
-end
-
-function change_sep(fn)
-    df = CSV.read("$fn.txt", delim = "|")
-    rename!(x -> Symbol(replace(string(x), " " => "_")), df)
-    CSV.write("$fn.csv", df)
-    return df
-end
-
-
 function plot_fibs(arr::AbstractArray, range = 5:10)
     plot([mavg(arr, fib(i)) for i in range])
 end
@@ -218,5 +198,11 @@ function load(fn)
     os = j[:, r"o_*"]
     cs = j[:, r"c_*"]
 end
+
+toz(d::Dict) = Dict(map(
+    x -> x.symbol[1] => hcat(zscore.(eachcol(x[:, 3:(end - 1)]))...),
+    collect(values(d)),
+))
+
 
 

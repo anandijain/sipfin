@@ -29,6 +29,12 @@ options() {
     curl "ftp://ftp.nasdaqtrader.com/symboldirectory/options.txt" -o "./ref_data/options.txt"
 }
 
+listings() {
+
+    curl "ftp://ftp.nasdaqtrader.com/symboldirectory/nasdaqlisted.txt" -o "./ref_data/nasdaqlisted.txt"
+	julia run.jl
+}
+
 sec_idxs() {
 	for YEAR in {1993..2020}
 	do 
@@ -48,4 +54,7 @@ sec_idxs() {
 		sed -i -e 2d $f
 	done
 }
+
+
+
 
