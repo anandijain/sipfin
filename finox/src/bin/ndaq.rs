@@ -17,7 +17,10 @@ pub async fn main() -> Result<(), String> {
             "d" | "dividends" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "dividends"));
+                    hm.insert(
+                        symb.to_string(),
+                        bad_fmt2(symb, "dividends?assetclass=stocks&"),
+                    );
                 }
 
                 finox::fetch_write::<dividends::DividendsRoot>(
@@ -30,7 +33,7 @@ pub async fn main() -> Result<(), String> {
             "h" | "institutional-holdings" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "institutional-holdings"));
+                    hm.insert(symb.to_string(), bad_fmt(symb, "institutional-holdings?"));
                 }
 
                 finox::fetch_write::<institutional::HolderRoot>(
@@ -43,7 +46,7 @@ pub async fn main() -> Result<(), String> {
             "i" | "insider-trades" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "insider-trades"));
+                    hm.insert(symb.to_string(), bad_fmt(symb, "insider-trades?"));
                 }
 
                 finox::fetch_write::<insiders::InsidersRoot>(
@@ -56,7 +59,7 @@ pub async fn main() -> Result<(), String> {
             "oc" | "option-chain" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "option-chain"));
+                    hm.insert(symb.to_string(), bad_fmt(symb, "option-chain?"));
                 }
 
                 finox::fetch_write::<option_chain::OptionChainRoot>(
@@ -69,7 +72,7 @@ pub async fn main() -> Result<(), String> {
             "e" | "eps" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "eps"));
+                    hm.insert(symb.to_string(), bad_fmt(symb, "eps?"));
                 }
 
                 finox::fetch_write::<earnings::EarningsRoot>(
@@ -88,7 +91,12 @@ pub async fn main() -> Result<(), String> {
 }
 
 fn bad_fmt(t: &str, q: &str) -> String {
-    format!("https://api.nasdaq.com/api/company/{}/{}?limit=99999", t, q)
+    format!("https://api.nasdaq.com/api/company/{}/{}limit=99999", t, q)
+}
+
+//LMAO
+fn bad_fmt2(t: &str, q: &str) -> String {
+    format!("https://api.nasdaq.com/api/quote/{}/{}limit=99999", t, q)
 }
 
 //Dividend-History
