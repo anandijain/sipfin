@@ -14,7 +14,7 @@ pub async fn main() -> Result<(), String> {
     // todo async
     for ep in endpoints[1..endpoints.len()].iter() {
         let recs = match ep.as_str() {
-            "dividends" => {
+            "d" | "dividends" => {
                 let mut hm = HashMap::new();
                 let urls = tickers
                     .iter()
@@ -31,7 +31,7 @@ pub async fn main() -> Result<(), String> {
                 )
                 .await
             }
-            "institutional-holdings" => {
+            "h" | "institutional-holdings" => {
                 let mut hm = HashMap::new();
                 let urls = tickers
                     .iter()

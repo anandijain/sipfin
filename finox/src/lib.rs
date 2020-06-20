@@ -220,6 +220,12 @@ pub async fn fetch_rt(
     .await;
     return fetches;
 }
+/* generalize the url creator
+*  first make work well with just ndaq, 
+ * prob want to use Url for n query params
+ */
+
+
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde_derive::Serialize, serde_derive::Deserialize)]
 pub enum Security {
@@ -229,6 +235,8 @@ pub enum Security {
     Etf(String),
 }
 
+
+// how to impl Vec<T>
 impl Security {
     pub fn to_nasdaq_url(&self, sfx: &str) -> String {
         // "insider-trades", historical "option-chain", "chart", "info", "dividends", realtime-trades
@@ -263,13 +271,15 @@ impl Security {
 
     pub fn to_yf(&self) -> String {
         match self {
-            Security::Stock(s) | Security::Etf(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?interval=1d&period1=0&period2=1590498425", s),
+            // TODO change p2 to current epoch so it stays up to date
+            Security::Stock(s) | Security::Etf(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}?interval=1d&period1=0&period2=1590498425", s), 
             Security::Currency(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}=X?interval=1d&period1=0&period2=1590498425", s),
             Security::Commodity(s) => format!("https://query2.finance.yahoo.com/v8/finance/chart/{}=F?interval=1d&period1=0&period2=1590498425", s),
             //_ => panic!("others not supported")
         }
     }
 }
+
 
 impl fmt::Display for Security {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

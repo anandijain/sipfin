@@ -1,6 +1,7 @@
 #!/bin/bash
 init_dirs() {
-	mkdir -p data/yf data/sec/10q data/sec/13f data/nasdaq/realtime-trades ref_data/sec
+	mkdir -p data/yf data/fred data/sec/11q data/sec/13f data/nasdaq/realtime-trades ref_data/sec
+
 }
 
 # run as root in home
@@ -54,7 +55,3 @@ sec_idxs() {
 		sed -i -e 2d $f
 	done
 }
-
-
-
-

@@ -104,7 +104,7 @@ async fn main() -> Result<(), reqwest::Error> {
                 println!("obs res Ok #{:#?}", res.len());
             }
         }
-        _ => panic!("'s' or 'o' for series or observation as 2nd command line arg"),
+        _ => panic!("'c' 's' or 'o' for categories, series, or observation as 2nd command line arg"),
     };
     Ok(())
 }
