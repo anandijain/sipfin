@@ -8,7 +8,7 @@ pub struct EarningsRoot {
     pub status: gen::Status,
 }
 
-impl crate::HasRecs for {
+impl crate::HasRecs for EarningsRoot {
     fn to_recs(&self) -> Vec<Vec<String>> {
         self.data
             .earnings_per_share
@@ -35,7 +35,7 @@ pub struct EarningsPerShare {
     pub earnings: f64,
 }
 
-impl crate::HasRec for EarningsPerShare{
+impl crate::HasRec for EarningsPerShare {
     fn to_rec(&self) -> Vec<String> {
         vec![
             self.period.to_string(),
@@ -45,10 +45,4 @@ impl crate::HasRec for EarningsPerShare{
     }
 }
 
-pub const NDAQ_EARNINGS_HEADER: [&'static str; 3] = [
-    "t",
-    "earnings",
-    "consensus",
-];
-
-
+pub const NDAQ_EARNINGS_HEADER: [&'static str; 3] = ["t", "earnings", "consensus"];

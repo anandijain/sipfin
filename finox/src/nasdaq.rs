@@ -1,5 +1,6 @@
 pub mod chart;
 pub mod dividends;
+pub mod earnings;
 pub mod gen;
 pub mod info;
 pub mod insiders;

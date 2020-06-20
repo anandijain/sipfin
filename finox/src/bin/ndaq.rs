@@ -16,10 +16,6 @@ pub async fn main() -> Result<(), String> {
         let recs = match ep.as_str() {
             "d" | "dividends" => {
                 let mut hm = HashMap::new();
-                let urls = tickers
-                    .iter()
-                    .map(|x| bad_fmt(x, "dividends"))
-                    .collect::<Vec<_>>();
                 for symb in tickers.iter() {
                     hm.insert(symb.to_string(), bad_fmt(symb, "dividends"));
                 }
@@ -33,10 +29,6 @@ pub async fn main() -> Result<(), String> {
             }
             "h" | "institutional-holdings" => {
                 let mut hm = HashMap::new();
-                let urls = tickers
-                    .iter()
-                    .map(|x| bad_fmt(x, "institutional-holdings"))
-                    .collect::<Vec<_>>();
                 for symb in tickers.iter() {
                     hm.insert(symb.to_string(), bad_fmt(symb, "institutional-holdings"));
                 }
@@ -48,9 +40,47 @@ pub async fn main() -> Result<(), String> {
                 )
                 .await
             }
+            "i" | "insider-trades" => {
+                let mut hm = HashMap::new();
+                for symb in tickers.iter() {
+                    hm.insert(symb.to_string(), bad_fmt(symb, "insider-trades"));
+                }
+
+                finox::fetch_write::<insiders::InsidersRoot>(
+                    hm,
+                    "../data/nasdaq/insider-trades/",
+                    &insiders::NDAQ_INSIDER_HEADER,
+                )
+                .await
+            }
+            "oc" | "option-chain" => {
+                let mut hm = HashMap::new();
+                for symb in tickers.iter() {
+                    hm.insert(symb.to_string(), bad_fmt(symb, "option-chain"));
+                }
+
+                finox::fetch_write::<option_chain::OptionChainRoot>(
+                    hm,
+                    "../data/nasdaq/option-chain/",
+                    &option_chain::NDAQ_OPTION_HEADER,
+                )
+                .await
+            }
+            "e" | "eps" => {
+                let mut hm = HashMap::new();
+                for symb in tickers.iter() {
+                    hm.insert(symb.to_string(), bad_fmt(symb, "eps"));
+                }
+
+                finox::fetch_write::<earnings::EarningsRoot>(
+                    hm,
+                    "../data/nasdaq/earnings/",
+                    &earnings::NDAQ_EARNINGS_HEADER,
+                )
+                .await
+            }
+
             _ => panic!("nah2"),
-            //"insider-trades"=> "",
-            //""=> "",
         };
         println!("{:#?}", recs);
     }
