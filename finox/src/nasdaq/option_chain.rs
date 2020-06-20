@@ -1,5 +1,4 @@
 use crate::nasdaq::gen;
-// use crate::nasdaq::gen::HasRecs;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -17,16 +16,6 @@ impl crate::HasRecs for OptionChainRoot {
         }
         return recs;
     }
-    //pub fn get_id(&self) -> String {
-    //    return self.data.option_chain_list.rows[0]
-    //        .call
-    //        .symbol
-    //        .to_string()
-    //        .split_whitespace()
-    //        .next()
-    //        .expect("wtf option ticker")
-    //        .to_string();
-    //}
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -60,10 +49,9 @@ impl OptionRow {
             let call: Vec<String> = OptionData2::to_rec(&c);
             recs.push(call);
         }
-        if let Some(p) = &self.put{
-
-        let put: Vec<String> = OptionData2::to_rec(&p);
-        recs.push(put);
+        if let Some(p) = &self.put {
+            let put: Vec<String> = OptionData2::to_rec(&p);
+            recs.push(put);
         }
         return recs;
     }

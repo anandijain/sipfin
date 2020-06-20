@@ -59,7 +59,13 @@ pub async fn main() -> Result<(), String> {
             "oc" | "option-chain" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "option-chain?"));
+                    hm.insert(
+                        symb.to_string(),
+                        bad_fmt2(
+                            symb,
+                            "option-chain?assetclass=stocks&todate=2030-06-26&fromdate=2020-06-26&",
+                        ),
+                    );
                 }
 
                 finox::fetch_write::<option_chain::OptionChainRoot>(
