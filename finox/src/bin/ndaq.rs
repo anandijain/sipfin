@@ -72,7 +72,7 @@ pub async fn main() -> Result<(), String> {
             "e" | "eps" => {
                 let mut hm = HashMap::new();
                 for symb in tickers.iter() {
-                    hm.insert(symb.to_string(), bad_fmt(symb, "eps?"));
+                    hm.insert(symb.to_string(), bad_fmt2(symb, "eps?"));
                 }
 
                 finox::fetch_write::<earnings::EarningsRoot>(
