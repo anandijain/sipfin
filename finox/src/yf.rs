@@ -2,7 +2,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-
 /*
 https://query1.finance.yahoo.com/v7/finance/spark?symbols=%5EGSPC&range=1d
 https://query1.finance.yahoo.com/v7/finance/spark?symbols=BTCUSD%3DX&range=1d
@@ -14,7 +13,6 @@ https://query2.finance.yahoo.com/ws/insights/v2/finance/insights?region=US&symbo
 https://finance.yahoo.com/_finance_doubledown/api/resource/YFinLists;count=3;listIds=%5B%22commodities%22%2C%22currencies%22%2C%22bonds%22%5D
 */
 
-
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct YFRoot {
@@ -22,7 +20,7 @@ pub struct YFRoot {
 }
 
 impl crate::HasRecs for YFRoot {
-fn to_recs(&self) -> Vec<Vec<String>> {
+    fn to_recs(&self) -> Vec<Vec<String>> {
         let mut ret: Vec<Vec<String>> = Vec::new();
         let ts = &self.chart.result[0].timestamp;
         let meta = &self.chart.result[0].meta;
@@ -42,7 +40,7 @@ fn to_recs(&self) -> Vec<Vec<String>> {
 }
 
 impl YFRoot {
-        pub fn meta_record(&self) -> Vec<String> {
+    pub fn meta_record(&self) -> Vec<String> {
         let rec = Meta::to_rec(&self.chart.result[0].meta);
         return rec;
     }
@@ -62,7 +60,6 @@ pub struct YFResult {
     pub timestamp: Vec<i64>,
     pub indicators: Indicators,
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,7 +118,7 @@ pub struct Quote {
 }
 //??
 impl crate::HasRecs for Quote {
-     fn to_recs(&self) -> Vec<Vec<String>> {
+    fn to_recs(&self) -> Vec<Vec<String>> {
         let mut ret: Vec<Vec<String>> = Vec::new();
         for i in 0..self.high.len() {
             if let Some(rec) = Quote::to_rec(self, i) {
@@ -134,7 +131,7 @@ impl crate::HasRecs for Quote {
 
 // TODO refac
 impl Quote {
-        pub fn to_rec(&self, i: usize) -> Option<Vec<String>> {
+    pub fn to_rec(&self, i: usize) -> Option<Vec<String>> {
         let mut rec: Vec<String> = Vec::new();
         if let Some(op) = self.open[i] {
             rec.push(op.to_string());
@@ -168,5 +165,3 @@ impl Quote {
         return serde::export::Some(rec);
     }
 }
-
-

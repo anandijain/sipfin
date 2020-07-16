@@ -3,8 +3,8 @@ using CSV, DataFrames, Plots, Dates, LinearAlgebra, Statistics
 
 fns = readdir("/home/sippycups/repos/sipfin/data/yf/", join=true)
 dfs = (dropmissing! ∘ DataFrame! ∘ CSV.File).(fns)
-tmp = dfs[1]
-cols = names(tmp)
+dfd = Dict(zip((last ∘ split).(fns, "/"), dfs))
+cols = names(dfs[1])
 regexs = map(x-> Regex("^$(x)_\\d"), cols)
 biggos = filter(x -> nrow(x) > 9000, dfs)
 
@@ -31,4 +31,9 @@ display(plot!(p, vals[1:end-1]))
 rank.(yos, rtol=1e-3)
 
 
-using LightGraphs, SimpleWeightedGraphs
+nums = j[:, Not(r"^symbol")]
+nums = nums[:, 2:end]
+vars = var.(eachcol(X[2:end, :] - X[1:end-1, :]))
+V = (X[end, :] - X[1, :]) ./ vars
+vals = Dict(zip(symbs, V))
+DataFrame(vals)
