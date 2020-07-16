@@ -3,7 +3,7 @@ use percent_encoding::{percent_encode, AsciiSet, NON_ALPHANUMERIC};
 
 use std::collections::HashMap;
 
-use finox::news::wsj;
+use finox::{news::wsj, roses};
 
 const F: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'=')
@@ -17,11 +17,12 @@ async fn main() {
     // fix this to read in the csvs. date isn't actually needed though
     // https://www.wsj.com/news/archive/2003/12/22?id=SB852113200493047500&type=article%7Cdnsa
     let root = "https://www.wsj.com/news/archive/";
-    let test_ids = vec![
-        "SB852112225564165000",
-        "SB12529005974621074610804586506800603874650",
-    ];
-    let test_urls = test_ids
+    //let test_ids = vec![
+    //    "SB852112225564165000",
+    //    "SB12529005974621074610804586506800603874650",
+    //];
+
+    let test_urls = roses::read_tickers("../data/news/wsj/article_ids_index.txt")
         .iter()
         .map(|x| format!("{}?id={}&type=article%7Cdnsa", root, x))
         .collect::<Vec<_>>();
