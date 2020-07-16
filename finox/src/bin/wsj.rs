@@ -24,9 +24,10 @@ async fn main() {
 
     let test_urls = roses::read_tickers("../data/news/wsj/article_ids_index.txt")
         .iter()
+        .rev()
         .map(|x| format!("{}?id={}&type=article%7Cdnsa", root, x))
         .collect::<Vec<_>>();
-    let data = finox::fetch_into::<wsj::WSJArticleRoot>(test_urls)
+    let data = finox::fetch_into::<wsj::WSJArticleRoot>(test_urls[0..100].to_vec())
         .await
         .into_iter()
         .flatten() //
