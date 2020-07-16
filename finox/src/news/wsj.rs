@@ -89,8 +89,14 @@ pub struct WSJArticleRoot {
     pub id: String,
     #[serde(rename = "type")]
     pub type_field: String,
-    pub data: ::serde_json::Value,
+    pub data: TmpData,
     pub hash: String,
+}
+
+impl crate::HasRec for WSJArticleRoot {
+    fn to_rec(&self) -> Vec<String> {
+        self.data.to_rec()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -111,8 +117,51 @@ pub struct WSJArticle {
     pub summary: String,
     pub summaries: ::serde_json::Value,
     pub comment_count: Option<i64>,
+    pub word_count: i64,
+    pub timestamp: i64,
+    pub url: String,
+    //pub video: bool,
+    //pub entitlements: Vec<::serde_json::Value>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TmpData {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub article_id: String,
+    pub article_section: String,
+    pub article_type: String,
+    pub byline: String,
+    pub flashline: ::serde_json::Value,
+    pub headline: String,
+    pub image: ::serde_json::Value,
+    pub pub_date: ::serde_json::Value,
+    pub title: String,
+    pub summary: String,
+    pub summaries: ::serde_json::Value,
     pub timestamp: i64,
     pub url: String,
     pub video: bool,
-    pub entitlements: Vec<::serde_json::Value>,
+    pub entitlements: Vec<String>,
+}
+
+impl TmpData {
+    pub fn to_rec(&self) -> Vec<String> {
+        vec![
+            self.id.to_string(),
+            self.type_field.to_string(),
+            self.article_section.to_string(),
+            self.headline.to_string(),
+            //self.byline.as_ref().unwrap_or_default(),
+            self.byline.to_string(), //.clone().unwrap(),
+            self.title.to_string(),
+            self.summary.to_string(),
+            //self.comment_count.unwrap_or_default().to_string(),
+            // self.word_count.to_string(), //.unwrap_or_default().to_string(),
+            self.timestamp.to_string(),
+            self.url.to_string(),
+        ]
+    }
 }

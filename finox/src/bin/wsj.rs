@@ -14,6 +14,28 @@ const F: &AsciiSet = &NON_ALPHANUMERIC
 
 #[tokio::main]
 async fn main() {
+    // fix this to read in the csvs. date isn't actually needed though
+    // https://www.wsj.com/news/archive/2003/12/22?id=SB852113200493047500&type=article%7Cdnsa
+    let root = "https://www.wsj.com/news/archive/";
+    let test_ids = vec![
+        "SB852112225564165000",
+        "SB12529005974621074610804586506800603874650",
+    ];
+    let test_urls = test_ids
+        .iter()
+        .map(|x| format!("{}?id={}&type=article%7Cdnsa", root, x))
+        .collect::<Vec<_>>();
+    let data = finox::fetch_into::<wsj::WSJArticleRoot>(test_urls)
+        .await
+        .into_iter()
+        .flatten() //
+        .map(|x| finox::HasRec::to_rec(&x))
+        .collect::<Vec<Vec<String>>>(); //<Vec<wsj::WSJArticleRoot>>();
+
+    println!("# {:#?}", data);
+}
+
+async fn get_ids() {
     let start = NaiveDate::from_ymd(1997, 1, 1);
     let today = Date::naive_utc(&Utc::today());
     let days = days_between(start, today);
@@ -27,13 +49,13 @@ async fn main() {
 
     let data = finox::fetch_write::<wsj::WSJArchive>(
         hm,
-        "../data/news/wsj/",
+        "../data/news/wsj/archive_ids/",
         &finox::headers::WSJ_ARCHIVE_HEADER,
     )
     .await
     .unwrap();
 
-    println!("{:#?}", data);
+    println!("# {:#?}", data.len());
 }
 
 fn test_full_link_fmt() {

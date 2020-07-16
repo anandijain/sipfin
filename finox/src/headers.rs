@@ -205,3 +205,15 @@ pub const CME_QUOTE_HEADER: [&'static str; 22] = [
 pub const MOODYS_HEADER: [&'static str; 4] = ["title", "source", "t", "synopsis"];
 
 pub const WSJ_ARCHIVE_HEADER: [&'static str; 2] = ["id", "type"];
+pub const WSJ_ARTICLE_HEADER: [&'static str; 10] = [
+    "id",
+    "type_field",
+    "article_section",
+    "headline",
+    "byline",
+    "title",
+    "summary",
+    "comment_count",
+    "timestamp",
+    "url",
+];
